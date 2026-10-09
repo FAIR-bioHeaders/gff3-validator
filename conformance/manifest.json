@@ -1,0 +1,1501 @@
+{
+  "manifest_version": 1,
+  "title": "GFF3 conformance suite",
+  "specification": {
+    "title": "GFF3 specification 1.26",
+    "url": "https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md"
+  },
+  "rule_catalogue": "https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/rules.md",
+  "questions": "https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/questions-for-SO.md",
+  "statuses": {
+    "spec": "The expected verdict follows from the GFF3 1.26 text.",
+    "proposed": "The expected verdict or finding depends on an open question (open_question); it follows the proposed answer or the current catalogue behaviour, and may change when the Sequence Ontology group answers.",
+    "extension:fhgff3": "FAIR-bioHeaders (FHGFF3) header layer, outside GFF3 1.26.",
+    "extension:insdc": "Reserved for INSDC GFF3 extension cases (none yet)."
+  },
+  "levels": {
+    "error": "the file is invalid",
+    "warning": "probably a mistake; the file stays valid",
+    "info": "a note; the file stays valid"
+  },
+  "rules": [
+    "BIO-001",
+    "BIO-002",
+    "BIO-003",
+    "BIO-004",
+    "BIO-005",
+    "BIO-006",
+    "BIO-007",
+    "BIO-008",
+    "BIO-009",
+    "BIO-010",
+    "BIO-011",
+    "GFF-ATT-001",
+    "GFF-ATT-002",
+    "GFF-ATT-003",
+    "GFF-ATT-004",
+    "GFF-ATT-005",
+    "GFF-ATT-006",
+    "GFF-ATT-007",
+    "GFF-ATT-008",
+    "GFF-ATT-009",
+    "GFF-ATT-010",
+    "GFF-ATT-011",
+    "GFF-ATT-012",
+    "GFF-ATT-013",
+    "GFF-ATT-014",
+    "GFF-ATT-016",
+    "GFF-DIR-001",
+    "GFF-DIR-002",
+    "GFF-DIR-003",
+    "GFF-DIR-004",
+    "GFF-DIR-005",
+    "GFF-DIR-006",
+    "GFF-DIR-007",
+    "GFF-DIR-008",
+    "GFF-DIR-009",
+    "GFF-DIR-010",
+    "GFF-STR-001",
+    "GFF-STR-002",
+    "GFF-STR-003",
+    "GFF-STR-004",
+    "GFF-STR-005",
+    "GFF-STR-006",
+    "GFF-STR-007",
+    "GFF-STR-008",
+    "GFF-STR-009",
+    "GFF-STR-010",
+    "GFF-STR-011",
+    "GFF-SYN-001",
+    "GFF-SYN-002",
+    "GFF-SYN-003",
+    "GFF-SYN-004",
+    "GFF-SYN-005",
+    "GFF-SYN-006",
+    "GFF-SYN-007",
+    "GFF-SYN-008",
+    "GFF-SYN-009",
+    "GFF-SYN-010",
+    "GFF-SYN-012",
+    "GFF-SYN-013",
+    "GFF-SYN-014",
+    "GFF-SYN-015",
+    "GFF-SYN-016",
+    "GFF-SYN-017",
+    "GFF-SYN-018",
+    "GFF-SYN-019",
+    "HDR-001",
+    "HDR-002",
+    "HDR-003"
+  ],
+  "cases": [
+    {
+      "id": "canonical-gene",
+      "file": "valid/canonical-gene.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene",
+      "status": "spec",
+      "description": "The specification's canonical gene (lines 0 to 24), tab-separated: multi-parent exons, discontinuous CDS, two CDS on one mRNA."
+    },
+    {
+      "id": "canonical-gene-gzip",
+      "file": "valid/canonical-gene-gzip.gff3.gz",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene",
+      "status": "spec",
+      "compression": "gzip",
+      "description": "canonical-gene, gzip-compressed (one member). Validate the decompressed bytes."
+    },
+    {
+      "id": "canonical-gene-bgzf",
+      "file": "valid/canonical-gene-bgzf.gff3.gz",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene",
+      "status": "spec",
+      "compression": "bgzf",
+      "description": "canonical-gene, BGZF-compressed (multi-member gzip with the BGZF end-of-file block)."
+    },
+    {
+      "id": "minimal",
+      "file": "valid/minimal.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Other Syntax: ##gff-version",
+      "status": "spec",
+      "description": "Only the version directive: a file with no features."
+    },
+    {
+      "id": "comments-and-blank-lines",
+      "file": "valid/comments-and-blank-lines.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene (comments and blank lines)",
+      "status": "spec",
+      "description": "Comment lines and blank lines between features are ignored."
+    },
+    {
+      "id": "multiple-parents",
+      "file": "valid/multiple-parents.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Column 9: Parent (multiple parents)",
+      "status": "spec",
+      "description": "Exons shared by two transcripts list both in one Parent value."
+    },
+    {
+      "id": "discontinuous-features",
+      "file": "valid/discontinuous-features.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Column 9: ID (discontinuous features); Alignments",
+      "status": "spec",
+      "description": "One CDS and one cDNA_match each spread over several lines sharing an ID, with a separate score and Target per line."
+    },
+    {
+      "id": "forward-references",
+      "file": "valid/forward-references.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Other Syntax: ###",
+      "status": "spec",
+      "description": "Children before their parents; all resolved before ###."
+    },
+    {
+      "id": "polycistronic-derives-from",
+      "file": "valid/polycistronic-derives-from.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Pathological Cases: polycistronic transcripts",
+      "status": "spec",
+      "description": "A polypeptide derives from a CDS (Derives_from, not Parent)."
+    },
+    {
+      "id": "circular-genome",
+      "file": "valid/circular-genome.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Circular Genomes; Other Syntax: ##sequence-region",
+      "status": "spec",
+      "description": "Gene II of phage f1 crosses the origin: end = 6407 + 831, beyond the ##sequence-region, allowed because the landmark is circular."
+    },
+    {
+      "id": "circular-genome-spec-example",
+      "file": "valid/circular-genome-spec-example.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-003",
+      "findings": [
+        {
+          "rule": "GFF-ATT-003",
+          "level": "info",
+          "line": 4
+        }
+      ],
+      "section": "Circular Genomes",
+      "status": "proposed",
+      "open_question": "Q4",
+      "description": "The specification's circular-genome example as printed, with column 9 ending in ';' (a note, reported once per file)."
+    },
+    {
+      "id": "embedded-fasta",
+      "file": "valid/embedded-fasta.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Other Syntax: ##FASTA",
+      "status": "spec",
+      "description": "Features followed by a ##FASTA section with the landmark and a Target sequence."
+    },
+    {
+      "id": "alignments-gap",
+      "file": "valid/alignments-gap.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Gap Attribute; Alignments; Column 9: Target",
+      "status": "spec",
+      "description": "The specification's Gap examples (nucleotide, protein with frameshifts), match/match_part, and a Target with a strand and an escaped space in its id."
+    },
+    {
+      "id": "percent-encoding",
+      "file": "valid/percent-encoding.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Description of the Format: escaping; Column 1: seqid",
+      "status": "spec",
+      "description": "Required encodings (%25, the column 9 reserved characters, tab and newline), a seqid escaping '#', literal UTF-8 and unescaped spaces."
+    },
+    {
+      "id": "attribute-values",
+      "file": "valid/attribute-values.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Column 9: attributes; Columns 4 & 5; Column 6; Column 7",
+      "status": "spec",
+      "description": "Multi-valued attributes, an application tag, scores, strand '?', an empty column 9 ('.') and a zero-length feature."
+    },
+    {
+      "id": "directives",
+      "file": "valid/directives.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Other Syntax: directives",
+      "status": "spec",
+      "description": "##sequence-region, ##species and ##genome-build in the specified forms."
+    },
+    {
+      "id": "crlf-line-endings",
+      "file": "valid/crlf-line-endings.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Description of the Format: escaping",
+      "status": "proposed",
+      "open_question": "Q2",
+      "description": "CRLF line endings. Accepted (the CR before LF is not treated as an unescaped control character) pending question 2; the proposed answer adds one warning per file."
+    },
+    {
+      "id": "genes-with-genome",
+      "file": "valid/genes-with-genome.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene; Column 8: phase",
+      "status": "spec",
+      "genome": "genomes/genome.fa",
+      "description": "A spliced plus-strand CDS (phase 1 on the second segment) and a minus-strand CDS, with start and stop codons, against the genome."
+    },
+    {
+      "id": "genes-with-gzip-genome",
+      "file": "valid/genes-with-gzip-genome.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene; Column 8: phase",
+      "status": "spec",
+      "genome": "genomes/genome.fa.gz",
+      "description": "genes-with-genome with a gzip-compressed genome FASTA."
+    },
+    {
+      "id": "partial-cds",
+      "file": "valid/partial-cds.gff3",
+      "expected": "valid",
+      "rule": "BIO-011",
+      "findings": [
+        {
+          "rule": "BIO-011",
+          "level": "info",
+          "line": null
+        }
+      ],
+      "section": "The Canonical Gene NOTE 5; Column 8: phase",
+      "status": "proposed",
+      "open_question": "Q17; SO-Ontologies#685",
+      "genome": "genomes/genome.fa",
+      "description": "A 5'-partial CDS without a start codon (partial=start) and a 3'-partial CDS without a stop codon (partial=end), the INSDC markers. The exempted checks are noted as skipped (BIO-011), not reported as problems."
+    },
+    {
+      "id": "selenocysteine-recoded-codon",
+      "file": "valid/selenocysteine-recoded-codon.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene",
+      "status": "proposed",
+      "open_question": "Q17; SO-Ontologies#658",
+      "genome": "genomes/genome.fa",
+      "description": "An in-frame TGA marked as selenocysteine by a recoded_codon subtype child of the CDS: no internal stop is reported."
+    },
+    {
+      "id": "syn-001-comment-before-version",
+      "file": "invalid/syn-001-comment-before-version.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-001",
+      "findings": [
+        {
+          "rule": "GFF-SYN-001",
+          "level": "error",
+          "line": 1
+        }
+      ],
+      "section": "Other Syntax: ##gff-version",
+      "status": "spec",
+      "description": "A comment precedes ##gff-version, which must be the topmost line."
+    },
+    {
+      "id": "syn-001-version-2",
+      "file": "invalid/syn-001-version-2.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-001",
+      "findings": [
+        {
+          "rule": "GFF-SYN-001",
+          "level": "error",
+          "line": 1
+        }
+      ],
+      "section": "Other Syntax: ##gff-version",
+      "status": "spec",
+      "description": "The version number must begin with 3."
+    },
+    {
+      "id": "syn-001-byte-order-mark",
+      "file": "invalid/syn-001-byte-order-mark.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-001",
+      "findings": [
+        {
+          "rule": "GFF-SYN-001",
+          "level": "error",
+          "line": 1
+        }
+      ],
+      "section": "Other Syntax: ##gff-version",
+      "status": "proposed",
+      "open_question": "Q1",
+      "description": "A UTF-8 byte order mark before ##gff-version."
+    },
+    {
+      "id": "syn-002-repeated-version",
+      "file": "invalid/syn-002-repeated-version.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-002",
+      "findings": [
+        {
+          "rule": "GFF-SYN-002",
+          "level": "error",
+          "line": 3
+        }
+      ],
+      "section": "Change Log 1.21: the ##gff-version pragma only appears once",
+      "status": "spec",
+      "description": "A second ##gff-version line (two files concatenated)."
+    },
+    {
+      "id": "syn-003-spaces-not-tabs",
+      "file": "invalid/syn-003-spaces-not-tabs.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-003",
+      "findings": [
+        {
+          "rule": "GFF-SYN-003",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format",
+      "status": "spec",
+      "description": "Columns separated by spaces instead of tabs."
+    },
+    {
+      "id": "syn-003-eight-columns",
+      "file": "invalid/syn-003-eight-columns.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-003",
+      "findings": [
+        {
+          "rule": "GFF-SYN-003",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format",
+      "status": "spec",
+      "description": "A feature line with eight columns."
+    },
+    {
+      "id": "syn-004-empty-column",
+      "file": "invalid/syn-004-empty-column.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-004",
+      "findings": [
+        {
+          "rule": "GFF-SYN-004",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format: undefined fields are replaced with '.'",
+      "status": "spec",
+      "description": "An empty source column instead of '.'."
+    },
+    {
+      "id": "syn-005-control-character",
+      "file": "invalid/syn-005-control-character.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-005",
+      "findings": [
+        {
+          "rule": "GFF-SYN-005",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format: escaping",
+      "status": "spec",
+      "description": "An unescaped control character (U+0007) in column 9."
+    },
+    {
+      "id": "syn-006-not-utf8",
+      "file": "valid/syn-006-not-utf8.gff3",
+      "expected": "valid",
+      "rule": "GFF-SYN-006",
+      "findings": [
+        {
+          "rule": "GFF-SYN-006",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format: use of UTF-8 is recommended",
+      "status": "spec",
+      "description": "A Latin-1 byte (0xE9) in column 9: UTF-8 is recommended, not required."
+    },
+    {
+      "id": "syn-007-end-of-line-comment",
+      "file": "valid/syn-007-end-of-line-comment.gff3",
+      "expected": "valid",
+      "rule": "GFF-SYN-007",
+      "findings": [
+        {
+          "rule": "GFF-SYN-007",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: end-of-line comments are not allowed",
+      "status": "spec",
+      "description": "Text that looks like an end-of-line comment; '#' is data, so the ID is 'g1 # check this' (a note only)."
+    },
+    {
+      "id": "syn-008-bare-percent",
+      "file": "invalid/syn-008-bare-percent.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-008",
+      "findings": [
+        {
+          "rule": "GFF-SYN-008",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format: RFC 3986 percent-encoding",
+      "status": "spec",
+      "description": "A literal '%' not written as %25."
+    },
+    {
+      "id": "syn-009-over-encoded",
+      "file": "valid/syn-009-over-encoded.gff3",
+      "expected": "valid",
+      "rule": "GFF-SYN-009",
+      "findings": [
+        {
+          "rule": "GFF-SYN-009",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format: escaping",
+      "status": "proposed",
+      "open_question": "Q3",
+      "description": "'-' encoded as %2D: 'no other characters may be encoded'. A warning under the proposed answer to question 3."
+    },
+    {
+      "id": "syn-010-seqid-whitespace",
+      "file": "invalid/syn-010-seqid-whitespace.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-010",
+      "findings": [
+        {
+          "rule": "GFF-SYN-010",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 1: seqid",
+      "status": "spec",
+      "description": "A seqid with an unescaped space."
+    },
+    {
+      "id": "syn-012-undefined-type",
+      "file": "invalid/syn-012-undefined-type.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-012",
+      "findings": [
+        {
+          "rule": "GFF-SYN-012",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type",
+      "status": "spec",
+      "description": "Type '.' (undefined)."
+    },
+    {
+      "id": "syn-013-non-integer-coordinates",
+      "file": "invalid/syn-013-non-integer-coordinates.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-013",
+      "findings": [
+        {
+          "rule": "GFF-SYN-013",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Columns 4 & 5: start and end",
+      "status": "spec",
+      "description": "Start written as 1.0."
+    },
+    {
+      "id": "syn-014-zero-start",
+      "file": "invalid/syn-014-zero-start.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-014",
+      "findings": [
+        {
+          "rule": "GFF-SYN-014",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Columns 4 & 5: start and end",
+      "status": "spec",
+      "description": "A 0-based start."
+    },
+    {
+      "id": "syn-015-start-after-end",
+      "file": "invalid/syn-015-start-after-end.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-015",
+      "findings": [
+        {
+          "rule": "GFF-SYN-015",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Columns 4 & 5: start and end",
+      "status": "spec",
+      "description": "Start greater than end on the minus strand."
+    },
+    {
+      "id": "syn-016-score-not-a-number",
+      "file": "invalid/syn-016-score-not-a-number.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-016",
+      "findings": [
+        {
+          "rule": "GFF-SYN-016",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 6: score",
+      "status": "spec",
+      "description": "Score 'high'."
+    },
+    {
+      "id": "syn-017-bad-strand",
+      "file": "invalid/syn-017-bad-strand.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-017",
+      "findings": [
+        {
+          "rule": "GFF-SYN-017",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 7: strand",
+      "status": "spec",
+      "description": "Strand '1'."
+    },
+    {
+      "id": "syn-018-bad-phase",
+      "file": "invalid/syn-018-bad-phase.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-018",
+      "findings": [
+        {
+          "rule": "GFF-SYN-018",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 8: phase",
+      "status": "spec",
+      "description": "Phase 3."
+    },
+    {
+      "id": "syn-019-cds-without-phase",
+      "file": "invalid/syn-019-cds-without-phase.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-019",
+      "findings": [
+        {
+          "rule": "GFF-SYN-019",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 8: phase",
+      "status": "spec",
+      "description": "A CDS with phase '.': the phase is required for all CDS features."
+    },
+    {
+      "id": "att-001-gtf-style",
+      "file": "invalid/att-001-gtf-style.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-001",
+      "findings": [
+        {
+          "rule": "GFF-ATT-001",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: attributes",
+      "status": "spec",
+      "description": "A pair without '=' (GTF style)."
+    },
+    {
+      "id": "att-002-empty-tag",
+      "file": "invalid/att-002-empty-tag.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-002",
+      "findings": [
+        {
+          "rule": "GFF-ATT-002",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: attributes",
+      "status": "spec",
+      "description": "A pair with an empty tag."
+    },
+    {
+      "id": "att-003-empty-pair",
+      "file": "valid/att-003-empty-pair.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-003",
+      "findings": [
+        {
+          "rule": "GFF-ATT-003",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: attributes",
+      "status": "proposed",
+      "open_question": "Q4",
+      "description": "An empty pair (';;'); a note only under the proposed answer."
+    },
+    {
+      "id": "att-004-repeated-tag",
+      "file": "invalid/att-004-repeated-tag.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-004",
+      "findings": [
+        {
+          "rule": "GFF-ATT-004",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: multiple attributes of the same type",
+      "status": "spec",
+      "description": "A tag repeated on one line instead of comma-separated values."
+    },
+    {
+      "id": "att-005-unescaped-reserved",
+      "file": "invalid/att-005-unescaped-reserved.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-005",
+      "findings": [
+        {
+          "rule": "GFF-ATT-005",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Description of the Format: reserved characters in column 9",
+      "status": "spec",
+      "description": "An unescaped '=' inside a value."
+    },
+    {
+      "id": "att-006-id-with-comma",
+      "file": "invalid/att-006-id-with-comma.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-006",
+      "findings": [
+        {
+          "rule": "GFF-ATT-006",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: multiple values",
+      "status": "spec",
+      "description": "ID is not one of the multi-valued tags, so it cannot hold two values."
+    },
+    {
+      "id": "att-007-unknown-reserved-tag",
+      "file": "valid/att-007-unknown-reserved-tag.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-007",
+      "findings": [
+        {
+          "rule": "GFF-ATT-007",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: attributes that begin with an uppercase letter are reserved",
+      "status": "proposed",
+      "open_question": "GFF-ATT-007",
+      "description": "An upper-case tag that GFF3 does not define."
+    },
+    {
+      "id": "att-008-case-variant-tag",
+      "file": "valid/att-008-case-variant-tag.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-008",
+      "findings": [
+        {
+          "rule": "GFF-ATT-008",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: attribute names are case sensitive",
+      "status": "spec",
+      "description": "'parent' is a legal application tag but differs from the reserved tag Parent only by case."
+    },
+    {
+      "id": "att-009-quoted-value",
+      "file": "valid/att-009-quoted-value.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-009",
+      "findings": [
+        {
+          "rule": "GFF-ATT-009",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: attribute values should not be quoted",
+      "status": "spec",
+      "description": "A quoted value; the quotes are part of the value (a note only)."
+    },
+    {
+      "id": "att-010-target-missing-end",
+      "file": "invalid/att-010-target-missing-end.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-010",
+      "findings": [
+        {
+          "rule": "GFF-ATT-010",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: Target",
+      "status": "spec",
+      "description": "A Target without an end coordinate."
+    },
+    {
+      "id": "att-011-sam-style-gap",
+      "file": "invalid/att-011-sam-style-gap.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-011",
+      "findings": [
+        {
+          "rule": "GFF-ATT-011",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "The Gap Attribute",
+      "status": "spec",
+      "description": "A SAM-style CIGAR string instead of space-separated operations."
+    },
+    {
+      "id": "att-012-gap-without-target",
+      "file": "valid/att-012-gap-without-target.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-012",
+      "findings": [
+        {
+          "rule": "GFF-ATT-012",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "The Gap Attribute",
+      "status": "proposed",
+      "open_question": "GFF-ATT-012",
+      "description": "A Gap with no Target to align to."
+    },
+    {
+      "id": "att-013-gap-length-mismatch",
+      "file": "valid/att-013-gap-length-mismatch.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-013",
+      "findings": [
+        {
+          "rule": "GFF-ATT-013",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "The Gap Attribute",
+      "status": "proposed",
+      "open_question": "GFF-ATT-013",
+      "description": "Gap covers 23 reference bases but the feature is 30 long."
+    },
+    {
+      "id": "att-014-dbxref-without-dbtag",
+      "file": "invalid/att-014-dbxref-without-dbtag.gff3",
+      "expected": "invalid",
+      "rule": "GFF-ATT-014",
+      "findings": [
+        {
+          "rule": "GFF-ATT-014",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Ontology Associations and DB Cross References",
+      "status": "spec",
+      "description": "A Dbxref value without the DBTAG: prefix."
+    },
+    {
+      "id": "att-016-is-circular-yes",
+      "file": "valid/att-016-is-circular-yes.gff3",
+      "expected": "valid",
+      "rule": "GFF-ATT-016",
+      "findings": [
+        {
+          "rule": "GFF-ATT-016",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Circular Genomes",
+      "status": "proposed",
+      "open_question": "GFF-ATT-016",
+      "description": "Is_circular with a value other than true."
+    },
+    {
+      "id": "dir-001-sequence-region-two-fields",
+      "file": "invalid/dir-001-sequence-region-two-fields.gff3",
+      "expected": "invalid",
+      "rule": "GFF-DIR-001",
+      "findings": [
+        {
+          "rule": "GFF-DIR-001",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##sequence-region",
+      "status": "spec",
+      "description": "##sequence-region without a start."
+    },
+    {
+      "id": "dir-002-repeated-sequence-region",
+      "file": "invalid/dir-002-repeated-sequence-region.gff3",
+      "expected": "invalid",
+      "rule": "GFF-DIR-002",
+      "findings": [
+        {
+          "rule": "GFF-DIR-002",
+          "level": "error",
+          "line": 3
+        }
+      ],
+      "section": "Other Syntax: ##sequence-region",
+      "status": "spec",
+      "description": "Two ##sequence-region directives for one seqid."
+    },
+    {
+      "id": "dir-003-reference-across-resolution",
+      "file": "invalid/dir-003-reference-across-resolution.gff3",
+      "expected": "invalid",
+      "rule": "GFF-DIR-003",
+      "findings": [
+        {
+          "rule": "GFF-DIR-003",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ###",
+      "status": "spec",
+      "description": "A Parent that is still unresolved at ### (defined after it)."
+    },
+    {
+      "id": "dir-004-feature-after-fasta",
+      "file": "invalid/dir-004-feature-after-fasta.gff3",
+      "expected": "invalid",
+      "rule": "GFF-DIR-004",
+      "findings": [
+        {
+          "rule": "GFF-DIR-004",
+          "level": "error",
+          "line": 5
+        }
+      ],
+      "section": "Other Syntax: ##FASTA",
+      "status": "spec",
+      "description": "A feature line inside the FASTA section."
+    },
+    {
+      "id": "dir-005-implied-fasta",
+      "file": "valid/dir-005-implied-fasta.gff3",
+      "expected": "valid",
+      "rule": "GFF-DIR-005",
+      "findings": [
+        {
+          "rule": "GFF-DIR-005",
+          "level": "warning",
+          "line": 3
+        }
+      ],
+      "section": "Other Syntax: ##FASTA (implied by a line beginning with >)",
+      "status": "spec",
+      "description": "A '>' line starts the FASTA section without ##FASTA (allowed for backward compatibility)."
+    },
+    {
+      "id": "dir-006-fasta-record-without-sequence",
+      "file": "valid/dir-006-fasta-record-without-sequence.gff3",
+      "expected": "valid",
+      "rule": "GFF-DIR-006",
+      "findings": [
+        {
+          "rule": "GFF-DIR-006",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "section": "Other Syntax: ##FASTA",
+      "status": "proposed",
+      "open_question": "GFF-DIR-006",
+      "description": "A FASTA record with a header and no sequence."
+    },
+    {
+      "id": "dir-007-species-name",
+      "file": "valid/dir-007-species-name.gff3",
+      "expected": "valid",
+      "rule": "GFF-DIR-007",
+      "findings": [
+        {
+          "rule": "GFF-DIR-007",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##species",
+      "status": "spec",
+      "description": "##species with a name rather than the preferred NCBI Taxonomy URL."
+    },
+    {
+      "id": "dir-008-genome-build-one-value",
+      "file": "valid/dir-008-genome-build-one-value.gff3",
+      "expected": "valid",
+      "rule": "GFF-DIR-008",
+      "findings": [
+        {
+          "rule": "GFF-DIR-008",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##genome-build",
+      "status": "proposed",
+      "open_question": "GFF-DIR-008",
+      "description": "##genome-build without its source."
+    },
+    {
+      "id": "dir-009-feature-ontology",
+      "file": "valid/dir-009-feature-ontology.gff3",
+      "expected": "valid",
+      "rule": "GFF-DIR-009",
+      "findings": [
+        {
+          "rule": "GFF-DIR-009",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##feature-ontology",
+      "status": "spec",
+      "description": "An ontology directive (recorded, not fetched: a note only)."
+    },
+    {
+      "id": "dir-010-unknown-directive",
+      "file": "valid/dir-010-unknown-directive.gff3",
+      "expected": "valid",
+      "rule": "GFF-DIR-010",
+      "findings": [
+        {
+          "rule": "GFF-DIR-010",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: application-specific directives are allowed",
+      "status": "spec",
+      "description": "An application-specific directive (a note only)."
+    },
+    {
+      "id": "str-001-duplicate-id",
+      "file": "invalid/str-001-duplicate-id.gff3",
+      "expected": "invalid",
+      "rule": "GFF-STR-001",
+      "findings": [
+        {
+          "rule": "GFF-STR-001",
+          "level": "error",
+          "line": 3
+        }
+      ],
+      "section": "Column 9: ID",
+      "status": "spec",
+      "description": "A gene and an mRNA share an ID, so they are not one feature."
+    },
+    {
+      "id": "str-002-strand-change",
+      "file": "valid/str-002-strand-change.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-002",
+      "findings": [
+        {
+          "rule": "GFF-STR-002",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "section": "Column 9: ID (discontinuous features)",
+      "status": "proposed",
+      "open_question": "Q8",
+      "description": "The lines of one CDS are on different strands."
+    },
+    {
+      "id": "str-003-parent-change",
+      "file": "valid/str-003-parent-change.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-003",
+      "findings": [
+        {
+          "rule": "GFF-STR-003",
+          "level": "warning",
+          "line": 5
+        }
+      ],
+      "section": "Column 9: ID (discontinuous features)",
+      "status": "proposed",
+      "open_question": "Q8",
+      "description": "The lines of one CDS name different parents."
+    },
+    {
+      "id": "str-004-unresolved-parent",
+      "file": "invalid/str-004-unresolved-parent.gff3",
+      "expected": "invalid",
+      "rule": "GFF-STR-004",
+      "findings": [
+        {
+          "rule": "GFF-STR-004",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Parent (part_of) Relationships",
+      "status": "spec",
+      "description": "A Parent that names no ID in the file."
+    },
+    {
+      "id": "str-005-unresolved-derives-from",
+      "file": "invalid/str-005-unresolved-derives-from.gff3",
+      "expected": "invalid",
+      "rule": "GFF-STR-005",
+      "findings": [
+        {
+          "rule": "GFF-STR-005",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 9: Derives_from",
+      "status": "spec",
+      "description": "A Derives_from that names no ID in the file."
+    },
+    {
+      "id": "str-006-parent-cycle",
+      "file": "invalid/str-006-parent-cycle.gff3",
+      "expected": "invalid",
+      "rule": "GFF-STR-006",
+      "findings": [
+        {
+          "rule": "GFF-STR-006",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Parent (part_of) Relationships",
+      "status": "spec",
+      "description": "Two features that are each other's Parent."
+    },
+    {
+      "id": "str-007-derives-from-cycle",
+      "file": "valid/str-007-derives-from-cycle.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-007",
+      "findings": [
+        {
+          "rule": "GFF-STR-007",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Pathological Cases",
+      "status": "proposed",
+      "open_question": "Q12",
+      "description": "Two features that derive from each other."
+    },
+    {
+      "id": "str-008-outside-sequence-region",
+      "file": "invalid/str-008-outside-sequence-region.gff3",
+      "expected": "invalid",
+      "rule": "GFF-STR-008",
+      "findings": [
+        {
+          "rule": "GFF-STR-008",
+          "level": "error",
+          "line": 3
+        }
+      ],
+      "section": "Other Syntax: ##sequence-region",
+      "status": "spec",
+      "description": "A feature extends past its ##sequence-region (not circular)."
+    },
+    {
+      "id": "str-009-seqid-without-sequence-region",
+      "file": "valid/str-009-seqid-without-sequence-region.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-009",
+      "findings": [
+        {
+          "rule": "GFF-STR-009",
+          "level": "info",
+          "line": 4
+        }
+      ],
+      "section": "Other Syntax: ##sequence-region",
+      "status": "spec",
+      "description": "Some seqids have a ##sequence-region and ctg2 has none (optional; a note only)."
+    },
+    {
+      "id": "str-010-seqid-not-in-fasta",
+      "file": "valid/str-010-seqid-not-in-fasta.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-010",
+      "findings": [
+        {
+          "rule": "GFF-STR-010",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##FASTA",
+      "status": "spec",
+      "description": "A ##FASTA section that lacks the landmark of a feature."
+    },
+    {
+      "id": "str-011-beyond-fasta-sequence",
+      "file": "invalid/str-011-beyond-fasta-sequence.gff3",
+      "expected": "invalid",
+      "rule": "GFF-STR-011",
+      "findings": [
+        {
+          "rule": "GFF-STR-011",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##FASTA; Columns 4 & 5",
+      "status": "spec",
+      "description": "A feature ends at 90 on a 4 bp embedded sequence."
+    },
+    {
+      "id": "bio-001-seqid-not-in-genome",
+      "file": "invalid/bio-001-seqid-not-in-genome.gff3",
+      "expected": "invalid",
+      "rule": "BIO-001",
+      "findings": [
+        {
+          "rule": "BIO-001",
+          "level": "error",
+          "line": 3
+        }
+      ],
+      "section": "Column 1: seqid",
+      "status": "spec",
+      "genome": "genomes/genome.fa",
+      "description": "A seqid that is not a sequence of the genome."
+    },
+    {
+      "id": "bio-002-beyond-genome",
+      "file": "invalid/bio-002-beyond-genome.gff3",
+      "expected": "invalid",
+      "rule": "BIO-002",
+      "findings": [
+        {
+          "rule": "BIO-002",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Columns 4 & 5: start and end",
+      "status": "spec",
+      "genome": "genomes/genome.fa",
+      "description": "A feature ends at 200 on the 120 bp chr1."
+    },
+    {
+      "id": "bio-003-sequence-region-longer",
+      "file": "valid/bio-003-sequence-region-longer.gff3",
+      "expected": "valid",
+      "rule": "BIO-003",
+      "findings": [
+        {
+          "rule": "BIO-003",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Other Syntax: ##sequence-region",
+      "status": "spec",
+      "genome": "genomes/genome.fa",
+      "description": "##sequence-region claims 200 bp; chr1 has 120."
+    },
+    {
+      "id": "bio-004-inconsistent-phase",
+      "file": "valid/bio-004-inconsistent-phase.gff3",
+      "expected": "valid",
+      "rule": "BIO-004",
+      "findings": [
+        {
+          "rule": "BIO-004",
+          "level": "warning",
+          "line": 7
+        },
+        {
+          "rule": "BIO-011",
+          "level": "info",
+          "line": null
+        }
+      ],
+      "section": "Column 8: phase",
+      "status": "proposed",
+      "open_question": "Q17",
+      "genome": "genomes/genome.fa",
+      "description": "The second CDS segment has phase 0; 20 coding bases before it make it 1. Stop codons are then not judged (BIO-011)."
+    },
+    {
+      "id": "bio-005-cds-outside-exon",
+      "file": "valid/bio-005-cds-outside-exon.gff3",
+      "expected": "valid",
+      "rule": "BIO-005",
+      "findings": [
+        {
+          "rule": "BIO-005",
+          "level": "warning",
+          "line": 7
+        }
+      ],
+      "section": "The Canonical Gene",
+      "status": "proposed",
+      "open_question": "Q11",
+      "genome": "genomes/genome.fa",
+      "description": "The second CDS segment (51..69) extends past its exon (51..60)."
+    },
+    {
+      "id": "bio-006-no-start-codon",
+      "file": "valid/bio-006-no-start-codon.gff3",
+      "expected": "valid",
+      "rule": "BIO-006",
+      "findings": [
+        {
+          "rule": "BIO-006",
+          "level": "warning",
+          "line": 6
+        }
+      ],
+      "section": "The Canonical Gene NOTE 5",
+      "status": "proposed",
+      "open_question": "Q17",
+      "genome": "genomes/genome.fa",
+      "description": "A CDS that starts with CCC, not a start codon, and is not marked partial."
+    },
+    {
+      "id": "bio-007-no-stop-codon",
+      "file": "valid/bio-007-no-stop-codon.gff3",
+      "expected": "valid",
+      "rule": "BIO-007",
+      "findings": [
+        {
+          "rule": "BIO-007",
+          "level": "warning",
+          "line": 7
+        }
+      ],
+      "section": "The Canonical Gene NOTE 5",
+      "status": "proposed",
+      "open_question": "Q17",
+      "genome": "genomes/genome.fa",
+      "description": "A CDS that ends with CCC, not a stop codon, and is not marked partial."
+    },
+    {
+      "id": "bio-008-internal-stop",
+      "file": "valid/bio-008-internal-stop.gff3",
+      "expected": "valid",
+      "rule": "BIO-008",
+      "findings": [
+        {
+          "rule": "BIO-008",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "section": "The Canonical Gene",
+      "status": "proposed",
+      "open_question": "Q17",
+      "genome": "genomes/genome.fa",
+      "description": "An in-frame TGA at 13..15 that is not marked as recoded."
+    },
+    {
+      "id": "bio-009-length-not-multiple-of-three",
+      "file": "valid/bio-009-length-not-multiple-of-three.gff3",
+      "expected": "valid",
+      "rule": "BIO-009",
+      "findings": [
+        {
+          "rule": "BIO-009",
+          "level": "info",
+          "line": 7
+        }
+      ],
+      "section": "Column 8: phase",
+      "status": "spec",
+      "genome": "genomes/genome.fa",
+      "description": "38 coding bases (the stop codon is incomplete); the specification's own canonical gene has such CDS, so a note only."
+    },
+    {
+      "id": "bio-010-strand-mismatch",
+      "file": "valid/bio-010-strand-mismatch.gff3",
+      "expected": "valid",
+      "rule": "BIO-010",
+      "findings": [
+        {
+          "rule": "BIO-010",
+          "level": "warning",
+          "line": 3
+        }
+      ],
+      "section": "The Canonical Gene",
+      "status": "proposed",
+      "open_question": "Q18",
+      "genome": "genomes/genome.fa",
+      "description": "An mRNA on the opposite strand to its gene."
+    },
+    {
+      "id": "bio-011-cds-without-strand",
+      "file": "valid/bio-011-cds-without-strand.gff3",
+      "expected": "valid",
+      "rule": "BIO-011",
+      "findings": [
+        {
+          "rule": "BIO-011",
+          "level": "info",
+          "line": null
+        }
+      ],
+      "section": "Column 7: strand; Column 8: phase",
+      "status": "spec",
+      "genome": "genomes/genome.fa",
+      "description": "A CDS on strand '.' has no 5' end, so its codons cannot be checked (a note that checks were skipped)."
+    },
+    {
+      "id": "hdr-001-header-required",
+      "file": "invalid/hdr-001-header-required.gff3",
+      "expected": "invalid",
+      "rule": "HDR-001",
+      "findings": [
+        {
+          "rule": "HDR-001",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification spec 009 FR-001",
+      "status": "extension:fhgff3",
+      "options": {
+        "require_header": true
+      },
+      "description": "No #~ header lines, but the header was required."
+    },
+    {
+      "id": "hdr-002-header-present",
+      "file": "valid/hdr-002-header-present.gff3",
+      "expected": "valid",
+      "rule": "HDR-002",
+      "findings": [
+        {
+          "rule": "HDR-002",
+          "level": "info",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification spec 009 FR-006",
+      "status": "extension:fhgff3",
+      "description": "#~ header lines are '#' comments to GFF3; their content is not validated yet (a note)."
+    },
+    {
+      "id": "hdr-003-header-checks-skipped",
+      "file": "valid/hdr-003-header-checks-skipped.gff3",
+      "expected": "valid",
+      "rule": "HDR-003",
+      "findings": [
+        {
+          "rule": "HDR-003",
+          "level": "info",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification spec 009 FR-006",
+      "status": "extension:fhgff3",
+      "options": {
+        "no_header": true
+      },
+      "description": "Header checks switched off (a note that they were skipped)."
+    }
+  ]
+}

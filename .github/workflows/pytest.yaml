@@ -29,6 +29,8 @@ jobs:
           poetry install
       - name: Test
         run: poetry run pytest
+      - name: Conformance suite is up to date and the CLI passes it (full findings)
+        run: poetry run python scripts/check_conformance.py --gff3-validate gff3-validate
       - name: Rule catalogue, docs/rules.md and README rule list are in sync
         run: poetry run python scripts/render_rules.py --check
       - name: Lint and formatting

@@ -165,6 +165,127 @@ fixture, and gff3_QC exited 0 except for the crash.
 4. No tool tested checks Gap syntax or empty columns, and none cites a rule or
    suggests a fix.
 
+## Conformance suite: GenomeTools (2026-10-09)
+
+The [conformance suite](../conformance/README.md) (#68) scored
+`gt gff3validator` from GenomeTools 1.6.6 (bioconda
+`genometools-genometools`, default options, no `-typecheck`) on the 67 cases
+whose verdict the GFF3 1.26 text settles (status `spec`), comparing only the
+exit status:
+
+```bash
+python scripts/check_conformance.py --command 'gt gff3validator {file}' --status spec
+```
+
+**Result: 48 of 60 scored cases passed; 7 skipped** (they need a genome,
+which `gt gff3validator` does not take). gt accepted every valid file
+(including the gzip and BGZF copies, comments and blank lines, a circular
+feature beyond its `##sequence-region`, Gap alignments and percent-encoding)
+and rejected 23 of the 35 scored invalid files. The 12 failures are invalid
+files that gt accepts (exit 0):
+
+| Case | Defect gt accepts |
+|---|---|
+| syn-004-empty-column | empty source column |
+| syn-005-control-character | unescaped U+0007 in column 9 |
+| syn-008-bare-percent | `50%` not written `50%25` |
+| syn-010-seqid-whitespace | seqid `chr 1` |
+| syn-012-undefined-type | type `.` |
+| syn-019-cds-without-phase | CDS with phase `.` |
+| att-006-id-with-comma | `ID=g1,g2` |
+| att-011-sam-style-gap | `Gap=8M3D6M` |
+| att-014-dbxref-without-dbtag | `Dbxref=AA816246` |
+| dir-004-feature-after-fasta | feature line after `##FASTA` |
+| str-005-unresolved-derives-from | Derives_from names no ID |
+| str-011-beyond-fasta-sequence | feature beyond the embedded sequence |
+
+On the 14 scorable `proposed` cases gt agreed with the suite 11 times. It
+differed on the three open points where gt is stricter than the catalogue's
+current reading: an unknown upper-case tag (`Gene_biotype`, GFF-ATT-007),
+`Is_circular=yes` (GFF-ATT-016) and the lines of one CDS naming different
+Parents (GFF-STR-003, question 8); gt treats all three as errors, the suite
+as warnings. These are evidence for the SO questions, not gt bugs.
+
+This is a comparison, not a judgement of gt: it stops at the first error,
+reports no rule ids, and several of the cases above are syntax checks it
+does not attempt. gff3-validator 0.1.0 passes all 92 cases with full
+findings comparison (CI runs this on every push).
+
+<details>
+<summary>Full table (spec cases)</summary>
+
+| case | status | expected | got | result | detail |
+|---|---|---|---|---|---|
+| canonical-gene | spec | valid | valid | pass |  |
+| canonical-gene-gzip | spec | valid | valid | pass |  |
+| canonical-gene-bgzf | spec | valid | valid | pass |  |
+| minimal | spec | valid | valid | pass |  |
+| comments-and-blank-lines | spec | valid | valid | pass |  |
+| multiple-parents | spec | valid | valid | pass |  |
+| discontinuous-features | spec | valid | valid | pass |  |
+| forward-references | spec | valid | valid | pass |  |
+| polycistronic-derives-from | spec | valid | valid | pass |  |
+| circular-genome | spec | valid | valid | pass |  |
+| embedded-fasta | spec | valid | valid | pass |  |
+| alignments-gap | spec | valid | valid | pass |  |
+| percent-encoding | spec | valid | valid | pass |  |
+| attribute-values | spec | valid | valid | pass |  |
+| directives | spec | valid | valid | pass |  |
+| genes-with-genome | spec | valid |  | skip | needs a genome ({genome} not in the command) |
+| genes-with-gzip-genome | spec | valid |  | skip | needs a genome ({genome} not in the command) |
+| syn-001-comment-before-version | spec | invalid | invalid | pass |  |
+| syn-001-version-2 | spec | invalid | invalid | pass |  |
+| syn-002-repeated-version | spec | invalid | invalid | pass |  |
+| syn-003-spaces-not-tabs | spec | invalid | invalid | pass |  |
+| syn-003-eight-columns | spec | invalid | invalid | pass |  |
+| syn-004-empty-column | spec | invalid | valid | fail | accepted (exit 0) |
+| syn-005-control-character | spec | invalid | valid | fail | accepted (exit 0) |
+| syn-006-not-utf8 | spec | valid | valid | pass |  |
+| syn-007-end-of-line-comment | spec | valid | valid | pass |  |
+| syn-008-bare-percent | spec | invalid | valid | fail | accepted (exit 0) |
+| syn-010-seqid-whitespace | spec | invalid | valid | fail | accepted (exit 0) |
+| syn-012-undefined-type | spec | invalid | valid | fail | accepted (exit 0) |
+| syn-013-non-integer-coordinates | spec | invalid | invalid | pass |  |
+| syn-014-zero-start | spec | invalid | invalid | pass |  |
+| syn-015-start-after-end | spec | invalid | invalid | pass |  |
+| syn-016-score-not-a-number | spec | invalid | invalid | pass |  |
+| syn-017-bad-strand | spec | invalid | invalid | pass |  |
+| syn-018-bad-phase | spec | invalid | invalid | pass |  |
+| syn-019-cds-without-phase | spec | invalid | valid | fail | accepted (exit 0) |
+| att-001-gtf-style | spec | invalid | invalid | pass |  |
+| att-002-empty-tag | spec | invalid | invalid | pass |  |
+| att-004-repeated-tag | spec | invalid | invalid | pass |  |
+| att-005-unescaped-reserved | spec | invalid | invalid | pass |  |
+| att-006-id-with-comma | spec | invalid | valid | fail | accepted (exit 0) |
+| att-008-case-variant-tag | spec | valid | valid | pass |  |
+| att-009-quoted-value | spec | valid | valid | pass |  |
+| att-010-target-missing-end | spec | invalid | invalid | pass |  |
+| att-011-sam-style-gap | spec | invalid | valid | fail | accepted (exit 0) |
+| att-014-dbxref-without-dbtag | spec | invalid | valid | fail | accepted (exit 0) |
+| dir-001-sequence-region-two-fields | spec | invalid | invalid | pass |  |
+| dir-002-repeated-sequence-region | spec | invalid | invalid | pass |  |
+| dir-003-reference-across-resolution | spec | invalid | invalid | pass |  |
+| dir-004-feature-after-fasta | spec | invalid | valid | fail | accepted (exit 0) |
+| dir-005-implied-fasta | spec | valid | valid | pass |  |
+| dir-007-species-name | spec | valid | valid | pass |  |
+| dir-009-feature-ontology | spec | valid | valid | pass |  |
+| dir-010-unknown-directive | spec | valid | valid | pass |  |
+| str-001-duplicate-id | spec | invalid | invalid | pass |  |
+| str-004-unresolved-parent | spec | invalid | invalid | pass |  |
+| str-005-unresolved-derives-from | spec | invalid | valid | fail | accepted (exit 0) |
+| str-006-parent-cycle | spec | invalid | invalid | pass |  |
+| str-008-outside-sequence-region | spec | invalid | invalid | pass |  |
+| str-009-seqid-without-sequence-region | spec | valid | valid | pass |  |
+| str-010-seqid-not-in-fasta | spec | valid | valid | pass |  |
+| str-011-beyond-fasta-sequence | spec | invalid | valid | fail | accepted (exit 0) |
+| bio-001-seqid-not-in-genome | spec | invalid |  | skip | needs a genome ({genome} not in the command) |
+| bio-002-beyond-genome | spec | invalid |  | skip | needs a genome ({genome} not in the command) |
+| bio-003-sequence-region-longer | spec | valid |  | skip | needs a genome ({genome} not in the command) |
+| bio-009-length-not-multiple-of-three | spec | valid |  | skip | needs a genome ({genome} not in the command) |
+| bio-011-cds-without-strand | spec | valid |  | skip | needs a genome ({genome} not in the command) |
+
+</details>
+
 ## Recommendation
 
 Build the engine new, in Python (#61), from the catalogue. Reuse no

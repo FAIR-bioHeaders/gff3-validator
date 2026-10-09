@@ -1,0 +1,2 @@
+##gff-version 3
+ctg1	.	cDNA_match	1050	1500	.	+	.	ID=m1;Target=cdna0123 12

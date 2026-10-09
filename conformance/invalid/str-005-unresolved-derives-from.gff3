@@ -1,0 +1,2 @@
+##gff-version 3
+chrX	.	polypeptide	1	90	.	+	.	ID=p1;Derives_from=cds99

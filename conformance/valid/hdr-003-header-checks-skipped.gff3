@@ -1,0 +1,4 @@
+##gff-version 3
+#~schema: https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhr.json
+#~schemaVersion: 1.0
+ctg1	.	gene	1	90	.	+	.	ID=g1

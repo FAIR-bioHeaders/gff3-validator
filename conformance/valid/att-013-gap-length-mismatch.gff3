@@ -1,0 +1,2 @@
+##gff-version 3
+chr3	.	match	1	30	.	.	.	ID=m1;Target=EST23 1 21;Gap=M8 D3 M6 I1 M6

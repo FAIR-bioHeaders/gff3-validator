@@ -1,0 +1,6 @@
+##gff-version 3
+scaffold%231	.	gene	1	90	.	+	.	ID=g1;Note=50%25 identity
+ctg1	.	gene	1	90	.	+	.	ID=g2;Note=a%3Bb%3Dc%26d%2Ce,second value
+ctg1	.	gene	1	90	.	+	.	ID=g3;Note=tab%09and%0Anewline
+ctg1	.	gene	1	90	.	+	.	ID=g4;Name=café 日本
+ctg1	my source	gene	1	90	.	+	.	ID=g5;Note=spaces are fine

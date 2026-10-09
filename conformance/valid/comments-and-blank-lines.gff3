@@ -1,0 +1,7 @@
+##gff-version 3
+# a comment line
+
+ctg1	.	gene	1	90	.	+	.	ID=g1
+
+# blank lines are ignored
+###

@@ -1,0 +1,11 @@
+##gff-version 3
+##sequence-region ctg1 1 120
+ctg1	.	gene	1	120	.	+	.	ID=g1
+ctg1	.	mRNA	1	120	.	+	.	ID=t1;Parent=g1
+ctg1	blastn	cDNA_match	11	70	1e-20	+	.	ID=m1;Target=cdna1 1 60
+##FASTA
+>ctg1 the annotated sequence
+ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
+ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
+>cdna1
+acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt
