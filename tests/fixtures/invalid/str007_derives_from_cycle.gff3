@@ -1,0 +1,4 @@
+##gff-version 3
+##sequence-region ctg1 1 100
+ctg1	.	polypeptide	1	90	.	+	.	ID=p1;Derives_from=p2
+ctg1	.	polypeptide	1	90	.	+	.	ID=p2;Derives_from=p1

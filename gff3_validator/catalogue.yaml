@@ -114,16 +114,18 @@ rules:
     Tab (outside column separators), newline, carriage return and other control
     characters (0x00 to 0x1F, 0x7F) must be percent-encoded.
   reference: {source: gff3, anchor: description-of-the-format, section: "Description of the Format: escaping"}
-  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\r"
-  fix: Percent-encode the character (for example %09 for tab, %0D for carriage return); convert CRLF line endings to LF.
-  status: planned
+  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note=first\rsecond"
+  fix: Percent-encode the character (for example %09 for tab, %0D for carriage return).
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
-    The specification does not address line endings. Are CRLF files invalid
-    (the CR is an unescaped control character in column 9) or should a CRLF
+    The specification does not address line endings. Are CRLF files invalid (the
+    CR is an unescaped control character in column 9) or should a CRLF
     terminator be accepted? Proposal: report CRLF once per file as an error
-    under this rule.
+    under this rule. Until SO answers, the validator reports control characters
+    inside a line and does not report a carriage return immediately before the
+    line feed (a CRLF line ending), which it removes before checking the line.
 
 - id: GFF-SYN-006
   level: warning
@@ -133,8 +135,12 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Description of the Format: use of UTF-8 is recommended"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note=caf\\xe9 (Latin-1 byte)"
   fix: Re-encode the file as UTF-8.
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Reported once per file, at the first line that is not valid UTF-8, with the
+    number of further such lines. Invalid bytes are replaced by U+FFFD for the
+    other checks.
 
 - id: GFF-SYN-007
   level: info
@@ -147,9 +153,11 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: end-of-line comments are not allowed"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1 # check this"
   fix: Move the comment to its own line starting with "#".
-  status: planned
+  status: implemented
   review: pending-SO
-  notes: Heuristic; "#" is a legal character in values, so this is info only.
+  notes: >-
+    Heuristic; "#" is a legal character in values, so this is info only. Checked
+    in column 9 only: whitespace followed by "#".
 
 - id: GFF-SYN-008
   level: error
@@ -159,11 +167,11 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Description of the Format: RFC 3986 percent-encoding"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note=50% identity"
   fix: Write a literal percent sign as %25.
-  status: planned
+  status: implemented
   review: pending-SO
   notes: >-
     Backslash escapes and "+" for space are not allowed, but cannot be told
-    apart from literal text; they are not checked.
+    apart from literal text; they are not checked. Checked in all nine columns.
 
 - id: GFF-SYN-009
   level: warning
@@ -176,14 +184,18 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Description of the Format: escaping"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Name=EDEN%2D1"
   fix: Write the character literally (here "-").
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Conflicts with column 1, where characters outside [a-zA-Z0-9.:^*$@!+_?-|]
-    "must" be escaped, and with Target, where spaces in target ids are
-    escaped as %20. Proposal: allow any encoding in column 1 and in Target ids,
-    warn elsewhere. Is over-encoding an error, a warning, or allowed?
+    "must" be escaped, and with Target, where spaces in target ids are escaped
+    as %20. Proposal: allow any encoding in column 1 and in Target ids, warn
+    elsewhere. Is over-encoding an error, a warning, or allowed? Implemented as
+    the proposal while question 3 is open: in column 1 only encoding a character
+    of the seqid set is reported, %20 is allowed in Target values, and other
+    encoded characters (including UTF-8 octets of non-ASCII characters) are
+    reported. Reported once per file, at the first occurrence, with a count.
 
 - id: GFF-SYN-010
   level: error
@@ -196,7 +208,7 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 1: seqid"}
   example: "chr 1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
   fix: Percent-encode the character (here "chr%201") or rename the sequence consistently in the genome too.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
@@ -204,7 +216,10 @@ rules:
     validator reads the list literally (? - | as three characters). Widely used
     seqids contain "#" or "=" (for example some assembly names); escaping them
     breaks the link to the FASTA name. Confirm the literal reading and whether
-    escaped seqids must match escaped or decoded FASTA ids.
+    escaped seqids must match escaped or decoded FASTA ids. Implemented for
+    unescaped whitespace only. The character set is not checked until SO answers
+    question 3. A seqid beginning with ">" cannot be told apart from a FASTA
+    header: the line starts an implied FASTA section (GFF-DIR-005).
 
 - id: GFF-SYN-011
   level: error
@@ -229,7 +244,7 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 3: type"}
   example: "ctg1\t.\t.\t1\t90\t.\t+\t.\tID=g1"
   fix: Give a Sequence Ontology term name or accession.
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: GFF-SYN-013
@@ -363,7 +378,7 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: attributes"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID g1; Name EDEN"
   fix: Write tag=value pairs (ID=g1;Name=EDEN). This is GTF syntax; convert GTF with a converter rather than by hand.
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: GFF-ATT-002
@@ -372,15 +387,16 @@ rules:
   title: Tags and values are not empty
   description: Every pair has a non-empty tag and a non-empty value.
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: attributes"}
-  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note="
-  fix: Remove the pair, or give it a value.
-  status: planned
+  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;=EDEN"
+  fix: Give the tag, or remove the pair.
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
-    The specification does not say values must be non-empty; the Perl
-    validator and GFF3toolkit treat empty values as errors. Is "Note=" an
-    error, a warning, or valid?
+    The specification does not say values must be non-empty; the Perl validator
+    and GFF3toolkit treat empty values as errors. Is "Note=" an error, a
+    warning, or valid? Until SO answers question 4, only an empty tag ("=value")
+    is reported; empty values ("Note=", "Parent=a,,b") are not.
 
 - id: GFF-ATT-003
   level: info
@@ -390,12 +406,14 @@ rules:
   reference: {source: gff3, anchor: circular-genomes, section: "Circular Genomes (example ends with ';')"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;;Name=EDEN;"
   fix: Remove the extra semicolons (optional).
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The specification's own circular-genome example ends column 9 with ";" so a
-    trailing semicolon appears to be allowed. Confirm that both are valid.
+    trailing semicolon appears to be allowed. Confirm that both are valid. Info
+    only, so it never affects validity; reported once per file, at the first
+    occurrence, with a count.
 
 - id: GFF-ATT-004
   level: error
@@ -405,7 +423,7 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: multiple attributes of the same type"}
   example: "ctg1\t.\texon\t1\t90\t.\t+\t.\tParent=t1;Parent=t2"
   fix: Join the values with a comma (Parent=t1,t2).
-  status: planned
+  status: implemented
   review: pending-SO
   notes: Implied by the specification and enforced by the Perl validator and GFF3toolkit.
 
@@ -420,11 +438,12 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Description of the Format: reserved characters in column 9"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note=a=b & c"
   fix: Escape the characters (Note=a%3Db %26 c).
-  status: planned
+  status: implemented
   review: pending-SO
   notes: >-
     "&" has no syntactic role in GFF3 but is still reserved. Comma handling is
-    in GFF-ATT-006.
+    in GFF-ATT-006. An unescaped ";" cannot be detected, since it splits the
+    pair. A "," in a tag is reported here; commas in values are GFF-ATT-006.
 
 - id: GFF-ATT-006
   level: error
@@ -437,15 +456,17 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: multiple values; Change Log 1.19"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1,g2"
   fix: Use one value (and a separate feature for the second ID), or escape the comma.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Derives_from is not in the multi-valued list (1.19), yet a feature can
     derive from several (the polycistronic and trans-splicing examples use one
     Derives_from per line). Is Derives_from=g1,g2 allowed? For lower-case
-    (application) tags, is an unescaped comma a value separator or literal
-    text? The validator will not interpret commas in application tags.
+    (application) tags, is an unescaped comma a value separator or literal text?
+    The validator will not interpret commas in application tags. Implemented for
+    ID, Name, Target, Gap and Is_circular. Derives_from is not checked until
+    question 5 is answered; for GFF-STR-005 its commas are read as separators.
 
 - id: GFF-ATT-007
   level: warning
@@ -458,13 +479,15 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: all attributes that begin with an uppercase letter are reserved"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Gene_biotype=protein_coding"
   fix: Use a lower-case tag for application data (gene_biotype=protein_coding).
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Common in practice (GVF tags such as Variant_seq, mirGFF3 Variant/Cigar,
-    NCBI "Is_pseudo"?). Should known extensions (GVF, mirGFF3) be recognized
-    by profile rather than warned about?
+    NCBI "Is_pseudo"?). Should known extensions (GVF, mirGFF3) be recognized by
+    profile rather than warned about? Implemented as a warning for any tag
+    beginning with an upper-case letter that is not reserved and is not a case
+    variant of a reserved tag (that is GFF-ATT-008).
 
 - id: GFF-ATT-008
   level: warning
@@ -474,7 +497,7 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: attribute names are case sensitive"}
   example: "ctg1\t.\texon\t1\t90\t.\t+\t.\tparent=t1"
   fix: Use the reserved spelling (Parent=t1) if a part-of relationship was meant.
-  status: planned
+  status: implemented
   review: pending-SO
   notes: >-
     The specification's own pathological-case examples write "name=resA";
@@ -488,12 +511,14 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: attribute values do not need to be and should not be quoted"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Dbxref=\"EMBL:AA816246\""
   fix: Remove the quotes unless they belong to the value.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The Ontology Associations section shows Dbxref="EMBL:AA816246" with quotes.
-    Are those examples meant literally?
+    Are those examples meant literally? A value that starts and ends with a
+    double quote is reported; info only, once per file, at the first occurrence,
+    with a count.
 
 - id: GFF-ATT-010
   level: error
@@ -504,15 +529,19 @@ rules:
     end) and an optional strand "+" or "-", separated by spaces. Spaces in the
     target id are escaped as %20.
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 9: Target; Alignments"}
-  example: "ctg1\t.\tcDNA_match\t1050\t1500\t.\t+\t.\tID=m1;Target=cdna0123 462 12"
-  fix: Give start <= end in target coordinates and put the orientation in the strand field (Target=cdna0123 12 462 -).
-  status: planned
+  example: "ctg1\t.\tcDNA_match\t1050\t1500\t.\t+\t.\tID=m1;Target=cdna0123+12+462"
+  fix: Separate target_id, start and end by spaces, escape spaces in target_id as %20, and give the strand as + or - (Target=cdna0123 12 462 +).
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
-    The ##FASTA example writes Target=cdna0123+12+462 ("+" for space), which
-    the specification otherwise forbids. Is start <= end required within
-    Target, and is a Target strand allowed when the target is a protein?
+    The ##FASTA example writes Target=cdna0123+12+462 ("+" for space), which the
+    specification otherwise forbids; it fails this rule. Implemented for the
+    stated form: three or four fields separated by spaces (runs of spaces are
+    accepted), positive integer start and end, strand + or -. Until SO answers,
+    start > end within Target is not reported (the Alignments section says
+    orientation goes in column 7 "and not by changing the order of the start and
+    end positions"), and a strand on a protein target is accepted.
 
 - id: GFF-ATT-011
   level: error
@@ -522,12 +551,14 @@ rules:
   reference: {source: gff3, anchor: the-gap-attribute, section: The Gap Attribute}
   example: "chr3\t.\tmatch\t1\t23\t.\t.\t.\tID=m1;Target=EST23 1 21;Gap=8M3D6M"
   fix: Write the code before the length (M8 D3 M6); this is not SAM CIGAR order.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The Perl validator also accepted lower-case codes. Are lower-case codes and
-    multiple spaces valid?
+    multiple spaces valid? Until SO answers, only the upper-case codes are
+    accepted, runs of spaces between operations are accepted, and a zero length
+    is reported.
 
 - id: GFF-ATT-012
   level: warning
@@ -537,7 +568,7 @@ rules:
   reference: {source: gff3, anchor: the-gap-attribute, section: The Gap Attribute}
   example: "chr3\t.\tmatch\t1\t23\t.\t.\t.\tID=m1;Gap=M8 D3 M6 I1 M6"
   fix: Add the Target attribute.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
 
@@ -552,13 +583,17 @@ rules:
   reference: {source: gff3, anchor: the-gap-attribute, section: The Gap Attribute}
   example: "chr3\t.\tmatch\t1\t30\t.\t.\t.\tID=m1;Target=EST23 1 21;Gap=M8 D3 M6 I1 M6"
   fix: Correct the coordinates or the Gap string so they describe the same alignment.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Which types are protein-to-nucleotide (nucleotide_to_protein_match,
     protein_match and subtypes?) must come from SO. For multi-line matches,
-    lengths apply per line.
+    lengths apply per line. Implemented without SO: a line is accepted if either
+    reading fits, nucleotide (no F or R; M + D = feature length; M + I = Target
+    length) or protein (3 x (M + D) + F - R = feature length; M + I = Target
+    length), and a warning is given when neither does. Checked only when Target
+    and Gap are well formed.
 
 - id: GFF-ATT-014
   level: error
@@ -568,7 +603,7 @@ rules:
   reference: {source: gff3, anchor: ontology-associations-and-db-cross-references, section: Ontology Associations and DB Cross References}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Dbxref=AA816246"
   fix: Prefix the identifier with its database tag (Dbxref=EMBL:AA816246).
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: GFF-ATT-015
@@ -595,10 +630,13 @@ rules:
   reference: {source: gff3, anchor: circular-genomes, section: Circular Genomes}
   example: "J02448\tGenBank\tregion\t1\t6407\t.\t+\t.\tID=J02448;Is_circular=yes"
   fix: Write Is_circular=true, or remove the attribute for a linear sequence.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
-  notes: Is Is_circular=false valid (meaning linear), or must the tag be absent?
+  notes: >-
+    Is Is_circular=false valid (meaning linear), or must the tag be absent?
+    Until SO answers, Is_circular=false is not reported; any value other than
+    true and false is.
 
 - id: GFF-ATT-017
   level: info
@@ -627,12 +665,14 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##sequence-region"}
   example: "##sequence-region ctg123 1497228"
   fix: "Write ##sequence-region ctg123 1 1497228."
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
-    Must start be 1? Must the directive come before the features on that
-    seqid, or may it appear anywhere (gt gff3 moves them to the top)?
+    Must start be 1? Must the directive come before the features on that seqid,
+    or may it appear anywhere (gt gff3 moves them to the top)? Until SO answers
+    question 10, a start other than 1 and a directive after the features on its
+    seqid are not reported. The fields are separated by whitespace.
 
 - id: GFF-DIR-002
   level: error
@@ -642,7 +682,7 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##sequence-region"}
   example: "##sequence-region ctg1 1 1000\n##sequence-region ctg1 1 2000"
   fix: Keep one directive covering the whole region.
-  status: planned
+  status: implemented
   review: pending-SO
   notes: An exact repeat (same bounds) could be a warning; proposal keeps it an error as the text says.
 
@@ -658,14 +698,19 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ###"}
   example: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Parent=g1\n###\nctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
   fix: Move "###" after the features it closes, or put parents before it.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The text says forward references are resolved; it does not say whether a
     later line may still name an earlier ID as Parent, or continue a
-    discontinuous feature (same ID) after "###". Streaming readers close
-    objects at "###", so both break them. Error or warning?
+    discontinuous feature (same ID) after "###". Streaming readers close objects
+    at "###", so both break them. Error or warning? Implemented for the part the
+    text states: a Parent or Derives_from seen before ### that names an ID first
+    defined after it (reported at the first such reference). Until SO answers
+    question 9, a later line naming an earlier ID, and the continuation of a
+    discontinuous feature after ###, are not reported. An ID that is never
+    defined is GFF-STR-004 or GFF-STR-005 instead.
 
 - id: GFF-DIR-004
   level: error
@@ -677,9 +722,12 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##FASTA"}
   example: "##FASTA\n>ctg1\nACGT\nctg1\t.\tgene\t1\t4\t.\t+\t.\tID=g1"
   fix: 'Move all feature lines before ##FASTA.'
-  status: planned
+  status: implemented
   review: pending-SO
-  notes: Are blank lines and "#" comments allowed inside the FASTA section?
+  notes: >-
+    Are blank lines and "#" comments allowed inside the FASTA section? Feature
+    lines (lines with a tab) and "##" directives after ##FASTA are reported;
+    blank lines and "#" comment lines are not, until SO answers.
 
 - id: GFF-DIR-005
   level: warning
@@ -689,7 +737,7 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##FASTA (implied by a line beginning with >)"}
   example: "ctg1\t.\tgene\t1\t4\t.\t+\t.\tID=g1\n>ctg1\nACGT"
   fix: 'Insert a ##FASTA line before the first sequence.'
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: GFF-DIR-006
@@ -700,12 +748,16 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##FASTA"}
   example: "##FASTA\n>ctg1\n>ctg2\nACGT"
   fix: Give each sequence a unique id and its sequence lines.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
-    Which alphabet is accepted (IUPAC nucleotides, amino acids, lower case,
-    "*", "-")? Is the FASTA id the first word of the header?
+    Which alphabet is accepted (IUPAC nucleotides, amino acids, lower case, "*",
+    "-")? Is the FASTA id the first word of the header? Implemented without an
+    alphabet check: a header with no id, a repeated id, a record without
+    sequence lines, and sequence lines before the first header (once) are
+    reported. The id is taken as the first word of the header, as FASTA readers
+    do.
 
 - id: GFF-DIR-007
   level: warning
@@ -715,13 +767,15 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##species"}
   example: "##species Caenorhabditis elegans"
   fix: "Write ##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=6239."
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The specification gives http URLs only, as "preferred". Accept https,
     identifiers.org/NCBITaxon CURIEs (NCBITaxon:6239)? Proposal: warning only
-    when the value is not a URL or CURIE.
+    when the value is not a URL or CURIE. Until SO answers, anything other than
+    the two NCBI Taxonomy browser URL forms (http or https) is reported,
+    including NCBITaxon CURIEs.
 
 - id: GFF-DIR-008
   level: warning
@@ -731,9 +785,12 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##genome-build"}
   example: "##genome-build GRCh38"
   fix: "Give both, for example ##genome-build NCBI GRCh38.p14."
-  status: planned
+  status: implemented
   review: pending-SO
-  notes: An FHGFF3 header records the genome more precisely (checksum, accession, SeqCol).
+  notes: >-
+    An FHGFF3 header records the genome more precisely (checksum, accession,
+    SeqCol). Reported when fewer than two values are given; the content is not
+    checked.
 
 - id: GFF-DIR-009
   level: info
@@ -746,7 +803,7 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##feature-ontology, ##attribute-ontology, ##source-ontology"}
   example: "##feature-ontology http://song.cvs.sourceforge.net/viewvc/*checkout*/song/ontology/so.obo?revision=1.263"
   fix: None needed; to use another ontology, supply it locally (planned option).
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
@@ -762,7 +819,7 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: directives"}
   example: "##date 2026-10-08"
   fix: None needed.
-  status: planned
+  status: implemented
   review: pending-SO
   notes: >-
     Directives defined elsewhere (GVF ##file-version, ##reference-fasta) could
@@ -785,14 +842,17 @@ rules:
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=x1\nctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=x1;Parent=x1"
   valid: "ctg1\t.\tCDS\t1\t30\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t61\t90\t.\t+\t0\tID=c1;Parent=t1"
   fix: Give each feature its own ID.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The specification does not say what lines of one feature must share.
     Proposal: same type is required (error); seqid, strand and Parent
     differences are GFF-STR-002 and GFF-STR-003. Is that the intended reading?
-    IDs are compared after percent-decoding; confirm.
+    IDs are compared after percent-decoding; confirm. Until SO answers, lines
+    sharing an ID with different types are reported (one finding per later
+    line); IDs, Parent and Derives_from values are compared after percent-
+    decoding.
 
 - id: GFF-STR-002
   level: warning
@@ -802,13 +862,14 @@ rules:
   reference: {source: gff3, anchor: pathological-cases, section: "Pathological Cases: trans-spliced transcript"}
   example: "chr1\t.\tCDS\t1\t30\t.\t+\t0\tID=c1;Parent=t1\nchr2\t.\tCDS\t61\t90\t.\t-\t0\tID=c1;Parent=t1"
   fix: Check that the lines are parts of the same feature.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Trans-splicing between strands or chromosomes is biologically real; the
-    specification's trans-splicing example stays on one strand and seqid.
-    Should a change of seqid or strand be allowed, warned or an error?
+    specification's trans-splicing example stays on one strand and seqid. Should
+    a change of seqid or strand be allowed, warned or an error? Implemented as a
+    warning until SO answers question 8.
 
 - id: GFF-STR-003
   level: warning
@@ -818,12 +879,13 @@ rules:
   reference: {source: gff3, anchor: the-canonical-gene, section: The Canonical Gene}
   example: "ctg1\t.\tCDS\t1\t30\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t61\t90\t.\t+\t0\tID=c1;Parent=t2"
   fix: Give the features different IDs, or the same Parent list.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
-    Can the Parent list legitimately be split across the lines of a feature
-    (the union being the parents)?
+    Can the Parent list legitimately be split across the lines of a feature (the
+    union being the parents)? Implemented as a warning until SO answers. For
+    GFF-STR-006 the union of the Parent lists is used.
 
 - id: GFF-STR-004
   level: error
@@ -835,8 +897,12 @@ rules:
   reference: {source: gff3, anchor: parent-part_of-relationships, section: "Parent (part_of) Relationships"}
   example: "ctg1\t.\texon\t1\t90\t.\t+\t.\tParent=mRNA0001"
   fix: Add the parent feature, or correct the ID (IDs are case sensitive).
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Checked at the end of the file; a reference that crosses a ### is GFF-
+    DIR-003. One finding per missing ID, at its first reference, with the number
+    of other referencing lines.
 
 - id: GFF-STR-005
   level: error
@@ -846,8 +912,11 @@ rules:
   reference: {source: gff3, anchor: pathological-cases, section: "Pathological Cases: polycistronic transcripts, intein"}
   example: "chrX\t.\tpolypeptide\t1\t90\t.\t+\t.\tID=p1;Derives_from=cds99"
   fix: Add the feature it derives from, or correct the ID.
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Checked at the end of the file, like GFF-STR-004. Commas in Derives_from are
+    read as separators (question 5).
 
 - id: GFF-STR-006
   level: error
@@ -857,8 +926,12 @@ rules:
   reference: {source: gff3, anchor: parent-part_of-relationships, section: "Parent (part_of) Relationships"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=a;Parent=b\nctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=b;Parent=a"
   fix: Remove the Parent that closes the loop.
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Checked at the end of the file by an iterative depth-first search over the
+    Parent graph of features with IDs (no recursion limit). A cycle is reported
+    at the line of its first-defined feature.
 
 - id: GFF-STR-007
   level: warning
@@ -868,10 +941,13 @@ rules:
   reference: {source: gff3, anchor: pathological-cases, section: "Pathological Cases"}
   example: "chrX\t.\tpolypeptide\t1\t90\t.\t+\t.\tID=p1;Derives_from=p2\nchrX\t.\tpolypeptide\t1\t90\t.\t+\t.\tID=p2;Derives_from=p1"
   fix: Remove the Derives_from that closes the loop.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
-  notes: The specification forbids Parent cycles only. Should Derives_from cycles be an error too?
+  notes: >-
+    The specification forbids Parent cycles only. Should Derives_from cycles be
+    an error too? Implemented as a warning, with the same search as GFF-STR-006,
+    until SO answers question 12.
 
 - id: GFF-STR-008
   level: error
@@ -883,11 +959,15 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##sequence-region"}
   example: "##sequence-region ctg1 1 1000\nctg1\t.\tgene\t900\t1200\t.\t+\t.\tID=g1"
   fix: 'Correct the coordinates or the ##sequence-region bounds.'
-  status: planned
+  status: implemented
   review: pending-SO
   notes: >-
     For a circular landmark, the bound is presumably 2 x length (end = position
-    past the origin + length); confirm.
+    past the origin + length); confirm. Until SO answers question 10, features
+    before the directive are also checked, and when any feature on the seqid has
+    Is_circular=true (which feature is the landmark is open, GFF-ATT-017) only
+    the start is checked; no 2 x length bound is applied. At most 100 lines per
+    seqid beyond the end are listed, then a count.
 
 - id: GFF-STR-009
   level: info
@@ -897,8 +977,11 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##sequence-region"}
   example: "##sequence-region ctg1 1 1000\nctg2\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
   fix: 'Add ##sequence-region lines for all sequences (optional).'
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Reported only when the file has at least one ##sequence-region; once per
+    seqid, at its first feature.
 
 - id: GFF-STR-010
   level: warning
@@ -908,12 +991,14 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##FASTA"}
   example: "ctg2\t.\tgene\t1\t4\t.\t+\t.\tID=g1\n##FASTA\n>ctg1\nACGT"
   fix: Add the sequence, or correct the seqid.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Not required by the specification; the FASTA section may hold only some
-    sequences (for example protein Targets). Warning or info?
+    sequences (for example protein Targets). Warning or info? Implemented as a
+    warning, once per seqid, at its first feature. The seqid is matched as
+    written, then percent-decoded (question 3).
 
 - id: GFF-STR-011
   level: error
@@ -923,8 +1008,11 @@ rules:
   reference: {source: gff3, anchor: other-syntax, section: "Other Syntax: ##FASTA"}
   example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\n##FASTA\n>ctg1\nACGT"
   fix: Correct the coordinates or the sequence.
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Reported once per seqid, at the feature that reaches furthest. For a seqid
+    with Is_circular=true only the start is checked.
 
 - id: GFF-STR-012
   level: info

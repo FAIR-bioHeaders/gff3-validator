@@ -1,0 +1,10 @@
+##gff-version 3
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=6239
+##genome-build WormBase ws110
+##sequence-region ctg1 1 100
+##sequence-region chr%231 1 50
+ctg1	my source	gene	1	90	.	+	.	ID=g1;Name=EDEN;Alias=eden,EDEN-1;Dbxref=EMBL:AA816246,NCBI_gi:10727410;Ontology_term=GO:0046703;Note=a%3Bb%2C c%3D d %26 e;gene_biotype=protein_coding;tags=a,b
+ctg1	.	mRNA	1	90	.	+	.	ID=t1;Parent=g1;Dbxref=MGI:MGI:12345
+ctg1	.	exon	1	90	.	+	.	Parent=t1
+ctg1	.	CDS	1	90	.	+	0	ID=c1;Parent=t1;Note=50%25 identity
+chr%231	.	region	1	50	.	+	.	ID=landmark1;Is_circular=false

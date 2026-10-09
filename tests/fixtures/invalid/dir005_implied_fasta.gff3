@@ -1,0 +1,8 @@
+##gff-version 3
+##sequence-region ctg1 1 100
+ctg1	.	gene	1	90	.	+	.	ID=g1
+ctg1	.	mRNA	1	90	.	+	.	ID=t1;Parent=g1
+ctg1	.	exon	1	90	.	+	.	Parent=t1
+ctg1	.	CDS	1	90	.	+	0	ID=c1;Parent=t1
+>ctg1
+ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT

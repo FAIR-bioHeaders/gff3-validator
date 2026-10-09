@@ -1,0 +1,14 @@
+##gff-version 3
+##sequence-region ctg123 1 1497228
+##sequence-region chr3 1 100
+chr3	.	match	1	23	.	+	.	ID=Match1;Target=EST23 1 21;Gap=M8 D3 M6 I1 M6
+ctg123	.	nucleotide_to_protein_match	100	129	.	+	.	ID=match008;Target=p101 1 10;Gap=M3 I1 M2 D1 M4
+ctg123	.	nucleotide_to_protein_match	200	227	.	+	.	ID=match009;Target=p102 1 10;Gap=M3 I1 M2 F1 M4
+ctg123	.	cDNA_match	1050	9000	6.2e-45	+	.	ID=match00001;Target=cdna0123 12 2964;Gap=M451 D3499 M501 D1499 M2001
+ctg123	.	cDNA_match	1050	1500	5.8e-42	+	.	ID=match00002;Target=cdna0123 12 462
+ctg123	.	cDNA_match	5000	5500	8.1e-43	+	.	ID=match00002;Target=cdna0123 463 963
+ctg123	.	cDNA_match	7000	9000	1.4e-40	+	.	ID=match00002;Target=cdna0123 964 2964
+ctg123	.	EST_match	2000	2500	.	+	.	ID=match003;Target=EST_B 1 500 -
+ctg123	.	cDNA_match	1200	9000	.	.	.	ID=cDNA00001
+ctg123	.	match_part	1200	3200	2.2e-30	+	.	ID=match00004;Parent=cDNA00001;Target=mjm1123.5 5 506;Gap=M301 D1499 M201
+ctg123	.	match_part	7000	9000	7.4e-32	-	.	ID=match00005;Parent=cDNA00001;Target=mjm1123%203 1 502 +;Gap=M101 D1499 M401

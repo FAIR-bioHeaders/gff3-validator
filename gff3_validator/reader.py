@@ -37,12 +37,13 @@ def open_input(source):
     return stream, owned
 
 
-def iter_lines(source):
+def iter_lines(source, on_invalid_utf8=None):
     """Yield ``(line_number, text)`` for each line of ``source``.
 
-    Text is decoded as UTF-8 (invalid bytes are replaced; GFF-SYN-006 will
-    report them) with the line feed removed. Carriage returns are kept, so
-    CRLF input stays visible to the rules.
+    Text is decoded as UTF-8 with the line feed removed. Invalid bytes are
+    replaced by U+FFFD and ``on_invalid_utf8(line_number)`` is called, if
+    given (GFF-SYN-006). Carriage returns are kept, so CRLF input stays
+    visible to the rules.
     """
     stream, owned = open_input(source)
     try:
@@ -59,7 +60,13 @@ def iter_lines(source):
             number += 1
             if raw.endswith(b"\n"):
                 raw = raw[:-1]
-            yield number, raw.decode("utf-8", errors="replace")
+            try:
+                text = raw.decode("utf-8")
+            except UnicodeDecodeError:
+                text = raw.decode("utf-8", errors="replace")
+                if on_invalid_utf8 is not None:
+                    on_invalid_utf8(number)
+            yield number, text
     finally:
         if owned is not None:
             owned.close()
