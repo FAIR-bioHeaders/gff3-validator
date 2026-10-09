@@ -121,8 +121,8 @@ files.
   found, 2 usage error or unreadable input (the run is then incomplete).
 - **Library** `gff3_validator.validate(path)` returning findings with rule id,
   level, line, column, message and fix.
-- **Web page** on the FAIR-bioHeaders site running the same engine in the
-  browser through Pyodide, so files never leave the computer.
+- **Web page** running the same engine in the browser through Pyodide, so
+  files never leave the computer (see [Use it in your browser](#use-it-in-your-browser)).
 - **Reports** in text, JSON, HTML (one self-contained file) and SARIF 2.1.0
   (for code-scanning annotations in CI).
 - **Repository profiles** (NCBI, Ensembl, Alliance) layered on the core rules,
@@ -224,6 +224,68 @@ lines (23,809 genes on both strands, 47,618 CDS of 1,066 codons) with a
 (14 s and 104 MiB on 3.9); without `###` lines, 140 MiB. The opt-in
 performance test includes this case
 (`GFF3_VALIDATOR_PERFORMANCE_GENOME_LINES` sets its size).
+
+## Use it in your browser
+
+<https://fair-bioheaders.github.io/gff3-validator/> (once GitHub Pages is
+enabled for this repository) runs the validator inside the page: the
+`gff3-validator` wheel built from this repository, in Python compiled to
+WebAssembly ([Pyodide](https://pyodide.org/)). Drop or pick a `.gff3` or
+`.gff3.gz` file, optionally add a genome FASTA for the biology checks and a
+translation table, choose how to treat a FAIR-bioHeaders header, and the page
+shows the HTML report and offers it, the JSON and the SARIF report for
+download. The reports are the ones `gff3-validate --format html|json|sarif`
+writes for the same file and options; CI checks this on every fixture
+(`web/test/parity.mjs`).
+
+**Privacy.** Your files are read by the page and never uploaded. After the
+page has loaded, the only requests are for the Python runtime and PyYAML from
+one pinned Pyodide release on `cdn.jsdelivr.net` and for the validator wheel
+from the page's own site. The page's Content-Security-Policy (a meta tag; the
+validator runs in a Web Worker started from a `blob:` URL, which inherits it)
+allows connections only to the site itself and to that Pyodide release, so the
+page could not send a file elsewhere even by mistake. `pyodide.js` and
+`pyodide-lock.json` are loaded with Subresource Integrity (sha384, in
+[web/pyodide.json](web/pyodide.json)); the lock file pins the sha256 of
+PyYAML, and the page checks the wheel against the sha256 in its
+`manifest.json`. The rest of the Pyodide runtime (`pyodide.asm.mjs`, the
+WebAssembly binary and the standard library) is loaded by `pyodide.js` from
+the same pinned release without SRI, because Pyodide offers no way to pass
+hashes for them.
+
+**Size limits.** The annotation is read from disk in 1 MiB slices and is never
+held in memory; memory grows with the number of feature IDs, as on the command
+line. Measured in headless Chrome (Pyodide 314.0.7, Python 3.14) on the
+synthetic files of the performance test:
+
+| Input | Time | WebAssembly memory |
+|---|---|---|
+| 1.1 million lines, 90 MB plain (1.05 million IDs) | 18 s | 155 MiB |
+| 3.3 million lines, 28 MB gzip (270 MB uncompressed, 3.15 million IDs) | 56 s | 387 MiB |
+| 524,000 lines (42 MB) with a 231 MiB genome, plain or gzip | 18 s | 90 to 108 MiB, plus the genome |
+
+That is two to three times slower than the CLI. A full vertebrate annotation
+(about 3 million lines) works. Memory grows by about 120 bytes per ID and
+WebAssembly memory cannot exceed 4 GiB (browsers may stop a tab sooner), so
+files several times larger than those measured here (not tested) need the
+command line. The genome is copied into the page's memory (a gzip genome is also
+decompressed there), so genomes of a few hundred MB are fine and multi-GB
+genomes are not; use `gff3-validate --genome` for those.
+
+Build and try the page locally:
+
+```bash
+poetry run python scripts/build_web.py      # builds the wheel and web/dist
+python -m http.server -d web/dist 8000      # then open http://localhost:8000/
+```
+
+`.github/workflows/pages.yml` builds `web/dist`, runs the parity check and
+deploys to GitHub Pages on every push to `main` (and on demand). To bump
+Pyodide, run `poetry run python scripts/build_web.py --pin VERSION` (it
+downloads `pyodide.js` and `pyodide-lock.json` of that release, computes the
+SRI hashes, checks that PyYAML is included and rewrites `web/pyodide.json`),
+then `cd web/test && npm install --save-exact pyodide@VERSION`, rebuild and run
+`node web/test/parity.mjs --python "poetry run python"`.
 
 ## Development
 

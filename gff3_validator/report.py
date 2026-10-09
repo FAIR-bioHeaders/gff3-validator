@@ -23,6 +23,9 @@ SARIF_SCHEMA = (
     "sarif-schema-2.1.0.json"
 )
 SARIF_LEVELS = {"error": "error", "warning": "warning", "info": "note"}
+# Links open in a new tab, so they also work when the report is shown in a
+# sandboxed frame (as on the web page).
+LINK = ' target="_blank" rel="noopener noreferrer"'
 LEVEL_ORDER = {"error": 0, "warning": 1, "info": 2}
 LIMITATIONS = (
     "Pre-release: only the catalogue rules marked implemented are checked, and "
@@ -97,7 +100,7 @@ th[aria-sort=descending] button::after{content:" \\2193"}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .lvl{font-weight:600}.error .lvl{color:#b71c1c}.warning .lvl{color:#8a5300}
 .info .lvl{color:#285a8f}
-a{color:#0b57d0}code{font-size:.95em}
+a{color:#0b57d0}code{font-size:.95em}td code{white-space:nowrap}
 .note{color:#444}
 @media (prefers-color-scheme:dark){body{color:#e8e8e8;background:#161616}
 th,td{border-color:#333}caption,.note{color:#aaa}a{color:#8ab4f8}
@@ -176,13 +179,13 @@ def to_html(report, catalogue=None):
         f"<dt>FAIR-bioHeaders header lines</dt><dd>{report.header_lines}</dd>",
         f"<dt>Validator</dt><dd>gff3-validator {e(__version__)}</dd>",
         f"<dt>Rule catalogue</dt><dd>{e(report.catalogue_version)} "
-        f'(<a href="{e(RULES_URL)}">rules</a>)</dd>',
+        f'(<a href="{e(RULES_URL)}"{LINK}>rules</a>)</dd>',
     ]
     for key, label in (("gff3", "Specification"), ("so", "Sequence Ontology")):
         source = catalogue.sources.get(key)
         if source:
             out.append(
-                f'<dt>{label}</dt><dd><a href="{e(source["url"])}">'
+                f'<dt>{label}</dt><dd><a href="{e(source["url"])}"{LINK}>'
                 f'{e(source["title"])}</a></dd>'
             )
     out += [
@@ -239,7 +242,7 @@ def to_html(report, catalogue=None):
                 f'data-level="{LEVEL_ORDER.get(finding.level, 3)}">'
                 f'<td class="num">{line}</td><td class="num">{column}</td>'
                 f'<td class="lvl">{e(finding.level)}</td>'
-                f'<td><a href="{e(rule_url(finding.rule))}">'
+                f'<td><a href="{e(rule_url(finding.rule))}"{LINK}>'
                 f"<code>{e(finding.rule)}</code></a></td>"
                 f"<td>{e(finding.message)}</td><td>{e(fix)}</td></tr>"
             )

@@ -45,3 +45,29 @@ jobs:
           cd /tmp
           /tmp/wheel-check/bin/gff3-validate --version
           /tmp/wheel-check/bin/gff3-validate "$GITHUB_WORKSPACE/tests/fixtures/valid/canonical_gene.gff3"
+
+  web:
+    # The in-browser page's engine (the wheel in Pyodide, through web/glue.js)
+    # must give the same JSON, SARIF and HTML reports as the CLI.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: |
+          python -m pip install poetry
+          poetry install
+      - name: Build web/dist
+        run: poetry run python scripts/build_web.py
+      - name: Pyodide parity with the CLI
+        run: |
+          (cd web/test && npm ci --no-audit --no-fund)
+          node web/test/parity.mjs --python "poetry run python"

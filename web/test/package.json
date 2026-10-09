@@ -1,0 +1,12 @@
+{
+  "name": "gff3-validator-web-parity",
+  "private": true,
+  "description": "Checks that the in-browser validator (Pyodide) gives the same reports as the CLI",
+  "type": "module",
+  "scripts": {
+    "parity": "node parity.mjs"
+  },
+  "dependencies": {
+    "pyodide": "314.0.7"
+  }
+}
