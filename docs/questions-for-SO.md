@@ -156,6 +156,21 @@ Each question is marked with what we need:
     frameshift, selenocysteine or stop-codon readthrough be marked, so phase,
     start, stop and internal-stop checks can exempt them?
     ([BIO-004](rules.md#bio-004) to [BIO-008](rules.md#bio-008))
+    For translation exceptions the SO/NCBI discussion in
+    [SO-Ontologies#658](https://github.com/The-Sequence-Ontology/SO-Ontologies/issues/658)
+    converges on a `recoded_codon` (SO:0000145) feature, or a subtype such as
+    `stop_codon_redefined_as_selenocysteine` (SO:0000885), that is a child
+    (`Parent=`) of the CDS and carries `recoded_amino_acid=<amino acid name>`
+    (`amino_acid` for other or unknown), split over several lines with one ID
+    when the codon spans a splice junction. The validator already exempts
+    codons covered by such features (and, as a fallback, NCBI's
+    `transl_except` attribute on the CDS), pending SO confirmation. Partial
+    CDS and frameshifts remain open: `partial`, `start_range` and `end_range`
+    are not honoured, so these rules stay warnings.
+18. **Strand within a gene.** Without the SO layer the validator compares the
+    strand of every child with its Parent (when both are `+` or `-`). Should
+    this be limited to gene parts, and how should trans-splicing be marked?
+    ([BIO-010](rules.md#bio-010))
 
    **Choose.** GFF3 defines no standard marker. Proposed: for translation
    exceptions, follow the convention SO and NCBI are converging on in
@@ -177,6 +192,10 @@ Found while drafting; each makes users copy invalid GFF3.
 - The single-exon and polycistronic examples have CDS lines with phase `.`
   and use `name=` for Name. ([GFF-SYN-019](rules.md#gff-syn-019),
   [GFF-ATT-008](rules.md#gff-att-008))
+- In the canonical gene, cds00001 and cds00002 have 2305 and 1402 coding
+  bases, one more than a whole number of codons (their last segment, 7000 to
+  7600, is one base longer than the frame needs), while cds00003 and cds00004
+  end on a codon boundary at 7600. ([BIO-009](rules.md#bio-009))
 - Dbxref and Ontology_term examples are quoted. ([GFF-ATT-009](rules.md#gff-att-009))
 - The accession pattern is written `SO:000000` (six digits).
   ([SO-002](rules.md#so-002))

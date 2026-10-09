@@ -28,7 +28,9 @@ David and Adam are the maintainers and jointly hold release authority
 `gff3_validator/reader.py` opens plain, gzip/BGZF or stdin input and yields
 lines. `rules.py` loads the packaged catalogue (`gff3_validator/catalogue.yaml`,
 a generated copy of `rules/catalogue.yaml`). `engine.py` runs the checks in
-`checks/` and collects `Finding`s; `header.py` holds the optional FHGFF3 hook;
+`checks/` and collects `Finding`s; `genome.py` indexes the `--genome` FASTA and reads slices on demand;
+`codons.py` holds the NCBI translation tables used by `checks/biology.py`;
+`header.py` holds the optional FHGFF3 hook;
 `report.py` renders text and JSON; `cli.py` is the `gff3-validate` command.
 `scripts/render_rules.py` generates `docs/rules.md`, the packaged copy and the
 README rule list. Tests and fixtures are in `tests/`.

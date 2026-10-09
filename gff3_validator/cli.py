@@ -6,7 +6,7 @@ Exit codes: 0 no errors, 1 errors found, 2 usage error or unreadable input.
 import argparse
 import sys
 
-from gff3_validator import __version__
+from gff3_validator import __version__, codons
 from gff3_validator.engine import DEFAULT_MAX_FINDINGS, Validator
 from gff3_validator.reader import InputError
 from gff3_validator.report import to_json, to_text
@@ -34,7 +34,17 @@ def build_parser():
     parser.add_argument(
         "--genome",
         metavar="FASTA",
-        help="genome for biology checks (planned; accepted but not used yet)",
+        help="genome FASTA (plain or gzip/BGZF, not stdin) for the biology "
+        "checks; gzip input is decompressed to a temporary file in TMPDIR",
+    )
+    parser.add_argument(
+        "--translation-table",
+        type=int,
+        metavar="N",
+        choices=sorted(codons.TABLES),
+        help=f"NCBI translation table for start, stop and internal stop codons "
+        f"(default {codons.DEFAULT_TABLE}; use 11 for bacteria, archaea and "
+        f"plastids); one of {', '.join(map(str, sorted(codons.TABLES)))}",
     )
     parser.add_argument(
         "--max-findings",
@@ -49,10 +59,16 @@ def build_parser():
 
 
 def main(argv=None):
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.translation_table is not None and not args.genome:
+        parser.error("--translation-table needs --genome")
     mode = "require" if args.require_header else "skip" if args.no_header else "auto"
     validator = Validator(
-        header_mode=mode, genome=args.genome, max_findings=args.max_findings
+        header_mode=mode,
+        genome=args.genome,
+        max_findings=args.max_findings,
+        translation_table=args.translation_table or codons.DEFAULT_TABLE,
     )
     try:
         report = validator.validate(args.input, name=args.input)

@@ -3,9 +3,10 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from gff3_validator import header
+from gff3_validator import codons, header
 from gff3_validator.checks import syntax
 from gff3_validator.checks.attributes import parse_attributes
+from gff3_validator.checks.biology import Biology
 from gff3_validator.checks.directives import (
     FastaSection,
     check_directive,
@@ -14,6 +15,7 @@ from gff3_validator.checks.directives import (
 )
 from gff3_validator.checks.structure import Structure
 from gff3_validator.findings import Finding
+from gff3_validator.genome import Genome
 from gff3_validator.reader import iter_lines
 from gff3_validator.rules import load_catalogue
 
@@ -72,7 +74,8 @@ class Validator:
 
     ``header_mode`` is ``"auto"`` (check a header when present), ``"require"``
     (``--require-header``) or ``"skip"`` (``--no-header``). ``genome`` is
-    accepted for the planned biology layer, which is not implemented.
+    the path of a genome FASTA (plain or gzip/BGZF); with it the biology rules
+    run, translating CDS with NCBI ``translation_table`` (default 1).
     """
 
     def __init__(
@@ -81,11 +84,18 @@ class Validator:
         genome: Optional[str] = None,
         max_findings=DEFAULT_MAX_FINDINGS,
         catalogue=None,
+        translation_table=codons.DEFAULT_TABLE,
     ):
         if header_mode not in header.MODES:
             raise ValueError(f"header_mode must be one of {header.MODES}")
+        if translation_table not in codons.TABLES:
+            raise ValueError(
+                f"translation table {translation_table} is not available; "
+                f"choose one of {sorted(codons.TABLES)}"
+            )
         self.header_mode = header_mode
         self.genome = genome
+        self.table = codons.table(translation_table)
         self.max_findings = max_findings
         self.catalogue = catalogue or load_catalogue()
 
@@ -102,8 +112,15 @@ class Validator:
     def validate(self, source, name=None) -> Report:
         """Validate ``source`` (path, ``"-"`` or binary stream).
 
-        Raises ``InputError`` if the input cannot be read completely.
+        Raises ``InputError`` if the input cannot be read completely, and
+        ``GenomeError`` (an ``InputError``) if the genome cannot be used.
         """
+        if self.genome is None:
+            return self._validate(source, name, None)
+        with Genome(self.genome) as genome:
+            return self._validate(source, name, genome)
+
+    def _validate(self, source, name, genome) -> Report:
         report = Report(
             source=name or str(source), catalogue_version=self.catalogue.version
         )
@@ -123,6 +140,7 @@ class Validator:
             emit("GFF-SYN-006", "line is not valid UTF-8", line=number)
 
         structure = Structure()
+        biology = None if genome is None else Biology(genome, self.table, structure)
         fasta = None
         version_seen = False
         for number, line in iter_lines(source, invalid_utf8):
@@ -156,6 +174,9 @@ class Validator:
                     fasta = self._directive(
                         report, emit, structure, number, line, version_seen
                     )
+                    if biology is not None and line.rstrip() == "###":
+                        for rule_id, at, message in biology.flush():
+                            emit(rule_id, message, line=at)
                     if number > 1 and line.startswith("##gff-version"):
                         version_seen = True
                 continue
@@ -188,6 +209,17 @@ class Validator:
                 number, fields[0], fields[2], fields[6], coordinates, attributes
             ):
                 emit(rule_id, message, line=at)
+            if biology is not None:
+                for rule_id, at, message in biology.feature(
+                    number,
+                    fields[0],
+                    fields[2],
+                    fields[6],
+                    fields[7],
+                    coordinates,
+                    attributes,
+                ):
+                    emit(rule_id, message, line=at)
         if report.lines == 0:
             self._add(report, "GFF-SYN-001", "the input is empty")
         if fasta is not None:
@@ -195,12 +227,15 @@ class Validator:
                 emit(rule_id, message, line=at)
         for rule_id, at, message in structure.finish():
             emit(rule_id, message, line=at)
+        if biology is not None:
+            for rule_id, at, message in biology.finish():
+                emit(rule_id, message, line=at)
         for rule_id, (message, line, column, count) in summary.items():
             if count > 1:
                 message += f" (and {count - 1} more like this in the file)"
             self._add(report, rule_id, message, line=line, field=column)
         self._finish_header(report)
-        self._record_skipped(report)
+        self._record_skipped(report, biology)
         return report
 
     def _directive(self, report, emit, structure, number, line, version_seen):
@@ -249,7 +284,7 @@ class Validator:
         )
         report.skipped.append({"layer": "fhgff3", "reason": reason})
 
-    def _record_skipped(self, report):
+    def _record_skipped(self, report, biology):
         planned = [
             rule.id
             for rule in self.catalogue
@@ -264,12 +299,16 @@ class Validator:
                 }
             )
         report.skipped.append({"layer": "so", "reason": "not implemented"})
-        reason = (
-            "not implemented (--genome was given but is not used yet)"
-            if self.genome
-            else "not implemented; would need --genome"
-        )
-        report.skipped.append({"layer": "biology", "reason": reason})
+        if biology is None:
+            report.skipped.append(
+                {"layer": "biology", "reason": "not run; needs --genome"}
+            )
+            return
+        reasons = biology.skip_reasons()
+        if reasons:
+            report.skipped.append(
+                {"layer": "biology", "reason": "partial: " + "; ".join(reasons)}
+            )
 
 
 def validate(source, **options) -> Report:

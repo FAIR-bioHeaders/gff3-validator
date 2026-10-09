@@ -254,6 +254,13 @@ class Structure:
                 if start > high:
                     sequence.more[1] += 1
 
+    def strand_of(self, identifier):
+        """The strand of the first line with ID ``identifier``, if seen yet."""
+        node = self.index.get(identifier)
+        if node is None or self.first_line[node] == 0:
+            return None
+        return self.combos[self.combo[node]][2]
+
     # -- FASTA ----------------------------------------------------------
 
     def fasta_record(self, name, length):

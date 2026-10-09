@@ -1,0 +1,2 @@
+##gff-version 3
+chr1	.	CDS	11	30	.	.	0	ID=cds1
