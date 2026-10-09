@@ -1,0 +1,150 @@
+name: Release
+
+# NOT READY FOR USE. gff3-validator is pre-release (0.0.1.dev0) and must not be
+# published until the rule catalogue has been reviewed (FHR-Specification #62).
+# Before the first release a maintainer must create a PyPI *pending* trusted
+# publisher for the project "gff3-validator" (owner FAIR-bioHeaders, repository
+# gff3-validator, workflow release.yml, environment pypi) and a "pypi"
+# environment in this repository. Recheck that the PyPI name is still free.
+#
+# Pushing a version tag (vX.Y.Z) builds, tests and publishes that version: the
+# wheel and sdist are attached to a GitHub release (which Zenodo can archive)
+# and published to PyPI through trusted publishing, with no stored token.
+
+on:
+  push:
+    tags: ['v*.*.*']
+  # Re-publish an existing release's files to PyPI, uploading only what PyPI is
+  # missing. Use this when the pypi job failed after the GitHub release was made.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish to PyPI (for example v0.1.0)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Install Poetry
+        run: python -m pip install poetry==2.3.2
+      - name: Check the tag matches the package version
+        run: |
+          version="$(poetry version --short)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match gff3-validator $version" >&2
+            exit 1
+          fi
+      - name: Test
+        run: |
+          poetry install
+          poetry run pytest
+          poetry run python scripts/render_rules.py --check
+      - name: Build wheel and source distribution
+        run: |
+          poetry build
+          ls dist
+          test "$(ls dist | wc -l)" -eq 2
+          sha256sum dist/*
+      - name: Check the built wheel installs and runs outside the checkout
+        run: |
+          python -m venv /tmp/release-check
+          /tmp/release-check/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/release-check/bin/gff3-validate --version
+          /tmp/release-check/bin/gff3-validate "$GITHUB_WORKSPACE/tests/fixtures/valid/canonical_gene.gff3"
+          /tmp/release-check/bin/python -W error -c "import gff3_validator"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  github-release:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - name: Create the GitHub release from the CHANGELOG entry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## " v " " { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "No CHANGELOG entry for $version" >&2
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag \
+            --title "gff3-validator $GITHUB_REF_NAME" --notes-file notes.md
+
+  pypi:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Needs a (pending) trusted publisher on PyPI for this repository, workflow
+    # and environment; see the note at the top of this file.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/gff3-validator/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          skip-existing: true
+
+  pypi-existing-release:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/gff3-validator/
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download the release's wheel and sdist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern '*.whl' --pattern '*.tar.gz' --dir dist
+          ls dist
+          test "$(ls dist | wc -l)" -eq 2
+          sha256sum dist/*
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          skip-existing: true

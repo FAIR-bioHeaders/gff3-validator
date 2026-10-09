@@ -1,0 +1,47 @@
+name: Python CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python: ['3.9', '3.13']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          python -m pip install poetry
+          poetry install
+      - name: Test
+        run: poetry run pytest
+      - name: Rule catalogue, docs/rules.md and README rule list are in sync
+        run: poetry run python scripts/render_rules.py --check
+      - name: Lint and formatting
+        run: |
+          poetry run ruff check .
+          poetry run isort . --check-only
+          poetry run black . --check
+      - name: Build wheel and source distribution
+        run: poetry build
+      - name: Check the built wheel installs and runs outside the checkout
+        run: |
+          python -m venv /tmp/wheel-check
+          /tmp/wheel-check/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/wheel-check/bin/gff3-validate --version
+          /tmp/wheel-check/bin/gff3-validate "$GITHUB_WORKSPACE/tests/fixtures/valid/canonical_gene.gff3"
