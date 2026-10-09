@@ -1,0 +1,2 @@
+##gff-version 3
+ctg1	.	exon	1	90	.	+	.	Parent=mRNA0001

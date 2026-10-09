@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Conformance suite (`conformance/`, FHR-Specification #68, spec 009
+  FR-012): 92 small cases (53 valid, 39 invalid; 67 settled by GFF3 1.26, 22
+  depending on an open SO question, 3 for the FHGFF3 header layer) covering
+  all 68 implemented rules, with a manifest of expected verdicts and findings.
+  `scripts/make_conformance.py` generates it byte-identically;
+  `scripts/check_conformance.py` checks it and scores gff3-validator (full
+  findings) or any other tool (exit status). CI runs it against the CLI.
+  docs/EVALUATION.md adds a GenomeTools score on the specification-settled
+  cases.
+
 ## 0.1.0 — 2026-10-09
 
 First release. 68 of 88 catalogue rules are implemented; the Sequence

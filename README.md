@@ -289,6 +289,20 @@ SRI hashes, checks that PyYAML is included and rewrites `web/pyodide.json`),
 then `cd web/test && npm install --save-exact pyodide@VERSION`, rebuild and run
 `node web/test/parity.mjs --python "poetry run python"`.
 
+## Conformance suite
+
+[`conformance/`](conformance/README.md) holds small GFF3 files (valid and
+invalid, plain and compressed, with a tiny genome for the biology rules) and a
+manifest giving each file's expected verdict, findings, GFF3 1.26 section and
+status (settled by the specification, or depending on an open SO question).
+It covers every implemented rule and is meant for any GFF3 tool, not just
+this one:
+
+```bash
+python scripts/check_conformance.py --gff3-validate gff3-validate          # full findings
+python scripts/check_conformance.py --command 'gt gff3validator {file}'    # exit status only
+```
+
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). The rule catalogue is the source of

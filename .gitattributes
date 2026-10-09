@@ -1,0 +1,4 @@
+# The conformance suite is byte-exact (CRLF, BOM and Latin-1 cases): never
+# convert line endings or re-encode these files.
+conformance/** -text
+conformance/**/*.gz binary

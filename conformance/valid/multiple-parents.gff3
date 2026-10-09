@@ -1,0 +1,7 @@
+##gff-version 3
+ctg1	.	gene	1	300	.	+	.	ID=g1
+ctg1	.	mRNA	1	300	.	+	.	ID=t1;Parent=g1
+ctg1	.	mRNA	1	300	.	+	.	ID=t2;Parent=g1
+ctg1	.	exon	1	100	.	+	.	Parent=t1,t2
+ctg1	.	exon	201	300	.	+	.	ID=e2;Parent=t1,t2
+###

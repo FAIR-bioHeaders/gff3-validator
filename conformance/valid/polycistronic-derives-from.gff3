@@ -1,0 +1,6 @@
+##gff-version 3
+chrX	.	gene	100	900	.	+	.	ID=gene01
+chrX	.	mRNA	100	900	.	+	.	ID=mRNA01;Parent=gene01
+chrX	.	CDS	200	400	.	+	0	ID=cds01;Parent=mRNA01
+chrX	.	polypeptide	200	400	.	+	.	Derives_from=cds01
+###
