@@ -37,6 +37,7 @@ Each question is marked with what we need:
 | 15 | Parent and part_of | SO expertise |
 | 16 | Derives_from typing | SO expertise |
 | 17 | Partial and exceptional CDS | Choose |
+| 18 | Strand within a gene | Choose |
 
 ## Decisions on the core format
 
@@ -156,21 +157,6 @@ Each question is marked with what we need:
     frameshift, selenocysteine or stop-codon readthrough be marked, so phase,
     start, stop and internal-stop checks can exempt them?
     ([BIO-004](rules.md#bio-004) to [BIO-008](rules.md#bio-008))
-    For translation exceptions the SO/NCBI discussion in
-    [SO-Ontologies#658](https://github.com/The-Sequence-Ontology/SO-Ontologies/issues/658)
-    converges on a `recoded_codon` (SO:0000145) feature, or a subtype such as
-    `stop_codon_redefined_as_selenocysteine` (SO:0000885), that is a child
-    (`Parent=`) of the CDS and carries `recoded_amino_acid=<amino acid name>`
-    (`amino_acid` for other or unknown), split over several lines with one ID
-    when the codon spans a splice junction. The validator already exempts
-    codons covered by such features (and, as a fallback, NCBI's
-    `transl_except` attribute on the CDS), pending SO confirmation. Partial
-    CDS and frameshifts remain open: `partial`, `start_range` and `end_range`
-    are not honoured, so these rules stay warnings.
-18. **Strand within a gene.** Without the SO layer the validator compares the
-    strand of every child with its Parent (when both are `+` or `-`). Should
-    this be limited to gene parts, and how should trans-splicing be marked?
-    ([BIO-010](rules.md#bio-010))
 
    **Choose.** GFF3 defines no standard marker. Proposed: for translation
    exceptions, follow the convention SO and NCBI are converging on in
@@ -187,6 +173,16 @@ Each question is marked with what we need:
    both ends there until the INSDC draft settles it. Is this the convention SO
    will recommend?
 
+18. **Strand within a gene.** Without the SO layer the validator compares the
+    strand of every child with its Parent (when both are `+` or `-`). Should
+    this be limited to gene parts, and how should trans-splicing be marked?
+    ([BIO-010](rules.md#bio-010))
+
+   **Choose.** Proposed: once the SO layer exists, check strand only along
+   part_of chains (gene → transcript → exon/CDS); until then, every Parent edge
+   is checked, as a warning. Exempt features marked `exception=trans-splicing`,
+   mirroring the INSDC `/exception="trans-splicing"` qualifier. Is there a
+   better marker?
 
 ## Suggested corrections to the specification text
 
