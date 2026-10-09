@@ -305,3 +305,63 @@ def test_cli_genome_and_table_options(tmp_path):
     result = run("--genome", "-", VALID)
     assert result.returncode == 2
     assert b"standard input" in result.stderr
+
+
+# -- partial CDS markers (question 17; SO-Ontologies#685) --------------------
+
+
+@pytest.mark.parametrize(
+    "attribute, expected",
+    [
+        ("", ["BIO-006", "BIO-007"]),
+        (";partial=start", ["BIO-007"]),  # INSDC: 5' end partial on +
+        (";partial=end", ["BIO-006"]),
+        (";partial=start,end", []),
+        (";partial=true", []),
+        (";start_range=.,1", ["BIO-007"]),  # legacy GVF: low genomic end
+        (";end_range=12,.", ["BIO-006"]),
+    ],
+)
+def test_partial_markers_plus_strand(tmp_path, attribute, expected):
+    # CCC GCT GCT GGG: no start codon and no stop codon.
+    path = tmp_path / "g.fa"
+    path.write_bytes(fasta([(b"c", b"CCCGCTGCTGGG")]))
+    report = validate(gff3("c . CDS 1 12 . + 0 ID=x" + attribute), genome=path)
+    found = rules(report)
+    # A partial marker that exempts a check is reported as skipped (BIO-011).
+    assert ("BIO-011" in found) == bool(attribute)
+    assert [rule for rule in found if rule != "BIO-011"] == expected
+
+
+@pytest.mark.parametrize(
+    "attribute, expected",
+    [
+        ("", ["BIO-006", "BIO-007"]),
+        # INSDC start/end on minus: genomic or 5'/3' not yet defined, so both
+        # ends are exempt, which is right under either reading.
+        (";partial=start", []),
+        (";partial=end", []),
+        # start_range is the low genomic end, the 3' end on minus.
+        (";start_range=.,1", ["BIO-006"]),
+        (";end_range=12,.", ["BIO-007"]),
+    ],
+)
+def test_partial_markers_minus_strand(tmp_path, attribute, expected):
+    coding = b"CCCGCTGCTGGG"
+    path = tmp_path / "g.fa"
+    path.write_bytes(fasta([(b"c", reverse_complement(coding))]))
+    report = validate(gff3("c . CDS 1 12 . - 0 ID=x" + attribute), genome=path)
+    found = rules(report)
+    assert ("BIO-011" in found) == bool(attribute)
+    assert [rule for rule in found if rule != "BIO-011"] == expected
+
+
+def test_partial_cds_skips_coding_length_and_keeps_internal_stops(tmp_path):
+    # ATG TAA CCC GC: the internal stop is still reported; the coding length
+    # (11) is not, since the 3' end is partial.
+    path = tmp_path / "g.fa"
+    path.write_bytes(fasta([(b"c", b"ATGTAACCCGC")]))
+    plain = validate(gff3("c . CDS 1 11 . + 0 ID=x"), genome=path)
+    partial = validate(gff3("c . CDS 1 11 . + 0 ID=x;partial=end"), genome=path)
+    assert "BIO-009" in rules(plain)
+    assert rules(partial) == ["BIO-008", "BIO-011"]

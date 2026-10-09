@@ -23,6 +23,17 @@ Translation exceptions (SO-Ontologies#658, question 17, pending SO): a codon
 covered by a ``recoded_codon`` feature (or a subtype) whose Parent is the CDS,
 or by a ``transl_except`` position on the CDS, is exempt from BIO-006 to
 BIO-009. A recoded codon may be split over several lines sharing one ID.
+
+Partial CDS (question 17, pending SO): INSDC will mark partial features with
+``partial=start``, ``partial=end`` or ``partial=start,end`` (Terence Murphy,
+SO-Ontologies#685), replacing the GVF-derived ``start_range`` and ``end_range``
+that NCBI has used; both are honoured, as is ``partial=true`` (both ends). A
+partial 5' end exempts the start codon (BIO-006), a partial 3' end the stop
+codon (BIO-007), and either exempts the coding length (BIO-009).
+``start_range`` and ``end_range`` refer to the low and high genomic
+coordinates. Until the INSDC draft defines whether ``start`` and ``end`` are
+genomic or 5'/3' on the minus strand, ``partial=start`` or ``partial=end`` on a
+minus-strand CDS exempts both ends, which is correct under either reading.
 """
 
 import re
@@ -64,7 +75,7 @@ Problem = Tuple[str, object, str]
 class Chain:
     """The lines of one CDS seen since the last ``###``."""
 
-    __slots__ = ("name", "seqid", "strand", "parents", "segments", "mixed")
+    __slots__ = ("name", "seqid", "strand", "parents", "segments", "mixed", "partial")
 
     def __init__(self, name, seqid, strand, parents):
         self.name = name
@@ -73,6 +84,29 @@ class Chain:
         self.parents = parents
         self.segments = array("q")  # start, end, phase (-1 if invalid), line
         self.mixed = False
+        self.partial = set()  # "5'" and/or "3'"
+
+
+def partial_ends(attributes, strand) -> set:
+    """The biologically partial ends ("5'", "3'") a CDS line marks."""
+    ends = set()
+    plus = strand == "+"
+    value = attributes.tags.get("partial")
+    if value is not None:
+        tokens = {token.strip().lower() for token in decode(value).split(",")}
+        if tokens & {"true", "yes", "1"}:
+            ends.update(("5'", "3'"))
+        insdc = tokens & {"start", "end"}
+        if insdc:
+            if plus:
+                ends.update("5'" if token == "start" else "3'" for token in insdc)
+            else:  # genomic or 5'/3' reading not yet defined: exempt both
+                ends.update(("5'", "3'"))
+    if "start_range" in attributes.tags:  # low genomic end (GVF)
+        ends.add("5'" if plus else "3'")
+    if "end_range" in attributes.tags:  # high genomic end (GVF)
+        ends.add("3'" if plus else "5'")
+    return ends
 
 
 class Biology:
@@ -149,6 +183,7 @@ class Biology:
             chain = self.chains[key] = Chain(name, seqid, strand, parents)
         elif chain.seqid != seqid or chain.strand != strand:
             chain.mixed = True  # GFF-STR-002 reports it
+        chain.partial.update(partial_ends(attributes, strand))
         chain.segments.extend(
             (start, end, int(phase) if phase in ("0", "1", "2") else -1, line)
         )
@@ -283,7 +318,9 @@ class Biology:
                 )
         coding = Coding(chain, segments, recoded)
         remainder = coding.length % 3
-        if (
+        if remainder and chain.partial:
+            self.skipped["partial CDS (coding length not judged)"] += 1
+        elif (
             coding.length > 0
             and remainder
             and not coding.covered(coding.length - remainder, remainder)
@@ -308,7 +345,9 @@ class Biology:
         scan = coding.scan(self.genome, name, self.table)
         table = f"translation table {self.table.id}"
         first = scan.first
-        if (
+        if "5'" in chain.partial:
+            self.skipped["5'-partial CDS (start codon not checked)"] += 1
+        elif (
             segments[0][2] == 0
             and ACGT.fullmatch(first)
             and first not in self.table.starts
@@ -337,7 +376,9 @@ class Biology:
                 + (f", and {more} more before its end" if more else ""),
             )
         last = scan.last
-        if (
+        if "3'" in chain.partial:
+            self.skipped["3'-partial CDS (stop codon not checked)"] += 1
+        elif (
             remainder == 0
             and ACGT.fullmatch(last)
             and last not in self.table.stops
