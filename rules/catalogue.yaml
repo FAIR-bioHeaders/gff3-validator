@@ -1286,8 +1286,15 @@ rules:
     GFF3 has no standard way to mark a partial CDS (attributes such as
     partial=true or start_range are profile-specific). The table is never
     inferred from the organism. How should incompleteness be expressed?
-    Implemented conservatively as a warning: since the specification defines no
-    partial marker, partial, start_range and end_range are not honoured. A CDS
+    Implemented as a warning. Partial markers: INSDC will use partial=start,
+    partial=end and partial=start,end (Terence Murphy, NCBI, in
+    SO-Ontologies#685), replacing the GVF-derived start_range and end_range
+    that NCBI has used; both, and partial=true, are honoured. A partial 5' end
+    exempts this check, a partial 3' end exempts BIO-007, and either exempts
+    BIO-009; exempted checks are counted in BIO-011. start_range and end_range
+    refer to the low and high genomic ends. Until the INSDC draft says whether
+    start and end are genomic or 5'/3', partial=start or partial=end on a minus-
+    strand CDS exempts both ends. A CDS
     whose first segment has phase 1 or 2 starts inside a codon by definition and
     is not judged, and a codon with bases other than A, C, G and T is not
     judged. The default table is 1 (--translation-table N; bacteria, archaea and

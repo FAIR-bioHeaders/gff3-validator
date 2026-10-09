@@ -179,8 +179,13 @@ Each question is marked with what we need:
    `stop_codon_redefined_as_selenocysteine`, with a `recoded_amino_acid=`
    attribute. The codon may be split across a splice junction as lines sharing
    one ID. The legacy `transl_except` attribute is honoured as a fallback. For
-   partial CDS, recognise `partial=true` and NCBI-style `start_range`/`end_range`.
-   Report everything else as warnings. Is this the convention SO will recommend?
+   partial CDS, follow INSDC, which will use `partial=start`, `partial=end` and
+   `partial=start,end` instead of the GVF-derived `start_range`/`end_range`
+   ([Terence Murphy, SO-Ontologies#685](https://github.com/The-Sequence-Ontology/SO-Ontologies/issues/685#issuecomment-6080389993));
+   the legacy attributes and `partial=true` are still honoured. Open: on the
+   minus strand, are `start` and `end` genomic or 5'/3'? The validator exempts
+   both ends there until the INSDC draft settles it. Is this the convention SO
+   will recommend?
 
 
 ## Suggested corrections to the specification text
