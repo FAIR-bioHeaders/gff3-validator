@@ -667,3 +667,6 @@ __pycache__/
 # In-browser page build output and the parity test's npm packages
 web/dist/
 web/test/node_modules/
+
+# Planemo test reports
+tool_test_output.*

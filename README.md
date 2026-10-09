@@ -289,6 +289,28 @@ SRI hashes, checks that PyYAML is included and rewrites `web/pyodide.json`),
 then `cd web/test && npm install --save-exact pyodide@VERSION`, rebuild and run
 `node web/test/parity.mjs --python "poetry run python"`.
 
+## Galaxy
+
+[`galaxy/`](galaxy/) holds a [Galaxy](https://galaxyproject.org/) tool
+wrapper (`gff3_validator`) that follows the
+[IUC standards](https://galaxy-iuc-standards.readthedocs.io/). It takes a
+GFF3 dataset (plain or gzip) and, optionally, a genome FASTA with a
+translation table for the biology rules and a FAIR-bioHeaders header mode. It
+always writes the HTML report, optionally the JSON and SARIF reports, and puts
+the text summary in the job's standard output. A file with errors (exit
+status 1) is a successful job; only an incomplete run (exit status 2) fails
+it. The tests use files from the conformance suite. Lint and test it with
+[Planemo](https://planemo.readthedocs.io/):
+
+```bash
+planemo lint --report_level warn galaxy/
+planemo test galaxy/gff3_validator.xml
+```
+
+The wrapper needs the `gff3-validator` Bioconda package. It will be submitted
+to [tools-iuc](https://github.com/galaxyproject/tools-iuc) (as
+`tools/gff3_validator`) once the Bioconda recipe is merged.
+
 ## Conformance suite
 
 [`conformance/`](conformance/README.md) holds small GFF3 files (valid and

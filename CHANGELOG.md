@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Galaxy tool wrapper (`galaxy/`, FHR-Specification #71): `gff3_validator`,
+  following the IUC standards, with HTML, JSON and SARIF reports, optional
+  genome and translation table, header mode and Planemo tests on conformance
+  files. To be submitted to tools-iuc once the Bioconda recipe is merged.
 - Conformance suite (`conformance/`, FHR-Specification #68, spec 009
   FR-012): 92 small cases (53 valid, 39 invalid; 67 settled by GFF3 1.26, 22
   depending on an open SO question, 3 for the FHGFF3 header layer) covering
