@@ -1,0 +1,4 @@
+##gff-version 3
+##sequence-region ctg1 1 100
+ctg1	.	gene	1	90	.	+	.	ID=a;Parent=b
+ctg1	.	mRNA	1	90	.	+	.	ID=b;Parent=a

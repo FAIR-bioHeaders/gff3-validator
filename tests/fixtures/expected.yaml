@@ -1,0 +1,27 @@
+# Expected rule ids for each fixture, taken from the catalogue rules (not from
+# any validator's output). Tests check the rules marked implemented; the other
+# ids document what the planned rules must report. Info-level findings that
+# every file gets (for example HDR-002 on a file with a header) are listed too.
+valid/canonical_gene.gff3: []
+valid/fasta_and_comments.gff3: []
+valid/fhgff3_header.gff3: [HDR-002]
+valid/zero_length_and_circular.gff3: []
+invalid/syn001_missing_version.gff3: [GFF-SYN-001]
+invalid/syn002_repeated_version.gff3: [GFF-SYN-002]
+invalid/syn003_spaces.gff3: [GFF-SYN-003]
+invalid/syn004_empty_column.gff3: [GFF-SYN-004]
+invalid/syn013_noninteger.gff3: [GFF-SYN-013]
+invalid/syn014_zero_start.gff3: [GFF-SYN-014]
+invalid/syn015_start_after_end.gff3: [GFF-SYN-015]
+invalid/syn016_bad_score.gff3: [GFF-SYN-016]
+invalid/syn017_bad_strand.gff3: [GFF-SYN-017]
+invalid/syn018_bad_phase.gff3: [GFF-SYN-018]
+invalid/syn019_cds_no_phase.gff3: [GFF-SYN-019]
+invalid/att001_gtf_attributes.gff3: [GFF-ATT-001]
+invalid/att008_lowercase_parent.gff3: [GFF-ATT-008]
+invalid/att011_bad_gap.gff3: [GFF-ATT-011]
+invalid/str001_duplicate_id.gff3: [GFF-STR-001]
+invalid/str004_unresolved_parent.gff3: [GFF-STR-004]
+invalid/str006_parent_cycle.gff3: [GFF-STR-006, SO-006]
+invalid/str008_outside_sequence_region.gff3: [GFF-STR-008]
+invalid/so001_unknown_type.gff3: [SO-001]
