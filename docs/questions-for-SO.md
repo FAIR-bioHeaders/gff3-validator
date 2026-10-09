@@ -157,7 +157,15 @@ Each question is marked with what we need:
     start, stop and internal-stop checks can exempt them?
     ([BIO-004](rules.md#bio-004) to [BIO-008](rules.md#bio-008))
 
-   **Choose.** GFF3 defines no standard marker. Proposed: recognise the common conventions (`partial=true`, NCBI-style `start_range`/`end_range`, and `transl_except` for selenocysteine and readthrough) to exempt CDS checks, and report the rest as warnings, until SO recommends a convention.
+   **Choose.** GFF3 defines no standard marker. Proposed: for translation
+   exceptions, follow the convention SO and NCBI are converging on in
+   [SO-Ontologies#658](https://github.com/The-Sequence-Ontology/SO-Ontologies/issues/658):
+   a `recoded_codon` (SO:0000145) child of the CDS, or a subtype such as
+   `stop_codon_redefined_as_selenocysteine`, with a `recoded_amino_acid=`
+   attribute. The codon may be split across a splice junction as lines sharing
+   one ID. The legacy `transl_except` attribute is honoured as a fallback. For
+   partial CDS, recognise `partial=true` and NCBI-style `start_range`/`end_range`.
+   Report everything else as warnings. Is this the convention SO will recommend?
 
 
 ## Suggested corrections to the specification text
