@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Document the MPL-2.0 transition for new project contributions from March 2025 onward, preserve historical permissions and third-party notices, and align README/package/citation licensing. No runtime behavior changes.
+
 - Galaxy tool wrapper (`galaxy/`, FHR-Specification #71): `gff3_validator`,
   following the IUC standards, with HTML, JSON and SARIF reports, optional
   genome and translation table, header mode and Planemo tests on conformance

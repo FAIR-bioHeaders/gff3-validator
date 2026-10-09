@@ -162,9 +162,9 @@ saying which case and why.
 
 ## License
 
-The suite (the GFF3, FASTA and manifest files, and the scripts) is under the
-repository's [MIT license](../LICENSE), like the rest of gff3-validator. The
-test files are small synthetic examples, several transcribed from the GFF3
-specification; you may copy them into other test suites freely. Keeping a
-note of where they came from is appreciated but, beyond the MIT notice, not
-required.
+New project contributions to the suite use [MPL-2.0](../LICENSE).
+The retained MIT notice continues to cover material previously distributed
+under MIT. Synthetic fixtures and scripts follow the applicable project
+terms; examples derived from external specifications retain their source
+attribution and any applicable upstream terms. See LICENSE and history
+for scope.

@@ -50,3 +50,7 @@ Not yet. The first release waits for the SO review of the catalogue and needs a
 PyPI pending trusted publisher (see `.github/workflows/release.yml`). Preparing
 a release does not authorize publishing, tagging or minting a DOI; those are
 maintainer actions.
+
+## License of contributions
+
+New project contributions from March 2025 onward use [MPL-2.0](LICENSE). The existing MIT notice is retained verbatim for previously MIT-licensed material; prior permissions remain available. Third-party code and assets retain their own terms. Consult LICENSE and version history for scope. New contributions must have the rights needed for their declared license; retain source notices.

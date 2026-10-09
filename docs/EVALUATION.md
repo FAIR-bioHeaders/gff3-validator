@@ -76,7 +76,7 @@ Python 3.13.
 | Wrong rules | `?` strand rejected; seqid character set applied to ID and Alias values; Target id looked up among feature IDs (it names an external sequence); Gap parsed as `int("M8")`; phase never required on CDS; a file "misses feature types" unless it uses every type in the schema. | GFF-SYN-017, -010, GFF-ATT-010, -011, GFF-SYN-019; the last check dropped. |
 | No percent-decoding, no `##gff-version`, no `##FASTA` | FASTA lines would be validated as features. | Reader state machine; GFF-SYN-001, GFF-DIR-004. |
 | Web app sends the file to a server | Flask upload saved to `uploads/` and never deleted; `debug=True`; hard-coded `secret_key`; Bootstrap from a CDN. The template has a syntax error (`{% endw ith %}`), is not in Flask's `templates/` directory, and `from .gff3_validator import` cannot import a file named `gff3-validator.py`. | Static page with Pyodide (#61, #69): the file stays local, no server, assets pinned. |
-| No tests, no licence | FHGFF3 and its upstream biodatamodels/gff-schema have no licence file. | New code under MIT; nothing copied. Ask biodatamodels before reusing any of its files. |
+| No tests, no licence | FHGFF3 and its upstream biodatamodels/gff-schema have no licence file. | Applicable new project contributions use MPL-2.0; nothing copied. Ask biodatamodels before reusing any of its files. |
 
 ## LinkML GFF3 model (biodatamodels/gff-schema, forked as FHGFF3)
 

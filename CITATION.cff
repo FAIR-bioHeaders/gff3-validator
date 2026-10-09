@@ -29,6 +29,7 @@ keywords:
 - Sequence Ontology
 - genome annotation
 - FAIR
-license: MIT
+license: MPL-2.0
+# Historical permissions and third-party exceptions are documented in LICENSE.
 version: 0.1.0
 date-released: 2026-10-09
