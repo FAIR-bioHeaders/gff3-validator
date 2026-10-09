@@ -30,4 +30,5 @@ keywords:
 - genome annotation
 - FAIR
 license: MIT
-version: 0.0.1.dev0
+version: 0.1.0
+date-released: 2026-10-09

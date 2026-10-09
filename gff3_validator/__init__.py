@@ -3,7 +3,7 @@
 Pre-release. Only the rules marked ``implemented`` in the catalogue are checked.
 """
 
-__version__ = "0.0.1.dev0"
+__version__ = "0.1.0"
 
 from gff3_validator.engine import Report, Validator, validate  # noqa: E402
 from gff3_validator.findings import Finding  # noqa: E402

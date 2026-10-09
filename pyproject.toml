@@ -2,7 +2,7 @@
 name = "gff3-validator"
 # Pre-release: not to be published until the rule catalogue is reviewed with the
 # Sequence Ontology group (FHR-Specification #62).
-version = "0.0.1.dev0"
+version = "0.1.0"
 description = "One-stop GFF3 validator: GFF3 1.26 syntax, structure and Sequence Ontology rules, plus optional FAIR-bioHeaders (FHGFF3) header checks"
 authors = ["Adam Wright <adam.wright@oicr.on.ca>", "David Molik <david.molik@usda.gov>"]
 license = "MIT"

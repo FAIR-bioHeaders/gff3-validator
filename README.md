@@ -3,13 +3,15 @@
 A one-stop validator for [GFF3](https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md)
 annotation files, built by FAIR-bioHeaders with the Sequence Ontology (SO) group.
 
-> **Status: pre-release (0.0.1.dev0).** The rule catalogue is a draft under
+> **Status: early release (0.1.0).** The rule catalogue is a draft under
 > review with the Sequence Ontology group
 > ([FHR-Specification #62](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/62)).
 > The core syntax, attribute, directive and structure rules that the GFF3
 > specification settles are implemented, and the optional biology rules run
-> with `--genome`; Sequence Ontology and header rules are not yet. Nothing
-> has been published to PyPI or Bioconda. Do not rely on rule ids, levels or output formats yet.
+> with `--genome`; Sequence Ontology and header rules are not yet. Install
+> with `pip install gff3-validator`, or use it in the browser at
+> https://fair-bioheaders.github.io/gff3-validator/. Rule ids, levels and
+> output formats may still change before 1.0.
 
 ## Goal
 
