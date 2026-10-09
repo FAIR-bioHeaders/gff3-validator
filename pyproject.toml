@@ -36,6 +36,7 @@ pytest = [
     { version = "^9.0.3", python = ">=3.10" },
     { version = "^8.4.2", python = "<3.10" },
 ]
+jsonschema = ">=4.17"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/FAIR-bioHeaders/gff3-validator/issues"

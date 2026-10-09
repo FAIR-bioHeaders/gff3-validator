@@ -116,14 +116,15 @@ files.
 
 ## Planned interfaces
 
-- **CLI** `gff3-validate FILE [--genome genome.fa [--translation-table N]] [--format text|json]`, reading
+- **CLI** `gff3-validate FILE [--genome genome.fa [--translation-table N]] [--format text|json|html|sarif]`, reading
   plain, gzip/BGZF or stdin (`-`) input. Exit codes: 0 no errors, 1 errors
   found, 2 usage error or unreadable input (the run is then incomplete).
 - **Library** `gff3_validator.validate(path)` returning findings with rule id,
   level, line, column, message and fix.
 - **Web page** on the FAIR-bioHeaders site running the same engine in the
   browser through Pyodide, so files never leave the computer.
-- **Reports** in text and JSON now; HTML and optional SARIF later.
+- **Reports** in text, JSON, HTML (one self-contained file) and SARIF 2.1.0
+  (for code-scanning annotations in CI).
 - **Repository profiles** (NCBI, Ensembl, Alliance) layered on the core rules,
   later and only with each repository's review.
 - **Distribution** on PyPI and Bioconda, a Galaxy wrapper, an FHR-Nextflow

@@ -9,7 +9,9 @@ import sys
 from gff3_validator import __version__, codons
 from gff3_validator.engine import DEFAULT_MAX_FINDINGS, Validator
 from gff3_validator.reader import InputError
-from gff3_validator.report import to_json, to_text
+from gff3_validator.report import to_html, to_json, to_sarif, to_text
+
+FORMATS = {"text": to_text, "json": to_json, "html": to_html, "sarif": to_sarif}
 
 
 def build_parser():
@@ -20,7 +22,10 @@ def build_parser():
     )
     parser.add_argument("input", help="GFF3 file, plain or gzip/BGZF; - for stdin")
     parser.add_argument(
-        "--format", choices=("text", "json"), default="text", help="report format"
+        "--format",
+        choices=tuple(FORMATS),
+        default="text",
+        help="report format: text, JSON, a self-contained HTML page or SARIF 2.1.0",
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -75,6 +80,5 @@ def main(argv=None):
     except InputError as error:
         print(f"gff3-validate: {error}; validation incomplete", file=sys.stderr)
         return 2
-    output = to_json(report) if args.format == "json" else to_text(report)
-    sys.stdout.write(output)
+    sys.stdout.write(FORMATS[args.format](report))
     return 0 if report.valid else 1
