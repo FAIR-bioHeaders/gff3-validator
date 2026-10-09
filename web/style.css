@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light dark;
+  --fg: #1b1b1b;
+  --bg: #fff;
+  --muted: #555;
+  --line: #d0d0d0;
+  --accent: #0b57d0;
+  --ok: #1a7f37;
+  --bad: #c62828;
+  --panel: #f5f7fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e8e8e8;
+    --bg: #161616;
+    --muted: #aaa;
+    --line: #3a3a3a;
+    --accent: #8ab4f8;
+    --panel: #1f2329;
+  }
+}
+body {
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  margin: 0;
+}
+header, main, footer {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+header { padding-top: 1rem; }
+h1 { margin: 0.5rem 0 0.2rem; font-size: 1.7rem; }
+h2 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
+.tagline { margin-top: 0; color: var(--muted); }
+a { color: var(--accent); }
+.privacy {
+  background: var(--panel);
+  border-left: 0.35rem solid var(--ok);
+  padding: 0.2rem 1rem 0.4rem;
+  margin: 1rem 0;
+}
+.privacy h2 { margin-top: 0.6rem; }
+form { display: grid; gap: 1rem; }
+.drop {
+  border: 2px dashed var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.drop.over { border-color: var(--accent); background: var(--panel); }
+.hint, .chosen { margin: 0; color: var(--muted); }
+fieldset { border: 1px solid var(--line); border-radius: 0.5rem; }
+fieldset label { display: block; }
+details { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.5rem 1rem; }
+details[open] { display: grid; gap: 0.4rem; }
+details > label { font-weight: 600; }
+summary { cursor: pointer; font-weight: 600; }
+.warning { border-left: 0.3rem solid #b26a00; padding-left: 0.6rem; }
+.alert { color: var(--bad); font-weight: 600; }
+button {
+  font: inherit;
+  padding: 0.45rem 1rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  justify-self: start;
+}
+button.secondary, .downloads button { background: transparent; color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+progress { width: 100%; height: 0.8rem; }
+#verdict { font-weight: 600; padding: 0.5rem 0.8rem; border-left: 0.35rem solid; }
+#verdict.ok { border-color: var(--ok); }
+#verdict.bad { border-color: var(--bad); }
+iframe {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: #fff;
+}
+footer { color: var(--muted); padding-bottom: 2rem; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

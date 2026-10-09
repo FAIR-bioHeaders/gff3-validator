@@ -1,0 +1,8 @@
+{
+  "version": "314.0.7",
+  "base": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/",
+  "integrity": {
+    "pyodide.js": "sha384-hYKrcQ7FiKU7f1c92md9N2eh7BoBVX4CPkNDfQyyVclsjZevvDOBUkajGcYk1EF8",
+    "pyodide-lock.json": "sha384-o8SQQvpVlZnOl04+3dFTJipKxul9GbViVusA379wlOrfHSgxbzt0yPiqCTxOiYES"
+  }
+}

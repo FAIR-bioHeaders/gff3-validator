@@ -1,0 +1,15 @@
+sarif-schema-2.1.0.json is the JSON schema of the Static Analysis Results
+Interchange Format (SARIF) Version 2.1.0, Errata 01, OASIS Standard,
+copied unchanged from
+https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json
+(sha256 c3b4bb2d6093897483348925aaa73af03b3e3f4bd4ca38cef26dcb4212a2682e).
+It is used only by tests/test_reports.py, so that the tests never fetch it.
+
+Copyright (c) OASIS Open 2023. All Rights Reserved.
+
+This document and translations of it may be copied and furnished to others,
+and derivative works that comment on or otherwise explain it or assist in its
+implementation may be prepared, copied, published, and distributed, in whole
+or in part, without restriction of any kind, provided that the above
+copyright notice and this section are included on all such copies and
+derivative works. (OASIS IPR Policy, https://www.oasis-open.org/policies-guidelines/ipr/)

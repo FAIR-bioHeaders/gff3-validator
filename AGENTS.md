@@ -31,9 +31,12 @@ a generated copy of `rules/catalogue.yaml`). `engine.py` runs the checks in
 `checks/` and collects `Finding`s; `genome.py` indexes the `--genome` FASTA and reads slices on demand;
 `codons.py` holds the NCBI translation tables used by `checks/biology.py`;
 `header.py` holds the optional FHGFF3 hook;
-`report.py` renders text and JSON; `cli.py` is the `gff3-validate` command.
+`report.py` renders text, JSON, HTML and SARIF 2.1.0; `web.py` is the
+Python side of the in-browser page; `cli.py` is the `gff3-validate` command.
 `scripts/render_rules.py` generates `docs/rules.md`, the packaged copy and the
 README rule list. Tests and fixtures are in `tests/`.
+`web/` is the in-browser page (`glue.js` is shared by its worker and the
+Pyodide parity test in `web/test/`); `scripts/build_web.py` builds `web/dist`.
 
 ## Verification
 

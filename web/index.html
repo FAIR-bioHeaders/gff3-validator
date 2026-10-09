@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Generated into web/dist by scripts/build_web.py, which fills in the
+     pinned Pyodide URL and the hashes of the report's inline style and script. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' blob: {{PYODIDE_BASE}} 'wasm-unsafe-eval' {{REPORT_SCRIPT_HASH}}; worker-src blob:; connect-src 'self' {{PYODIDE_BASE}}; style-src 'self' {{REPORT_STYLE_HASH}}; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GFF3 validator in your browser</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<header>
+  <h1>GFF3 validator</h1>
+  <p class="tagline">Check a GFF3 file against GFF3 1.26 in your browser, with
+  the same engine as the <code>gff3-validate</code> command.</p>
+</header>
+<main>
+  <section class="privacy" aria-labelledby="privacy-title">
+    <h2 id="privacy-title">Your files stay on this computer</h2>
+    <p>The validator runs inside this page (Python compiled to WebAssembly,
+    <a href="https://pyodide.org/">Pyodide</a>). Your annotation and genome
+    files are read locally and are never uploaded. After the page has loaded,
+    the only network requests are for the Python runtime and its packages
+    from <code>cdn.jsdelivr.net</code> and for the validator itself from this
+    site; the page's Content-Security-Policy blocks every other connection.</p>
+  </section>
+
+  <form id="form" novalidate>
+    <div id="drop" class="drop" tabindex="-1">
+      <label for="gff3">GFF3 file (<code>.gff3</code>, <code>.gff</code>, or
+      gzip/BGZF <code>.gz</code>)</label>
+      <input id="gff3" name="gff3" type="file" accept=".gff3,.gff,.gz,.bgz,text/plain,application/gzip" required>
+      <p class="hint">or drop a file anywhere on this box.</p>
+      <p id="gff3-chosen" class="chosen" aria-live="polite"></p>
+    </div>
+
+    <fieldset>
+      <legend>FAIR-bioHeaders header</legend>
+      <label><input type="radio" name="header" value="auto" checked> Check a header if present</label>
+      <label><input type="radio" name="header" value="require"> Require a header (<code>--require-header</code>)</label>
+      <label><input type="radio" name="header" value="skip"> Skip header checks (<code>--no-header</code>)</label>
+    </fieldset>
+
+    <details id="biology">
+      <summary>Biology checks with a genome FASTA (optional, <code>--genome</code>)</summary>
+      <p class="warning" id="genome-warning">The genome is copied into the
+      browser's memory (gzip genomes need about twice their uncompressed size
+      while decompressed). A browser tab can usually use 1 to 2 GB, so genomes
+      above a few hundred MB may fail; use the command line for large
+      genomes.</p>
+      <label for="genome">Genome FASTA (plain or gzip)</label>
+      <input id="genome" name="genome" type="file" accept=".fa,.fasta,.fna,.fas,.gz,.bgz,text/plain,application/gzip">
+      <p id="genome-chosen" class="chosen" aria-live="polite"></p>
+      <label for="table">Translation table (<code>--translation-table</code>)</label>
+      <select id="table" name="table" disabled>
+        <option value="">1: Standard</option>
+      </select>
+      <button type="button" id="clear-genome" class="secondary">Remove genome</button>
+    </details>
+
+    <button type="submit" id="run" disabled>Validate</button>
+  </form>
+
+  <section id="status" aria-labelledby="status-title">
+    <h2 id="status-title" class="visually-hidden">Progress</h2>
+    <p id="status-text" role="status" aria-live="polite">Loading the Python runtime...</p>
+    <progress id="progress" max="1" aria-labelledby="status-text"></progress>
+  </section>
+
+  <section id="results" hidden aria-labelledby="results-title">
+    <h2 id="results-title">Report</h2>
+    <p id="verdict"></p>
+    <p class="downloads">Download:
+      <button type="button" data-download="html">HTML report</button>
+      <button type="button" data-download="json">JSON</button>
+      <button type="button" data-download="sarif">SARIF</button>
+    </p>
+    <iframe id="report" title="Validation report" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+  </section>
+
+  <section aria-labelledby="limits-title">
+    <h2 id="limits-title">Limits</h2>
+    <p>Files are read in slices, so the annotation itself is not held in
+    memory, but Python in the browser is slower than on the command line and
+    a tab's memory is limited. See the
+    <a href="https://github.com/FAIR-bioHeaders/gff3-validator#use-it-in-your-browser">README</a>
+    for measured sizes. The validator is a pre-release: only the rules marked
+    implemented in the <a href="https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/rules.md">rule catalogue</a>
+    are checked, and the report lists what was not checked.</p>
+  </section>
+</main>
+<footer>
+  <p><a href="https://github.com/FAIR-bioHeaders/gff3-validator">gff3-validator</a>
+  <span id="engine-version"></span> by FAIR-bioHeaders. MIT licence.</p>
+</footer>
+</body>
+</html>
