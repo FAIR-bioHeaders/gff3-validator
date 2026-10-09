@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 — 2026-10-09
+
+First release. 68 of 88 catalogue rules are implemented; the Sequence
+Ontology rules await the SO review. Also usable in the browser at
+https://fair-bioheaders.github.io/gff3-validator/.
+
 
 - Repository bootstrapped: package skeleton, draft rule catalogue
   (FHR-Specification #62), evaluation of existing validators (#63). Not released.

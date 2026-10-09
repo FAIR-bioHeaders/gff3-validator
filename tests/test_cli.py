@@ -154,4 +154,4 @@ def test_genome_option_runs_biology_checks():
 def test_version():
     result = run("--version")
     assert result.returncode == 0
-    assert result.stdout.strip() == b"0.0.1.dev0"
+    assert result.stdout.strip() == b"0.1.0"

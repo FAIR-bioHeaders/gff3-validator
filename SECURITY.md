@@ -10,4 +10,4 @@ issue for a suspected vulnerability.
 The validator reads untrusted files. Crashes, unbounded memory or time on crafted
 input, and unescaped content in reports are in scope.
 
-`gff3-validator` is pre-release (0.0.1.dev0); no version is supported yet.
+`gff3-validator` 0.1.x is the supported release line.
