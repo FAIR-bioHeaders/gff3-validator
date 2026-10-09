@@ -23,9 +23,9 @@ Sources:
 | [GFF-DIR](#gff-dir) Directives | 10 | 10 | 0 | 5 |
 | [GFF-STR](#gff-str) Structure: IDs, references and bounds | 13 | 11 | 2 | 7 |
 | [SO](#so) Sequence Ontology | 8 | 0 | 8 | 6 |
-| [BIO](#bio) Biology (optional, with --genome) | 11 | 0 | 11 | 6 |
+| [BIO](#bio) Biology (optional, with --genome) | 11 | 11 | 0 | 6 |
 | [HDR](#hdr) FHGFF3 header (optional, FAIR-bioHeaders) | 9 | 3 | 6 | 0 |
-| **Total** | 88 | 57 | 31 | 45 |
+| **Total** | 88 | 68 | 20 | 45 |
 
 ## GFF-SYN
 
@@ -1451,23 +1451,23 @@ Biology (optional, with --genome)
 
 | Id | Level | Status | Title |
 |---|---|---|---|
-| [BIO-001](#bio-001) | error | planned | seqid is in the genome |
-| [BIO-002](#bio-002) | error | planned | Features fit within the genome sequence |
-| [BIO-003](#bio-003) | warning | planned | ##sequence-region agrees with the genome |
-| [BIO-004](#bio-004) | warning | planned | CDS phases are consistent |
-| [BIO-005](#bio-005) | warning | planned | CDS segments lie within exons |
-| [BIO-006](#bio-006) | warning | planned | CDS starts with a start codon |
-| [BIO-007](#bio-007) | warning | planned | CDS ends with a stop codon |
-| [BIO-008](#bio-008) | warning | planned | No internal stop codons |
-| [BIO-009](#bio-009) | info | planned | CDS length is a multiple of three |
-| [BIO-010](#bio-010) | warning | planned | Strand is consistent within a gene |
-| [BIO-011](#bio-011) | info | planned | Biology checks skipped |
+| [BIO-001](#bio-001) | error | implemented | seqid is in the genome |
+| [BIO-002](#bio-002) | error | implemented | Features fit within the genome sequence |
+| [BIO-003](#bio-003) | warning | implemented | ##sequence-region agrees with the genome |
+| [BIO-004](#bio-004) | warning | implemented | CDS phases are consistent |
+| [BIO-005](#bio-005) | warning | implemented | CDS segments lie within exons |
+| [BIO-006](#bio-006) | warning | implemented | CDS starts with a start codon |
+| [BIO-007](#bio-007) | warning | implemented | CDS ends with a stop codon |
+| [BIO-008](#bio-008) | warning | implemented | No internal stop codons |
+| [BIO-009](#bio-009) | info | implemented | CDS length is a multiple of three |
+| [BIO-010](#bio-010) | warning | implemented | Strand is consistent within a gene |
+| [BIO-011](#bio-011) | info | implemented | Biology checks skipped |
 
 ### BIO-001
 
 **seqid is in the genome**
 
-- Level: error; layer: biology; status: planned; review: pending-SO
+- Level: error; layer: biology; status: implemented; review: pending-SO
 - Reference: [FR-003, FR-005](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
 
 Every seqid names a sequence in the genome supplied with --genome.
@@ -1480,13 +1480,13 @@ Chr1→.→gene→1→90→.→+→.→ID=g1   (genome has chr1)
 
 Fix: Use the genome the annotation was made on, or the same sequence names. The validator does not map names.
 
-Notes: When no seqid matches, the genome is probably the wrong one; later biology checks are then skipped, not failed.
+Notes: Seqids of feature lines and of ##sequence-region lines are looked up as written and then percent-decoded; names are never mapped (chr1 and 1 differ). When no seqid matches, the genome is probably the wrong one: one BIO-001 error is reported for the file instead of one per seqid, and the codon checks are skipped (BIO-011), not failed.
 
 ### BIO-002
 
 **Features fit within the genome sequence**
 
-- Level: error; layer: biology; status: planned; review: pending-SO
+- Level: error; layer: biology; status: implemented; review: pending-SO
 - Reference: [Columns 4 & 5: start and end](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 A feature's end is not beyond the length of its sequence in the genome, unless the landmark is circular.
@@ -1499,11 +1499,13 @@ chr1→.→gene→1→2000→.→+→.→ID=g1   (chr1 is 1500 bp)
 
 Fix: Check the genome version and coordinates.
 
+Notes: On a circular landmark (Is_circular=true) only the start must lie within the sequence. Reported once per seqid, for the furthest feature, as GFF-STR-011 does for the ##FASTA section; a CDS beyond the sequence is not translated (BIO-011).
+
 ### BIO-003
 
 **##sequence-region agrees with the genome**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO
+- Level: warning; layer: biology; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##sequence-region](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 A ##sequence-region covering a whole sequence has the genome sequence's length.
@@ -1516,13 +1518,13 @@ Example (invalid):
 
 Fix: Check the genome version.
 
-Notes: A sequence-region may cover only part of a sequence, so only a region longer than the sequence is certain to be wrong.
+Notes: A sequence-region may cover only part of a sequence, so only a region longer than the sequence is certain to be wrong. Not reported for a circular landmark, whose bound is an open question (question 10).
 
 ### BIO-004
 
 **CDS phases are consistent**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: biology; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 8: phase](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Along a CDS (all lines with one ID, in 5' to 3' order on its strand), the phase of each segment follows from the previous segments' lengths and phases: phase(n+1) = (3 - ((length(n) - phase(n)) mod 3)) mod 3.
@@ -1536,13 +1538,13 @@ ctg1→.→CDS→61→90→.→+→0→ID=c1
 
 Fix: Recompute phases from the segment lengths (here the second phase is 2).
 
-Notes: Phase is not frame. Programmed frameshifts (the specification's example resets phase to 0), ribosomal slippage and partial CDS at the 5' end break the formula; the first segment of a 5'-partial CDS may have any phase. Is this a warning, and which annotations exempt it?
+Notes: Phase is not frame. Programmed frameshifts (the specification's example resets phase to 0), ribosomal slippage and partial CDS at the 5' end break the formula; the first segment of a 5'-partial CDS may have any phase. Is this a warning, and which annotations exempt it? Implemented as a warning: a CDS is the CDS lines sharing an ID or, for lines without ID, sharing a Parent list (grouping by Parent alone would merge cds00003 and cds00004 of the canonical gene, which share mRNA00003). Segments are ordered by start on + and by end on -, and the first segment's phase is not judged. A CDS on strand . or ?, with a missing phase or with lines on different seqids or strands is skipped and counted in BIO-011. Segments are kept until the next ### or the end of the file (memory: about 40 bytes per CDS line). When phases are inconsistent, stop codons (BIO-007, BIO-008) are not checked, since the annotation then implies a frameshift.
 
 ### BIO-005
 
 **CDS segments lie within exons**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: biology; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Canonical Gene](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-canonical-gene) (gff3)
 
 When a transcript has exon children, each CDS segment of that transcript lies within one of its exons.
@@ -1556,13 +1558,13 @@ ctg1→.→CDS→150→250→.→+→0→ID=c1;Parent=t1
 
 Fix: Correct the CDS or exon coordinates.
 
-Notes: Does not need the genome (it could move to the structure layer). Not applicable when the exon features are omitted (single-exon case in Pathological Cases).
+Notes: Does not need the genome (it could move to the structure layer) but runs with the biology layer. Implemented as a warning: each CDS segment is compared with the exons whose Parent is a Parent of the CDS, collected until the next ### or the end of the file. Not applicable when the exon features are omitted (single-exon case in Pathological Cases).
 
 ### BIO-006
 
 **CDS starts with a start codon**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: biology; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Canonical Gene NOTE 5; Change Log 1.13](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-canonical-gene) (gff3)
 
 When a CDS is complete, its first three bases are a start codon under the translation table chosen with --translation-table. Start and stop codons are included in the CDS.
@@ -1575,13 +1577,13 @@ CDS 1..90 on +, genome bases 1..3 are CCC
 
 Fix: Check the CDS start; mark partial CDS as such.
 
-Notes: GFF3 has no standard way to mark a partial CDS (attributes such as partial=true or start_range are profile-specific). The table is never inferred from the organism. How should incompleteness be expressed?
+Notes: GFF3 has no standard way to mark a partial CDS (attributes such as partial=true or start_range are profile-specific). The table is never inferred from the organism. How should incompleteness be expressed? Implemented conservatively as a warning: since the specification defines no partial marker, partial, start_range and end_range are not honoured. A CDS whose first segment has phase 1 or 2 starts inside a codon by definition and is not judged, and a codon with bases other than A, C, G and T is not judged. The default table is 1 (--translation-table N; bacteria, archaea and plastids use 11); tables 27, 28 and 31 are not offered because their stop codons depend on context. Translation exceptions follow the SO/NCBI discussion in SO-Ontologies#658 (pending SO confirmation, question 17): a codon wholly covered by a recoded_codon (SO:0000145) feature, or a subtype (stop_codon_read_through SO:0000883, stop_codon_redefined_as_selenocysteine SO:0000885, stop_codon_redefined_as_pyrrolysine SO:0000884), whose Parent is the CDS, is exempt; such a feature carries recoded_amino_acid=<amino acid name> and may be split across a splice junction as several lines with one ID. The legacy NCBI transl_except attribute on the CDS is honoured as a fallback. The subtypes are listed by name and accession until the SO layer is implemented; the recoded_amino_acid value is not checked yet.
 
 ### BIO-007
 
 **CDS ends with a stop codon**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: biology; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Canonical Gene NOTE 5](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-canonical-gene) (gff3)
 
 When a CDS is complete, its last three bases are a stop codon under the chosen translation table.
@@ -1594,13 +1596,13 @@ CDS 1..90 on +, genome bases 88..90 are GGG
 
 Fix: Check the CDS end; mark partial CDS as such.
 
-Notes: Stop codons completed by polyadenylation (some mitochondrial genes) need an exception.
+Notes: Stop codons completed by polyadenylation (some mitochondrial genes) need an exception. Implemented as a warning, with the same partial-CDS caveat as BIO-006. Not judged when the coding length is not a multiple of three (BIO-009 reports that) or when the phases are inconsistent (BIO-004). A stop codon completed by polyadenylation is exempt when marked as a recoded codon (see BIO-006); BIO-009 is then not reported if the recoded codon covers the trailing partial codon.
 
 ### BIO-008
 
 **No internal stop codons**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: biology; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Canonical Gene](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-canonical-gene) (gff3)
 
 The translated CDS has no in-frame stop codon before its end.
@@ -1611,15 +1613,15 @@ Example (invalid):
 CDS whose codon 10 is TAA under table 1
 ```
 
-Fix: Check exon boundaries and phases; annotate selenocysteine or readthrough explicitly.
+Fix: Check exon boundaries and phases; mark selenocysteine, pyrrolysine or readthrough with a recoded_codon child of the CDS.
 
-Notes: Selenocysteine, pyrrolysine and stop-codon readthrough are legitimate; how should they be annotated so the check can exempt them?
+Notes: Selenocysteine, pyrrolysine and stop-codon readthrough are legitimate; how should they be annotated so the check can exempt them? Kept at warning, not error, because legitimate recoding still exists in files that do not mark it. Translation exceptions follow the SO/NCBI discussion in SO-Ontologies#658 (pending SO confirmation, question 17): a codon wholly covered by a recoded_codon (SO:0000145) feature, or a subtype (stop_codon_read_through SO:0000883, stop_codon_redefined_as_selenocysteine SO:0000885, stop_codon_redefined_as_pyrrolysine SO:0000884), whose Parent is the CDS, is exempt; such a feature carries recoded_amino_acid=<amino acid name> and may be split across a splice junction as several lines with one ID. The legacy NCBI transl_except attribute on the CDS is honoured as a fallback. The subtypes are listed by name and accession until the SO layer is implemented; the recoded_amino_acid value is not checked yet. The last complete codon is the terminal codon (BIO-007), never internal. One finding per CDS gives the first internal stop and the count.
 
 ### BIO-009
 
 **CDS length is a multiple of three**
 
-- Level: info; layer: biology; status: planned; review: pending-SO
+- Level: info; layer: biology; status: implemented; review: pending-SO
 - Reference: [Column 8: phase](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 The coding length of a complete CDS (sum of segment lengths minus the first segment's phase) is a multiple of three.
@@ -1632,11 +1634,13 @@ CDS segments 1..31 and 61..90 with phase 0
 
 Fix: Check the coordinates.
 
+Notes: Coding lengths are computed from the coordinates, so the genome is needed only to run the layer. The specification's canonical gene has two such CDS (cds00001 with 2305 and cds00002 with 1402 coding bases), so the example itself is reported (see the suggested corrections in questions-for-SO.md).
+
 ### BIO-010
 
 **Strand is consistent within a gene**
 
-- Level: warning; layer: biology; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: biology; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Canonical Gene](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-canonical-gene) (gff3)
 
 The parts of a gene (transcripts, exons, CDS) are on the same strand as the gene.
@@ -1650,24 +1654,26 @@ ctg1→.→mRNA→1→90→.→-→.→ID=t1;Parent=g1
 
 Fix: Correct the strand.
 
-Notes: Does not need the genome. Trans-splicing and genes with strand "?" or "." are exceptions; error or warning?
+Notes: Does not need the genome but runs with the biology layer. Trans-splicing and genes with strand "?" or "." are exceptions; error or warning? Implemented as a warning along every Parent relation where both lines have strand + or -, because without the SO layer the validator cannot tell which features are parts of a gene; the Parent's strand is that of its first line. Trans-splicing has no marker yet and is reported.
 
 ### BIO-011
 
 **Biology checks skipped**
 
-- Level: info; layer: biology; status: planned; review: pending-SO
+- Level: info; layer: biology; status: implemented; review: pending-SO
 - Reference: [FR-005](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
 
-Reported when biology checks were not run, with the reason (no --genome, no translation table, no seqid in common with the genome). Skipped checks are never counted as passed.
+Reported when --genome was given but some biology checks could not run, with the reasons and counts (CDS on seqids not in the genome, on strand . or ?, with a missing phase, with lines on different seqids or strands, beyond the end of the sequence, or with inconsistent phases). Without --genome the whole biology layer is listed as not checked in the report. Skipped checks are never counted as passed.
 
 Example (invalid):
 
 ```text
-gff3-validate annotation.gff3   (no --genome)
+chr1→.→CDS→1→90→.→.→0→ID=c1   (with --genome; strand . has no 5' end)
 ```
 
-Fix: Supply --genome (and --translation-table) to run them.
+Fix: Follow the reason given, for example give each CDS a strand and a phase, or use the genome the annotation was made on.
+
+Notes: Without --genome no finding is emitted (it would be on every file); the report's skipped list says that the biology layer needs --genome. Table 1 is used when --translation-table is not given; the table is never inferred.
 
 ## HDR
 

@@ -131,11 +131,24 @@ def test_no_header_skips_header_checks():
     assert findings(result) == ["HDR-003"]
 
 
-def test_genome_option_is_accepted_but_reported_as_unused():
-    result = run("--format", "json", "--genome", "genome.fa", VALID)
-    assert result.returncode == 0
-    skipped = json.loads(result.stdout)["skipped"]
-    assert any("--genome was given" in item["reason"] for item in skipped)
+def test_genome_option_runs_biology_checks():
+    genome = FIXTURES / "biology" / "genome.fa"
+    result = run("--format", "json", "--genome", genome, VALID)
+    assert result.returncode == 1
+    report = json.loads(result.stdout)
+    # canonical_gene.gff3 is on ctg123, which the test genome does not have:
+    # its codons are not checked, but coding lengths still are (BIO-009).
+    assert sorted(item["rule"] for item in report["findings"]) == [
+        "BIO-001",
+        "BIO-009",
+        "BIO-009",
+        "BIO-011",
+    ]
+    (biology,) = [item for item in report["skipped"] if item["layer"] == "biology"]
+    assert biology["reason"] == "partial: 4 CDS on seqids not in the genome"
+    result = run("--format", "json", "--genome", "missing.fa", VALID)
+    assert result.returncode == 2
+    assert b"cannot open genome missing.fa" in result.stderr
 
 
 def test_version():

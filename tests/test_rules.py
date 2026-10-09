@@ -19,10 +19,20 @@ def rule_ids(report):
     return {finding.rule for finding in report.findings}
 
 
+GENOME = FIXTURES / "biology" / "genome.fa"
+
+
+def validate_fixture(name, genome=GENOME):
+    """Validate a fixture; those in biology/ with the test genome."""
+    if name.startswith("biology/"):
+        return validate(FIXTURES / name, genome=genome)
+    return validate(FIXTURES / name)
+
+
 @pytest.mark.parametrize("name", sorted(EXPECTED))
 def test_fixture_reports_expected_implemented_rules(name):
     expected = set(EXPECTED[name]) & IMPLEMENTED
-    report = validate(FIXTURES / name)
+    report = validate_fixture(name)
     assert rule_ids(report) == expected
     errors = [rule for rule in expected if CATALOGUE[rule].level == "error"]
     assert report.valid == (not errors)

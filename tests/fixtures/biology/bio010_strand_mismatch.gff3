@@ -1,0 +1,4 @@
+##gff-version 3
+chr1	.	exon	1	100	.	+	.	Parent=t1
+chr1	.	gene	1	100	.	+	.	ID=g1
+chr1	.	mRNA	1	100	.	-	.	ID=t1;Parent=g1
