@@ -64,3 +64,12 @@ vulnerabilities privately as described in the FHR-Specification
 [SECURITY.md](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/SECURITY.md),
 not in a public issue. Publishing packages, tags and DOIs are separate
 maintainer actions; a spec, plan or task list never authorizes them.
+
+## Licensing policy (2026-10-09)
+
+New FAIR BioHeaders project contributions from March 2025 onward use MPL-2.0.
+David Molik left USDA in February 2025. Preserve historical USDA public-domain
+material, previously granted permissions, and third-party licenses/notices;
+do not label all current contributors as government employees. See LICENSE
+for scope. Do not rewrite historical releases or silently relicense upstream
+material. Keep README badges, package metadata and citation metadata consistent.

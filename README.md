@@ -332,7 +332,8 @@ truth: edit `rules/catalogue.yaml`, then run `python scripts/render_rules.py` to
 regenerate `docs/rules.md`, the packaged copy and the list above (CI checks for
 drift with `--check`).
 
-## License
+## Licensing
 
-[MIT](LICENSE). Copyright (c) 2026 Adam Wright and David Molik
-(FAIR-bioHeaders contributors).
+[![License: MPL-2.0](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](LICENSE)
+
+New project contributions from March 2025 onward use [MPL-2.0](LICENSE). The existing MIT notice is retained verbatim for previously MIT-licensed material; prior permissions remain available. Third-party code and assets retain their own terms. Consult LICENSE and version history for scope.
