@@ -18,14 +18,14 @@ Sources:
 
 | Category | Rules | Implemented | Planned | Need SO input |
 |---|---|---|---|---|
-| [GFF-SYN](#gff-syn) Syntax: file, lines and columns 1 to 8 | 20 | 11 | 9 | 9 |
-| [GFF-ATT](#gff-att) Attributes (column 9) | 17 | 0 | 17 | 12 |
-| [GFF-DIR](#gff-dir) Directives | 10 | 0 | 10 | 5 |
-| [GFF-STR](#gff-str) Structure: IDs, references and bounds | 13 | 0 | 13 | 7 |
+| [GFF-SYN](#gff-syn) Syntax: file, lines and columns 1 to 8 | 20 | 18 | 2 | 9 |
+| [GFF-ATT](#gff-att) Attributes (column 9) | 17 | 15 | 2 | 12 |
+| [GFF-DIR](#gff-dir) Directives | 10 | 10 | 0 | 5 |
+| [GFF-STR](#gff-str) Structure: IDs, references and bounds | 13 | 11 | 2 | 7 |
 | [SO](#so) Sequence Ontology | 8 | 0 | 8 | 6 |
 | [BIO](#bio) Biology (optional, with --genome) | 11 | 0 | 11 | 6 |
 | [HDR](#hdr) FHGFF3 header (optional, FAIR-bioHeaders) | 9 | 3 | 6 | 0 |
-| **Total** | 88 | 14 | 74 | 45 |
+| **Total** | 88 | 57 | 31 | 45 |
 
 ## GFF-SYN
 
@@ -37,14 +37,14 @@ Syntax: file, lines and columns 1 to 8
 | [GFF-SYN-002](#gff-syn-002) | error | implemented | Only one ##gff-version directive |
 | [GFF-SYN-003](#gff-syn-003) | error | implemented | Feature lines have nine tab-separated columns |
 | [GFF-SYN-004](#gff-syn-004) | error | implemented | Undefined columns are ".", not empty |
-| [GFF-SYN-005](#gff-syn-005) | error | planned | No unescaped control characters |
-| [GFF-SYN-006](#gff-syn-006) | warning | planned | File is UTF-8 |
-| [GFF-SYN-007](#gff-syn-007) | info | planned | Possible end-of-line comment |
-| [GFF-SYN-008](#gff-syn-008) | error | planned | Percent-encoding is well formed |
-| [GFF-SYN-009](#gff-syn-009) | warning | planned | Characters encoded that need not be |
-| [GFF-SYN-010](#gff-syn-010) | error | planned | seqid uses the allowed characters |
+| [GFF-SYN-005](#gff-syn-005) | error | implemented | No unescaped control characters |
+| [GFF-SYN-006](#gff-syn-006) | warning | implemented | File is UTF-8 |
+| [GFF-SYN-007](#gff-syn-007) | info | implemented | Possible end-of-line comment |
+| [GFF-SYN-008](#gff-syn-008) | error | implemented | Percent-encoding is well formed |
+| [GFF-SYN-009](#gff-syn-009) | warning | implemented | Characters encoded that need not be |
+| [GFF-SYN-010](#gff-syn-010) | error | implemented | seqid uses the allowed characters |
 | [GFF-SYN-011](#gff-syn-011) | error | planned | seqid is defined |
-| [GFF-SYN-012](#gff-syn-012) | error | planned | type is defined |
+| [GFF-SYN-012](#gff-syn-012) | error | implemented | type is defined |
 | [GFF-SYN-013](#gff-syn-013) | error | implemented | start and end are integers |
 | [GFF-SYN-014](#gff-syn-014) | error | implemented | start is at least 1 |
 | [GFF-SYN-015](#gff-syn-015) | error | implemented | start is not greater than end |
@@ -141,7 +141,7 @@ Notes: The source column (2) is free text: the validator applies no character se
 
 **No unescaped control characters**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Description of the Format: escaping](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Tab (outside column separators), newline, carriage return and other control characters (0x00 to 0x1F, 0x7F) must be percent-encoded.
@@ -149,18 +149,18 @@ Tab (outside column separators), newline, carriage return and other control char
 Example (invalid):
 
 ```text
-ctg1→.→gene→1→90→.→+→.→ID=g1<CR>
+ctg1→.→gene→1→90→.→+→.→ID=g1;Note=first<CR>second
 ```
 
-Fix: Percent-encode the character (for example %09 for tab, %0D for carriage return); convert CRLF line endings to LF.
+Fix: Percent-encode the character (for example %09 for tab, %0D for carriage return).
 
-Notes: The specification does not address line endings. Are CRLF files invalid (the CR is an unescaped control character in column 9) or should a CRLF terminator be accepted? Proposal: report CRLF once per file as an error under this rule.
+Notes: The specification does not address line endings. Are CRLF files invalid (the CR is an unescaped control character in column 9) or should a CRLF terminator be accepted? Proposal: report CRLF once per file as an error under this rule. Until SO answers, the validator reports control characters inside a line and does not report a carriage return immediately before the line feed (a CRLF line ending), which it removes before checking the line.
 
 ### GFF-SYN-006
 
 **File is UTF-8**
 
-- Level: warning; layer: core; status: planned; review: pending-SO
+- Level: warning; layer: core; status: implemented; review: pending-SO
 - Reference: [Description of the Format: use of UTF-8 is recommended](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 UTF-8 is the only recommended character encoding (since 1.26).
@@ -173,11 +173,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;Note=caf\xe9 (Latin-1 byte)
 
 Fix: Re-encode the file as UTF-8.
 
+Notes: Reported once per file, at the first line that is not valid UTF-8, with the number of further such lines. Invalid bytes are replaced by U+FFFD for the other checks.
+
 ### GFF-SYN-007
 
 **Possible end-of-line comment**
 
-- Level: info; layer: core; status: planned; review: pending-SO
+- Level: info; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: end-of-line comments are not allowed](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 End-of-line comments are not allowed. A "#" in a feature or directive line is data; text such as " # comment" at the end of column 9 is probably a misplaced comment.
@@ -190,13 +192,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1 # check this
 
 Fix: Move the comment to its own line starting with "#".
 
-Notes: Heuristic; "#" is a legal character in values, so this is info only.
+Notes: Heuristic; "#" is a legal character in values, so this is info only. Checked in column 9 only: whitespace followed by "#".
 
 ### GFF-SYN-008
 
 **Percent-encoding is well formed**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Description of the Format: RFC 3986 percent-encoding](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 A "%" must start a percent-encoded octet, "%" followed by two hexadecimal digits (RFC 3986). A literal percent sign is written %25.
@@ -209,13 +211,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;Note=50% identity
 
 Fix: Write a literal percent sign as %25.
 
-Notes: Backslash escapes and "+" for space are not allowed, but cannot be told apart from literal text; they are not checked.
+Notes: Backslash escapes and "+" for space are not allowed, but cannot be told apart from literal text; they are not checked. Checked in all nine columns.
 
 ### GFF-SYN-009
 
 **Characters encoded that need not be**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Description of the Format: escaping](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Only tab, newline, carriage return, percent and control characters (and, in column 9, the reserved characters ; = & ,) are to be encoded; "no other characters may be encoded".
@@ -228,13 +230,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;Name=EDEN%2D1
 
 Fix: Write the character literally (here "-").
 
-Notes: Conflicts with column 1, where characters outside [a-zA-Z0-9.:^*$@!+_?-|] "must" be escaped, and with Target, where spaces in target ids are escaped as %20. Proposal: allow any encoding in column 1 and in Target ids, warn elsewhere. Is over-encoding an error, a warning, or allowed?
+Notes: Conflicts with column 1, where characters outside [a-zA-Z0-9.:^*$@!+_?-|] "must" be escaped, and with Target, where spaces in target ids are escaped as %20. Proposal: allow any encoding in column 1 and in Target ids, warn elsewhere. Is over-encoding an error, a warning, or allowed? Implemented as the proposal while question 3 is open: in column 1 only encoding a character of the seqid set is reported, %20 is allowed in Target values, and other encoded characters (including UTF-8 octets of non-ASCII characters) are reported. Reported once per file, at the first occurrence, with a count.
 
 ### GFF-SYN-010
 
 **seqid uses the allowed characters**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 1: seqid](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 The seqid (column 1) may contain any characters but must escape those not in [a-zA-Z0-9.:^*$@!+_?-|]. It may not contain unescaped whitespace and must not begin with an unescaped ">".
@@ -247,7 +249,7 @@ chr 1→.→gene→1→90→.→+→.→ID=g1
 
 Fix: Percent-encode the character (here "chr%201") or rename the sequence consistently in the genome too.
 
-Notes: Read as a regular-expression class, "?-|" would be a character range; the validator reads the list literally (? - | as three characters). Widely used seqids contain "#" or "=" (for example some assembly names); escaping them breaks the link to the FASTA name. Confirm the literal reading and whether escaped seqids must match escaped or decoded FASTA ids.
+Notes: Read as a regular-expression class, "?-|" would be a character range; the validator reads the list literally (? - | as three characters). Widely used seqids contain "#" or "=" (for example some assembly names); escaping them breaks the link to the FASTA name. Confirm the literal reading and whether escaped seqids must match escaped or decoded FASTA ids. Implemented for unescaped whitespace only. The character set is not checked until SO answers question 3. A seqid beginning with ">" cannot be told apart from a FASTA header: the line starts an implied FASTA section (GFF-DIR-005).
 
 ### GFF-SYN-011
 
@@ -272,7 +274,7 @@ Notes: Not stated explicitly; follows from the definition of seqid. The Perl val
 
 **type is defined**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Column 3: type](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 The type (column 3) is required; "." is not a valid type. Term validity is checked by the SO rules.
@@ -437,29 +439,29 @@ Attributes (column 9)
 
 | Id | Level | Status | Title |
 |---|---|---|---|
-| [GFF-ATT-001](#gff-att-001) | error | planned | Attributes are tag=value pairs separated by semicolons |
-| [GFF-ATT-002](#gff-att-002) | error | planned | Tags and values are not empty |
-| [GFF-ATT-003](#gff-att-003) | info | planned | Empty attribute pair or trailing semicolon |
-| [GFF-ATT-004](#gff-att-004) | error | planned | Each tag appears once per line |
-| [GFF-ATT-005](#gff-att-005) | error | planned | Reserved characters are escaped in tags and values |
-| [GFF-ATT-006](#gff-att-006) | error | planned | Single-valued reserved tags have one value |
-| [GFF-ATT-007](#gff-att-007) | warning | planned | Unknown reserved (upper-case) tag |
-| [GFF-ATT-008](#gff-att-008) | warning | planned | Tag differs from a reserved tag only by case |
-| [GFF-ATT-009](#gff-att-009) | info | planned | Quoted attribute value |
-| [GFF-ATT-010](#gff-att-010) | error | planned | Target has the form "target_id start end [strand]" |
-| [GFF-ATT-011](#gff-att-011) | error | planned | Gap is a list of operations |
-| [GFF-ATT-012](#gff-att-012) | warning | planned | Gap is given with Target |
-| [GFF-ATT-013](#gff-att-013) | warning | planned | Gap lengths agree with the feature and Target lengths |
-| [GFF-ATT-014](#gff-att-014) | error | planned | Dbxref and Ontology_term values are DBTAG:ID |
+| [GFF-ATT-001](#gff-att-001) | error | implemented | Attributes are tag=value pairs separated by semicolons |
+| [GFF-ATT-002](#gff-att-002) | error | implemented | Tags and values are not empty |
+| [GFF-ATT-003](#gff-att-003) | info | implemented | Empty attribute pair or trailing semicolon |
+| [GFF-ATT-004](#gff-att-004) | error | implemented | Each tag appears once per line |
+| [GFF-ATT-005](#gff-att-005) | error | implemented | Reserved characters are escaped in tags and values |
+| [GFF-ATT-006](#gff-att-006) | error | implemented | Single-valued reserved tags have one value |
+| [GFF-ATT-007](#gff-att-007) | warning | implemented | Unknown reserved (upper-case) tag |
+| [GFF-ATT-008](#gff-att-008) | warning | implemented | Tag differs from a reserved tag only by case |
+| [GFF-ATT-009](#gff-att-009) | info | implemented | Quoted attribute value |
+| [GFF-ATT-010](#gff-att-010) | error | implemented | Target has the form "target_id start end [strand]" |
+| [GFF-ATT-011](#gff-att-011) | error | implemented | Gap is a list of operations |
+| [GFF-ATT-012](#gff-att-012) | warning | implemented | Gap is given with Target |
+| [GFF-ATT-013](#gff-att-013) | warning | implemented | Gap lengths agree with the feature and Target lengths |
+| [GFF-ATT-014](#gff-att-014) | error | implemented | Dbxref and Ontology_term values are DBTAG:ID |
 | [GFF-ATT-015](#gff-att-015) | info | planned | DBTAG is a registered database abbreviation |
-| [GFF-ATT-016](#gff-att-016) | warning | planned | Is_circular is "true" |
+| [GFF-ATT-016](#gff-att-016) | warning | implemented | Is_circular is "true" |
 | [GFF-ATT-017](#gff-att-017) | info | planned | Is_circular is on the landmark feature |
 
 ### GFF-ATT-001
 
 **Attributes are tag=value pairs separated by semicolons**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Column 9: attributes](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Column 9 is "." or a list of tag=value pairs separated by ";". Each pair has one "=" separating a tag from its value.
@@ -476,7 +478,7 @@ Fix: Write tag=value pairs (ID=g1;Name=EDEN). This is GTF syntax; convert GTF wi
 
 **Tags and values are not empty**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: attributes](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Every pair has a non-empty tag and a non-empty value.
@@ -484,18 +486,18 @@ Every pair has a non-empty tag and a non-empty value.
 Example (invalid):
 
 ```text
-ctg1→.→gene→1→90→.→+→.→ID=g1;Note=
+ctg1→.→gene→1→90→.→+→.→ID=g1;=EDEN
 ```
 
-Fix: Remove the pair, or give it a value.
+Fix: Give the tag, or remove the pair.
 
-Notes: The specification does not say values must be non-empty; the Perl validator and GFF3toolkit treat empty values as errors. Is "Note=" an error, a warning, or valid?
+Notes: The specification does not say values must be non-empty; the Perl validator and GFF3toolkit treat empty values as errors. Is "Note=" an error, a warning, or valid? Until SO answers question 4, only an empty tag ("=value") is reported; empty values ("Note=", "Parent=a,,b") are not.
 
 ### GFF-ATT-003
 
 **Empty attribute pair or trailing semicolon**
 
-- Level: info; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: info; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Circular Genomes (example ends with ';')](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#circular-genomes) (gff3)
 
 An empty pair (";;") or a trailing ";" carries no data.
@@ -508,13 +510,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;;Name=EDEN;
 
 Fix: Remove the extra semicolons (optional).
 
-Notes: The specification's own circular-genome example ends column 9 with ";" so a trailing semicolon appears to be allowed. Confirm that both are valid.
+Notes: The specification's own circular-genome example ends column 9 with ";" so a trailing semicolon appears to be allowed. Confirm that both are valid. Info only, so it never affects validity; reported once per file, at the first occurrence, with a count.
 
 ### GFF-ATT-004
 
 **Each tag appears once per line**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Column 9: multiple attributes of the same type](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Multiple values of a tag are separated by commas within one pair, not by repeating the tag.
@@ -533,7 +535,7 @@ Notes: Implied by the specification and enforced by the Perl validator and GFF3t
 
 **Reserved characters are escaped in tags and values**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Description of the Format: reserved characters in column 9](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 In column 9 ";", "=", "&" and "," have reserved meanings and must be escaped (%3B, %3D, %26, %2C) when used in a tag or value. Tags are case sensitive.
@@ -546,13 +548,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;Note=a=b & c
 
 Fix: Escape the characters (Note=a%3Db %26 c).
 
-Notes: "&" has no syntactic role in GFF3 but is still reserved. Comma handling is in GFF-ATT-006.
+Notes: "&" has no syntactic role in GFF3 but is still reserved. Comma handling is in GFF-ATT-006. An unescaped ";" cannot be detected, since it splits the pair. A "," in a tag is reported here; commas in values are GFF-ATT-006.
 
 ### GFF-ATT-006
 
 **Single-valued reserved tags have one value**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: multiple values; Change Log 1.19](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Only Parent, Alias, Note, Dbxref and Ontology_term can have multiple comma-separated values. A comma in the value of another reserved tag (ID, Name, Target, Gap, Derives_from, Is_circular) must be escaped as %2C.
@@ -565,13 +567,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1,g2
 
 Fix: Use one value (and a separate feature for the second ID), or escape the comma.
 
-Notes: Derives_from is not in the multi-valued list (1.19), yet a feature can derive from several (the polycistronic and trans-splicing examples use one Derives_from per line). Is Derives_from=g1,g2 allowed? For lower-case (application) tags, is an unescaped comma a value separator or literal text? The validator will not interpret commas in application tags.
+Notes: Derives_from is not in the multi-valued list (1.19), yet a feature can derive from several (the polycistronic and trans-splicing examples use one Derives_from per line). Is Derives_from=g1,g2 allowed? For lower-case (application) tags, is an unescaped comma a value separator or literal text? The validator will not interpret commas in application tags. Implemented for ID, Name, Target, Gap and Is_circular. Derives_from is not checked until question 5 is answered; for GFF-STR-005 its commas are read as separators.
 
 ### GFF-ATT-007
 
 **Unknown reserved (upper-case) tag**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: all attributes that begin with an uppercase letter are reserved](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Tags beginning with an upper-case letter are reserved. Only ID, Name, Alias, Parent, Target, Gap, Derives_from, Note, Dbxref, Ontology_term and Is_circular are defined.
@@ -584,13 +586,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;Gene_biotype=protein_coding
 
 Fix: Use a lower-case tag for application data (gene_biotype=protein_coding).
 
-Notes: Common in practice (GVF tags such as Variant_seq, mirGFF3 Variant/Cigar, NCBI "Is_pseudo"?). Should known extensions (GVF, mirGFF3) be recognized by profile rather than warned about?
+Notes: Common in practice (GVF tags such as Variant_seq, mirGFF3 Variant/Cigar, NCBI "Is_pseudo"?). Should known extensions (GVF, mirGFF3) be recognized by profile rather than warned about? Implemented as a warning for any tag beginning with an upper-case letter that is not reserved and is not a case variant of a reserved tag (that is GFF-ATT-008).
 
 ### GFF-ATT-008
 
 **Tag differs from a reserved tag only by case**
 
-- Level: warning; layer: core; status: planned; review: pending-SO
+- Level: warning; layer: core; status: implemented; review: pending-SO
 - Reference: [Column 9: attribute names are case sensitive](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Tags are case sensitive; "parent" is not "Parent", so a lower-case reserved name is an application tag and has no effect.
@@ -609,7 +611,7 @@ Notes: The specification's own pathological-case examples write "name=resA"; tha
 
 **Quoted attribute value**
 
-- Level: info; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: info; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: attribute values do not need to be and should not be quoted](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Values should not be quoted; quotes are part of the value.
@@ -622,13 +624,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1;Dbxref="EMBL:AA816246"
 
 Fix: Remove the quotes unless they belong to the value.
 
-Notes: The Ontology Associations section shows Dbxref="EMBL:AA816246" with quotes. Are those examples meant literally?
+Notes: The Ontology Associations section shows Dbxref="EMBL:AA816246" with quotes. Are those examples meant literally? A value that starts and ends with a double quote is reported; info only, once per file, at the first occurrence, with a count.
 
 ### GFF-ATT-010
 
 **Target has the form "target_id start end [strand]"**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: Target; Alignments](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 Target values are a target id, start and end (positive integers, start <= end) and an optional strand "+" or "-", separated by spaces. Spaces in the target id are escaped as %20.
@@ -636,18 +638,18 @@ Target values are a target id, start and end (positive integers, start <= end) a
 Example (invalid):
 
 ```text
-ctg1→.→cDNA_match→1050→1500→.→+→.→ID=m1;Target=cdna0123 462 12
+ctg1→.→cDNA_match→1050→1500→.→+→.→ID=m1;Target=cdna0123+12+462
 ```
 
-Fix: Give start <= end in target coordinates and put the orientation in the strand field (Target=cdna0123 12 462 -).
+Fix: Separate target_id, start and end by spaces, escape spaces in target_id as %20, and give the strand as + or - (Target=cdna0123 12 462 +).
 
-Notes: The ##FASTA example writes Target=cdna0123+12+462 ("+" for space), which the specification otherwise forbids. Is start <= end required within Target, and is a Target strand allowed when the target is a protein?
+Notes: The ##FASTA example writes Target=cdna0123+12+462 ("+" for space), which the specification otherwise forbids; it fails this rule. Implemented for the stated form: three or four fields separated by spaces (runs of spaces are accepted), positive integer start and end, strand + or -. Until SO answers, start > end within Target is not reported (the Alignments section says orientation goes in column 7 "and not by changing the order of the start and end positions"), and a strand on a protein target is accepted.
 
 ### GFF-ATT-011
 
 **Gap is a list of operations**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Gap Attribute](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-gap-attribute) (gff3)
 
 Gap is a space-separated list of operations, each a code M, I, D, F or R followed by a positive length (for example "M8 D3 M6 I1 M6").
@@ -660,13 +662,13 @@ chr3→.→match→1→23→.→.→.→ID=m1;Target=EST23 1 21;Gap=8M3D6M
 
 Fix: Write the code before the length (M8 D3 M6); this is not SAM CIGAR order.
 
-Notes: The Perl validator also accepted lower-case codes. Are lower-case codes and multiple spaces valid?
+Notes: The Perl validator also accepted lower-case codes. Are lower-case codes and multiple spaces valid? Until SO answers, only the upper-case codes are accepted, runs of spaces between operations are accepted, and a zero length is reported.
 
 ### GFF-ATT-012
 
 **Gap is given with Target**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Gap Attribute](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-gap-attribute) (gff3)
 
 The Gap attribute describes the alignment of the feature to its Target, so a Gap without a Target cannot be interpreted.
@@ -683,7 +685,7 @@ Fix: Add the Target attribute.
 
 **Gap lengths agree with the feature and Target lengths**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Gap Attribute](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-gap-attribute) (gff3)
 
 For nucleotide alignments, M + D lengths equal the feature length and M + I lengths equal the Target length; for protein-to-nucleotide matches, M, I and D count residues (three bases each) and F, R count bases.
@@ -696,13 +698,13 @@ chr3→.→match→1→30→.→.→.→ID=m1;Target=EST23 1 21;Gap=M8 D3 M6 I1 
 
 Fix: Correct the coordinates or the Gap string so they describe the same alignment.
 
-Notes: Which types are protein-to-nucleotide (nucleotide_to_protein_match, protein_match and subtypes?) must come from SO. For multi-line matches, lengths apply per line.
+Notes: Which types are protein-to-nucleotide (nucleotide_to_protein_match, protein_match and subtypes?) must come from SO. For multi-line matches, lengths apply per line. Implemented without SO: a line is accepted if either reading fits, nucleotide (no F or R; M + D = feature length; M + I = Target length) or protein (3 x (M + D) + F - R = feature length; M + I = Target length), and a warning is given when neither does. Checked only when Target and Gap are well formed.
 
 ### GFF-ATT-014
 
 **Dbxref and Ontology_term values are DBTAG:ID**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Ontology Associations and DB Cross References](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#ontology-associations-and-db-cross-references) (gff3)
 
 Each value has a database tag, a colon and an identifier; split on the first colon, so the DBTAG contains no colon and the ID may.
@@ -738,7 +740,7 @@ Notes: The specification points to ftp://ftp.geneontology.org/pub/go/doc/GO.xrf_
 
 **Is_circular is "true"**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Circular Genomes](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#circular-genomes) (gff3)
 
 Is_circular is a flag; the specification uses the value "true".
@@ -751,7 +753,7 @@ J02448→GenBank→region→1→6407→.→+→.→ID=J02448;Is_circular=yes
 
 Fix: Write Is_circular=true, or remove the attribute for a linear sequence.
 
-Notes: Is Is_circular=false valid (meaning linear), or must the tag be absent?
+Notes: Is Is_circular=false valid (meaning linear), or must the tag be absent? Until SO answers, Is_circular=false is not reported; any value other than true and false is.
 
 ### GFF-ATT-017
 
@@ -778,22 +780,22 @@ Directives
 
 | Id | Level | Status | Title |
 |---|---|---|---|
-| [GFF-DIR-001](#gff-dir-001) | error | planned | ##sequence-region has the form: seqid start end |
-| [GFF-DIR-002](#gff-dir-002) | error | planned | One ##sequence-region per seqid |
-| [GFF-DIR-003](#gff-dir-003) | error | planned | ### closes all forward references |
-| [GFF-DIR-004](#gff-dir-004) | error | planned | Only FASTA after ##FASTA |
-| [GFF-DIR-005](#gff-dir-005) | warning | planned | FASTA section starts with ##FASTA |
-| [GFF-DIR-006](#gff-dir-006) | warning | planned | FASTA records are well formed |
-| [GFF-DIR-007](#gff-dir-007) | warning | planned | ##species is an NCBI Taxonomy URL |
-| [GFF-DIR-008](#gff-dir-008) | warning | planned | ##genome-build has a source and a build name |
-| [GFF-DIR-009](#gff-dir-009) | info | planned | Ontology directives are recorded but not fetched |
-| [GFF-DIR-010](#gff-dir-010) | info | planned | Unknown directive |
+| [GFF-DIR-001](#gff-dir-001) | error | implemented | ##sequence-region has the form: seqid start end |
+| [GFF-DIR-002](#gff-dir-002) | error | implemented | One ##sequence-region per seqid |
+| [GFF-DIR-003](#gff-dir-003) | error | implemented | ### closes all forward references |
+| [GFF-DIR-004](#gff-dir-004) | error | implemented | Only FASTA after ##FASTA |
+| [GFF-DIR-005](#gff-dir-005) | warning | implemented | FASTA section starts with ##FASTA |
+| [GFF-DIR-006](#gff-dir-006) | warning | implemented | FASTA records are well formed |
+| [GFF-DIR-007](#gff-dir-007) | warning | implemented | ##species is an NCBI Taxonomy URL |
+| [GFF-DIR-008](#gff-dir-008) | warning | implemented | ##genome-build has a source and a build name |
+| [GFF-DIR-009](#gff-dir-009) | info | implemented | Ontology directives are recorded but not fetched |
+| [GFF-DIR-010](#gff-dir-010) | info | implemented | Unknown directive |
 
 ### GFF-DIR-001
 
 **##sequence-region has the form: seqid start end**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Other Syntax: ##sequence-region](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 The directive gives a seqid and integer start and end with 1 <= start <= end.
@@ -806,13 +808,13 @@ Example (invalid):
 
 Fix: Write ##sequence-region ctg123 1 1497228.
 
-Notes: Must start be 1? Must the directive come before the features on that seqid, or may it appear anywhere (gt gff3 moves them to the top)?
+Notes: Must start be 1? Must the directive come before the features on that seqid, or may it appear anywhere (gt gff3 moves them to the top)? Until SO answers question 10, a start other than 1 and a directive after the features on its seqid are not reported. The fields are separated by whitespace.
 
 ### GFF-DIR-002
 
 **One ##sequence-region per seqid**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##sequence-region](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 Only one ##sequence-region directive may be given for any seqid.
@@ -832,7 +834,7 @@ Notes: An exact repeat (same bounds) could be a warning; proposal keeps it an er
 
 **### closes all forward references**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Other Syntax: ###](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 "###" declares that all forward references to feature IDs seen so far are resolved. A Parent or Derives_from seen before "###" must refer to an ID that also appears before it, and features after it should not add parts to features before it.
@@ -847,13 +849,13 @@ ctg1→.→gene→1→90→.→+→.→ID=g1
 
 Fix: Move "###" after the features it closes, or put parents before it.
 
-Notes: The text says forward references are resolved; it does not say whether a later line may still name an earlier ID as Parent, or continue a discontinuous feature (same ID) after "###". Streaming readers close objects at "###", so both break them. Error or warning?
+Notes: The text says forward references are resolved; it does not say whether a later line may still name an earlier ID as Parent, or continue a discontinuous feature (same ID) after "###". Streaming readers close objects at "###", so both break them. Error or warning? Implemented for the part the text states: a Parent or Derives_from seen before ### that names an ID first defined after it (reported at the first such reference). Until SO answers question 9, a later line naming an earlier ID, and the continuation of a discontinuous feature after ###, are not reported. An ID that is never defined is GFF-STR-004 or GFF-STR-005 instead.
 
 ### GFF-DIR-004
 
 **Only FASTA after ##FASTA**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##FASTA](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 After ##FASTA the rest of the file is one or more FASTA records; no feature lines or other content may follow.
@@ -869,13 +871,13 @@ ctg1→.→gene→1→4→.→+→.→ID=g1
 
 Fix: Move all feature lines before ##FASTA.
 
-Notes: Are blank lines and "#" comments allowed inside the FASTA section?
+Notes: Are blank lines and "#" comments allowed inside the FASTA section? Feature lines (lines with a tab) and "##" directives after ##FASTA are reported; blank lines and "#" comment lines are not, until SO answers.
 
 ### GFF-DIR-005
 
 **FASTA section starts with ##FASTA**
 
-- Level: warning; layer: core; status: planned; review: pending-SO
+- Level: warning; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##FASTA (implied by a line beginning with >)](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 A line beginning with ">" implies a ##FASTA directive (kept for Artemis compatibility); writing ##FASTA is clearer.
@@ -894,7 +896,7 @@ Fix: Insert a ##FASTA line before the first sequence.
 
 **FASTA records are well formed**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Other Syntax: ##FASTA](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 Each record has a ">" header with an id, at least one sequence line, and ids are unique.
@@ -910,13 +912,13 @@ ACGT
 
 Fix: Give each sequence a unique id and its sequence lines.
 
-Notes: Which alphabet is accepted (IUPAC nucleotides, amino acids, lower case, "*", "-")? Is the FASTA id the first word of the header?
+Notes: Which alphabet is accepted (IUPAC nucleotides, amino acids, lower case, "*", "-")? Is the FASTA id the first word of the header? Implemented without an alphabet check: a header with no id, a repeated id, a record without sequence lines, and sequence lines before the first header (once) are reported. The id is taken as the first word of the header, as FASTA readers do.
 
 ### GFF-DIR-007
 
 **##species is an NCBI Taxonomy URL**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Other Syntax: ##species](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 The preferred format is an NCBI Taxonomy browser URL by id or name.
@@ -929,13 +931,13 @@ Example (invalid):
 
 Fix: Write ##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=6239.
 
-Notes: The specification gives http URLs only, as "preferred". Accept https, identifiers.org/NCBITaxon CURIEs (NCBITaxon:6239)? Proposal: warning only when the value is not a URL or CURIE.
+Notes: The specification gives http URLs only, as "preferred". Accept https, identifiers.org/NCBITaxon CURIEs (NCBITaxon:6239)? Proposal: warning only when the value is not a URL or CURIE. Until SO answers, anything other than the two NCBI Taxonomy browser URL forms (http or https) is reported, including NCBITaxon CURIEs.
 
 ### GFF-DIR-008
 
 **##genome-build has a source and a build name**
 
-- Level: warning; layer: core; status: planned; review: pending-SO
+- Level: warning; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##genome-build](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 The directive gives the source of the assembly and its build name.
@@ -948,13 +950,13 @@ Example (invalid):
 
 Fix: Give both, for example ##genome-build NCBI GRCh38.p14.
 
-Notes: An FHGFF3 header records the genome more precisely (checksum, accession, SeqCol).
+Notes: An FHGFF3 header records the genome more precisely (checksum, accession, SeqCol). Reported when fewer than two values are given; the content is not checked.
 
 ### GFF-DIR-009
 
 **Ontology directives are recorded but not fetched**
 
-- Level: info; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: info; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Other Syntax: ##feature-ontology, ##attribute-ontology, ##source-ontology](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 ##feature-ontology, ##attribute-ontology and ##source-ontology name ontologies by URI. The validator never fetches URIs during validation; types are checked against the pinned SO release and the directive is reported.
@@ -973,7 +975,7 @@ Notes: The release URIs in the specification (SourceForge CVS) are dead. Should 
 
 **Unknown directive**
 
-- Level: info; layer: core; status: planned; review: pending-SO
+- Level: info; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: directives](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 Application-specific directives are allowed and need not be supported; unknown ones are reported for information.
@@ -994,17 +996,17 @@ Structure: IDs, references and bounds
 
 | Id | Level | Status | Title |
 |---|---|---|---|
-| [GFF-STR-001](#gff-str-001) | error | planned | IDs are unique, except for the lines of one discontinuous feature |
-| [GFF-STR-002](#gff-str-002) | warning | planned | Lines of one feature share seqid and strand |
-| [GFF-STR-003](#gff-str-003) | warning | planned | Lines of one feature have the same Parent |
-| [GFF-STR-004](#gff-str-004) | error | planned | Parent refers to an ID in the file |
-| [GFF-STR-005](#gff-str-005) | error | planned | Derives_from refers to an ID in the file |
-| [GFF-STR-006](#gff-str-006) | error | planned | No Parent cycles |
-| [GFF-STR-007](#gff-str-007) | warning | planned | No Derives_from cycles |
-| [GFF-STR-008](#gff-str-008) | error | planned | Features are within their ##sequence-region |
-| [GFF-STR-009](#gff-str-009) | info | planned | seqid without ##sequence-region |
-| [GFF-STR-010](#gff-str-010) | warning | planned | seqids appear in the ##FASTA section |
-| [GFF-STR-011](#gff-str-011) | error | planned | Features fit within the embedded sequence |
+| [GFF-STR-001](#gff-str-001) | error | implemented | IDs are unique, except for the lines of one discontinuous feature |
+| [GFF-STR-002](#gff-str-002) | warning | implemented | Lines of one feature share seqid and strand |
+| [GFF-STR-003](#gff-str-003) | warning | implemented | Lines of one feature have the same Parent |
+| [GFF-STR-004](#gff-str-004) | error | implemented | Parent refers to an ID in the file |
+| [GFF-STR-005](#gff-str-005) | error | implemented | Derives_from refers to an ID in the file |
+| [GFF-STR-006](#gff-str-006) | error | implemented | No Parent cycles |
+| [GFF-STR-007](#gff-str-007) | warning | implemented | No Derives_from cycles |
+| [GFF-STR-008](#gff-str-008) | error | implemented | Features are within their ##sequence-region |
+| [GFF-STR-009](#gff-str-009) | info | implemented | seqid without ##sequence-region |
+| [GFF-STR-010](#gff-str-010) | warning | implemented | seqids appear in the ##FASTA section |
+| [GFF-STR-011](#gff-str-011) | error | implemented | Features fit within the embedded sequence |
 | [GFF-STR-012](#gff-str-012) | info | planned | Child extends beyond its parent |
 | [GFF-STR-013](#gff-str-013) | warning | planned | Parent and child are on the same seqid |
 
@@ -1012,7 +1014,7 @@ Structure: IDs, references and bounds
 
 **IDs are unique, except for the lines of one discontinuous feature**
 
-- Level: error; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: error; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: ID; Change Log 1.20](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#description-of-the-format) (gff3)
 
 IDs must be unique within the file. The same ID may appear on several lines only when those lines collectively represent a single discontinuous feature (for example the segments of a CDS or a cDNA_match). Lines sharing an ID with different types are two features with one ID.
@@ -1033,13 +1035,13 @@ ctg1→.→CDS→61→90→.→+→0→ID=c1;Parent=t1
 
 Fix: Give each feature its own ID.
 
-Notes: The specification does not say what lines of one feature must share. Proposal: same type is required (error); seqid, strand and Parent differences are GFF-STR-002 and GFF-STR-003. Is that the intended reading? IDs are compared after percent-decoding; confirm.
+Notes: The specification does not say what lines of one feature must share. Proposal: same type is required (error); seqid, strand and Parent differences are GFF-STR-002 and GFF-STR-003. Is that the intended reading? IDs are compared after percent-decoding; confirm. Until SO answers, lines sharing an ID with different types are reported (one finding per later line); IDs, Parent and Derives_from values are compared after percent- decoding.
 
 ### GFF-STR-002
 
 **Lines of one feature share seqid and strand**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Pathological Cases: trans-spliced transcript](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#pathological-cases) (gff3)
 
 Lines with the same ID describe one feature; a change of seqid or strand between them is unusual.
@@ -1053,13 +1055,13 @@ chr2→.→CDS→61→90→.→-→0→ID=c1;Parent=t1
 
 Fix: Check that the lines are parts of the same feature.
 
-Notes: Trans-splicing between strands or chromosomes is biologically real; the specification's trans-splicing example stays on one strand and seqid. Should a change of seqid or strand be allowed, warned or an error?
+Notes: Trans-splicing between strands or chromosomes is biologically real; the specification's trans-splicing example stays on one strand and seqid. Should a change of seqid or strand be allowed, warned or an error? Implemented as a warning until SO answers question 8.
 
 ### GFF-STR-003
 
 **Lines of one feature have the same Parent**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [The Canonical Gene](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#the-canonical-gene) (gff3)
 
 A single feature has one set of parents; lines with the same ID but different Parent values are probably different features.
@@ -1073,13 +1075,13 @@ ctg1→.→CDS→61→90→.→+→0→ID=c1;Parent=t2
 
 Fix: Give the features different IDs, or the same Parent list.
 
-Notes: Can the Parent list legitimately be split across the lines of a feature (the union being the parents)?
+Notes: Can the Parent list legitimately be split across the lines of a feature (the union being the parents)? Implemented as a warning until SO answers. For GFF-STR-006 the union of the Parent lists is used.
 
 ### GFF-STR-004
 
 **Parent refers to an ID in the file**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Parent (part_of) Relationships](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#parent-part_of-relationships) (gff3)
 
 Every Parent value is the ID of a feature in the same file. Forward references are allowed (up to "###" or the end of the file).
@@ -1092,11 +1094,13 @@ ctg1→.→exon→1→90→.→+→.→Parent=mRNA0001
 
 Fix: Add the parent feature, or correct the ID (IDs are case sensitive).
 
+Notes: Checked at the end of the file; a reference that crosses a ### is GFF- DIR-003. One finding per missing ID, at its first reference, with the number of other referencing lines.
+
 ### GFF-STR-005
 
 **Derives_from refers to an ID in the file**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Pathological Cases: polycistronic transcripts, intein](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#pathological-cases) (gff3)
 
 Every Derives_from value is the ID of a feature in the same file.
@@ -1109,11 +1113,13 @@ chrX→.→polypeptide→1→90→.→+→.→ID=p1;Derives_from=cds99
 
 Fix: Add the feature it derives from, or correct the ID.
 
+Notes: Checked at the end of the file, like GFF-STR-004. Commas in Derives_from are read as separators (question 5).
+
 ### GFF-STR-006
 
 **No Parent cycles**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Parent (part_of) Relationships](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#parent-part_of-relationships) (gff3)
 
 A set of Parent relationships that forms a cycle (including a feature that is its own parent) must be rejected.
@@ -1127,11 +1133,13 @@ ctg1→.→mRNA→1→90→.→+→.→ID=b;Parent=a
 
 Fix: Remove the Parent that closes the loop.
 
+Notes: Checked at the end of the file by an iterative depth-first search over the Parent graph of features with IDs (no recursion limit). A cycle is reported at the line of its first-defined feature.
+
 ### GFF-STR-007
 
 **No Derives_from cycles**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Pathological Cases](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#pathological-cases) (gff3)
 
 A feature that (indirectly) derives from itself is probably an error.
@@ -1145,13 +1153,13 @@ chrX→.→polypeptide→1→90→.→+→.→ID=p2;Derives_from=p1
 
 Fix: Remove the Derives_from that closes the loop.
 
-Notes: The specification forbids Parent cycles only. Should Derives_from cycles be an error too?
+Notes: The specification forbids Parent cycles only. Should Derives_from cycles be an error too? Implemented as a warning, with the same search as GFF-STR-006, until SO answers question 12.
 
 ### GFF-STR-008
 
 **Features are within their ##sequence-region**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##sequence-region](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 When a ##sequence-region is given for a seqid, every feature on it lies within that range, unless the landmark is marked Is_circular.
@@ -1165,13 +1173,13 @@ ctg1→.→gene→900→1200→.→+→.→ID=g1
 
 Fix: Correct the coordinates or the ##sequence-region bounds.
 
-Notes: For a circular landmark, the bound is presumably 2 x length (end = position past the origin + length); confirm.
+Notes: For a circular landmark, the bound is presumably 2 x length (end = position past the origin + length); confirm. Until SO answers question 10, features before the directive are also checked, and when any feature on the seqid has Is_circular=true (which feature is the landmark is open, GFF-ATT-017) only the start is checked; no 2 x length bound is applied. At most 100 lines per seqid beyond the end are listed, then a count.
 
 ### GFF-STR-009
 
 **seqid without ##sequence-region**
 
-- Level: info; layer: core; status: planned; review: pending-SO
+- Level: info; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##sequence-region](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 The directive is optional but strongly encouraged; when some seqids have one and others do not, the others cannot be bounds-checked.
@@ -1185,11 +1193,13 @@ ctg2→.→gene→1→90→.→+→.→ID=g1
 
 Fix: Add ##sequence-region lines for all sequences (optional).
 
+Notes: Reported only when the file has at least one ##sequence-region; once per seqid, at its first feature.
+
 ### GFF-STR-010
 
 **seqids appear in the ##FASTA section**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Other Syntax: ##FASTA](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 When the file has a ##FASTA section, features normally refer to sequences in it.
@@ -1205,13 +1215,13 @@ ACGT
 
 Fix: Add the sequence, or correct the seqid.
 
-Notes: Not required by the specification; the FASTA section may hold only some sequences (for example protein Targets). Warning or info?
+Notes: Not required by the specification; the FASTA section may hold only some sequences (for example protein Targets). Warning or info? Implemented as a warning, once per seqid, at its first feature. The seqid is matched as written, then percent-decoded (question 3).
 
 ### GFF-STR-011
 
 **Features fit within the embedded sequence**
 
-- Level: error; layer: core; status: planned; review: pending-SO
+- Level: error; layer: core; status: implemented; review: pending-SO
 - Reference: [Other Syntax: ##FASTA](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#other-syntax) (gff3)
 
 A feature's end is not beyond the length of its sequence in the ##FASTA section, unless the landmark is circular.
@@ -1226,6 +1236,8 @@ ACGT
 ```
 
 Fix: Correct the coordinates or the sequence.
+
+Notes: Reported once per seqid, at the feature that reaches furthest. For a seqid with Is_circular=true only the start is checked.
 
 ### GFF-STR-012
 

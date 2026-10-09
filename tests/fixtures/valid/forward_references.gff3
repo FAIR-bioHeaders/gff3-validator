@@ -1,0 +1,23 @@
+##gff-version 3
+##sequence-region chrX 1 200
+chrX	.	exon	10	90	.	+	.	Parent=tran01
+chrX	.	mRNA	10	90	.	+	.	ID=tran01;Parent=gene01
+chrX	.	gene	10	90	.	+	.	ID=gene01;Name=resA
+###
+chrX	.	gene	100	120	.	+	.	ID=gene02
+chrX	.	gene	130	150	.	+	.	ID=gene03
+chrX	.	mRNA	100	150	.	+	.	ID=tran02;Parent=gene02,gene03
+chrX	.	exon	100	150	.	+	.	Parent=tran02
+chrX	.	CDS	100	120	.	+	0	ID=cds02;Parent=tran02
+chrX	.	CDS	130	150	.	+	0	ID=cds03;Parent=tran02
+chrX	.	polypeptide	100	120	.	+	.	ID=pp02;Derives_from=cds02
+chrX	.	polypeptide	130	150	.	+	.	ID=pp03;Derives_from=cds03
+###
+##FASTA
+>chrX chromosome X
+ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
+ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
+ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
+ACGTACGTACGTACGTACGT
+>prot1
+MKV*

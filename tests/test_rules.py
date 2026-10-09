@@ -1,5 +1,6 @@
 """Each implemented rule fires on its fixture and only where the catalogue says."""
 
+import io
 from pathlib import Path
 
 import pytest
@@ -23,7 +24,8 @@ def test_fixture_reports_expected_implemented_rules(name):
     expected = set(EXPECTED[name]) & IMPLEMENTED
     report = validate(FIXTURES / name)
     assert rule_ids(report) == expected
-    assert report.valid == (not name.startswith("invalid/") or not expected)
+    errors = [rule for rule in expected if CATALOGUE[rule].level == "error"]
+    assert report.valid == (not errors)
 
 
 def test_every_fixture_is_listed():
@@ -158,7 +160,7 @@ def test_empty_input(tmp_path):
 def test_fasta_section_is_not_read_as_features(tmp_path):
     path = tmp_path / "x.gff3"
     path.write_text("##gff-version 3\n>ctg1\nACGT\n", encoding="utf-8")
-    assert rule_ids(validate(path)) == set()
+    assert rule_ids(validate(path)) == {"GFF-DIR-005"}
 
 
 def test_max_findings_keeps_counts(tmp_path):
@@ -168,6 +170,17 @@ def test_max_findings_keeps_counts(tmp_path):
     assert len(report.findings) == 2
     assert report.truncated == 3
     assert report.counts["error"] == 5
+
+
+@pytest.mark.parametrize(
+    "rule", [rule for rule in CATALOGUE.implemented() if rule.layer == "core"]
+)
+def test_catalogue_example_fires_its_rule(rule):
+    text = rule.example
+    if rule.id != "GFF-SYN-001":
+        text = "##gff-version 3\n" + text
+    data = text.encode("utf-8").replace(b"\\xe9", b"\xe9") + b"\n"
+    assert rule.id in rule_ids(validate(io.BytesIO(data)))
 
 
 def test_skipped_layers_are_reported():

@@ -15,8 +15,8 @@ from gff3_validator.report import to_json, to_text
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="gff3-validate",
-        description="Validate a GFF3 file (pre-release: only a first slice of "
-        "rules is implemented; see docs/rules.md).",
+        description="Validate a GFF3 file (pre-release: only the rules marked "
+        "implemented in docs/rules.md are checked).",
     )
     parser.add_argument("input", help="GFF3 file, plain or gzip/BGZF; - for stdin")
     parser.add_argument(

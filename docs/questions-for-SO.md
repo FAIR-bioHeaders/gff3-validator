@@ -8,7 +8,9 @@ is silent, ambiguous or contradicts itself. The rule ids link to
 [rules.md](rules.md), where each rule's `notes` give the detail and our
 proposal. 45 of the 88 draft rules are marked "needs SO input". Until SO
 answers, these rules stay at the level shown in the catalogue, and none
-counts as SO-endorsed.
+counts as SO-endorsed. Where such a rule is already implemented, it reports
+only what the specification text settles; its `notes` in the catalogue say
+what is left unreported until the question is answered.
 
 ## Decisions on the core format
 
