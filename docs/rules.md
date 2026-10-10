@@ -1329,7 +1329,7 @@ Example (invalid):
 ctg1→.→SO:704→1→90→.→+→.→ID=g1
 ```
 
-Fix: Write the full accession (SO:0000704).
+Fix: Write the accession as SO: followed by seven digits (for example SO:0000704).
 
 Notes: The specification writes "SO:000000" (six zeros) as the pattern; SO accessions have seven digits. Any type starting with "SO:" (in any case) that is not SO: and seven digits is reported; a well-formed accession that is not in the release is SO-001.
 
@@ -1386,7 +1386,7 @@ Example (invalid):
 ctg1→.→five_prime_utr→1→90→.→+→.→Parent=t1
 ```
 
-Fix: Use the SO label (five_prime_UTR).
+Fix: Use the SO label named in the message (for example five_prime_UTR for 5'UTR).
 
 Notes: Depends on the SO-001 decision on synonyms. Implemented as proposed in question 14: a type that differs from a label only by case, or that equals an EXACT synonym (compared ignoring case), is reported with the label. A unique match is then treated as that term by the other SO rules (SO-003, SO-004, SO-006, SO-009) but not by the CDS, exon and recoded_codon checks, which need the exact label or accession. A synonym of several terms lists them and is not checked further.
 

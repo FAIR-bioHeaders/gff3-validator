@@ -1091,7 +1091,7 @@ rules:
   description: An accession type has the form SO:NNNNNNN (seven digits).
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 3: type (SO:000000 syntax)"}
   example: "ctg1\t.\tSO:704\t1\t90\t.\t+\t.\tID=g1"
-  fix: Write the full accession (SO:0000704).
+  fix: "Write the accession as SO: followed by seven digits (for example SO:0000704)."
   status: implemented
   review: pending-SO
   notes: >-
@@ -1141,7 +1141,7 @@ rules:
   description: The type matches an SO synonym or differs from a label only by case; the label is preferred.
   reference: {source: so, anchor: "", section: "so.obo name and synonym"}
   example: "ctg1\t.\tfive_prime_utr\t1\t90\t.\t+\t.\tParent=t1"
-  fix: Use the SO label (five_prime_UTR).
+  fix: Use the SO label named in the message (for example five_prime_UTR for 5'UTR).
   status: implemented
   review: pending-SO
   needs_so: true
