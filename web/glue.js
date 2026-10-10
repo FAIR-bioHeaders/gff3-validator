@@ -46,6 +46,7 @@
         "import json",
         "import gff3_validator",
         "from gff3_validator import codons, load_catalogue",
+        "from gff3_validator.web import profiles as _profiles",
         "_c = load_catalogue()",
         "json.dumps({",
         "  'version': gff3_validator.__version__,",
@@ -53,6 +54,7 @@
         "  'tables': [[n, codons.TABLES[n][0]] for n in sorted(codons.TABLES)],",
         "  'default_table': codons.DEFAULT_TABLE,",
         "  'so': _c.sources['so']['title'],",
+        "  'profiles': _profiles(),",
         "})",
       ].join("\n")
     );
@@ -77,9 +79,9 @@
   }
 
   /* Validate one file. options: {headerMode: "auto"|"require"|"skip",
-   * translationTable: number|undefined}. genome: {size, readAt}|null.
-   * Returns {ok, error} or {ok, valid, counts, summary, json, sarif, html,
-   * text}, as gff3_validator.web.run. */
+   * translationTable: number|undefined, profile: id|undefined}. genome:
+   * {size, readAt}|null. Returns {ok, error} or {ok, valid, compliant,
+   * counts, summary, json, sarif, html, text}, as gff3_validator.web.run. */
   function validate(pyodide, file, genome, options, onProgress) {
     options = options || {};
     var web = pyodide.pyimport("gff3_validator.web");
@@ -99,6 +101,7 @@
       if (options.translationTable !== undefined && options.translationTable !== null) {
         kwargs.translation_table = Number(options.translationTable);
       }
+      if (options.profile) kwargs.profile = String(options.profile);
       result = web.run.callKwargs(stream, file.name, kwargs);
       return result.toJs({ dict_converter: Object.fromEntries });
     } finally {

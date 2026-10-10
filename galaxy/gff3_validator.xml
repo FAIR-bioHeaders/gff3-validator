@@ -31,10 +31,13 @@ ln -s '$input' '$name' &&
 #elif $header == 'skip':
     #set $options += ' --no-header'
 #end if
+#if $profile != 'none':
+    #set $options += " --profile '" + str($profile) + "'"
+#end if
 #set $options += ' --max-findings ' + str($max_findings)
 
-## gff3-validate exits 0 when the file has no errors, 1 when it has errors and
-## 2 when the run is incomplete (unreadable input or genome). Exit status 1 is
+## gff3-validate exits 0 when the file has no errors, 1 when it has errors
+## (with a profile, also profile errors) and 2 when the run is incomplete (unreadable input or genome). Exit status 1 is
 ## a successful validation, so it is mapped to 0; any other status stops the
 ## job with that status.
 accept_invalid() { status=\$?; [ "\$status" -eq 1 ] || exit "\$status"; } &&
@@ -93,6 +96,11 @@ gff3-validate $options --format html -- '$name' > '$report_html' || accept_inval
             <option value="auto" selected="true">Check it if present</option>
             <option value="require">Require it (a file without a header is invalid)</option>
             <option value="skip">Skip header checks</option>
+        </param>
+        <param name="profile" type="select" label="Repository or community profile"
+            help="Also check the recommendations of a repository or community. Profile findings are reported separately and do not change whether the file is valid GFF3.">
+            <option value="none" selected="true">None: GFF3 1.26 and the Sequence Ontology only</option>
+            <option value="agbiodata">AgBioData GFF3 recommendations (draft profile)</option>
         </param>
         <param name="max_findings" type="integer" value="10000" min="1" label="Maximum number of findings to report"
             help="Counts of errors, warnings and notes stay complete."/>
@@ -252,6 +260,30 @@ gff3-validate $options --format html -- '$name' > '$report_html' || accept_inval
                 <has_text text="duplicate sequence name"/>
             </assert_stderr>
         </test>
+        <!-- 9: AgBioData profile: valid GFF3 that does not comply with the profile -->
+        <test expect_num_outputs="2">
+            <param name="input" value="agb-009-target-spaces.gff3" ftype="gff3"/>
+            <param name="profile" value="agbiodata"/>
+            <param name="extra_reports" value="json"/>
+            <output name="report_html" ftype="html">
+                <assert_contents>
+                    <has_text text="AgBioData profile findings"/>
+                    <has_text text="AGB-009"/>
+                </assert_contents>
+            </output>
+            <output name="report_json" ftype="json">
+                <assert_contents>
+                    <has_text text="&quot;valid&quot;: true"/>
+                    <has_text text="&quot;compliant&quot;: false"/>
+                    <has_text text="&quot;id&quot;: &quot;agbiodata&quot;"/>
+                </assert_contents>
+            </output>
+            <assert_stdout>
+                <has_text text="AgBioData profile error AGB-009"/>
+                <has_text text="no errors (0 errors"/>
+                <has_text text="(not compliant)"/>
+            </assert_stdout>
+        </test>
     </tests>
     <help><![CDATA[
 .. class:: infomark
@@ -276,6 +308,16 @@ Checks:
   under the chosen translation table, strand consistency.
 - **FAIR-bioHeaders header** (``HDR-*``): whether a FAIR-bioHeaders (FHGFF3)
   provenance header is present; it can be required or skipped.
+
+Optionally, a **profile** adds the recommendations of a repository or
+community on top of these checks. The `AgBioData GFF3 recommendations`_
+profile (a draft, not reviewed by the AgBioData working group) checks, for
+example, that child features lie within their parent, warns about
+Ontology_term and GO terms in Dbxref, and makes unknown types and internal
+stop codons errors. Profile findings (``AGB-*``, or a core rule at a raised
+level) are listed in a separate section and do not change whether the file is
+valid GFF3; the summary says whether the file complies with the profile. See
+the `profile documentation`_.
 
 Each finding has a level:
 
@@ -305,7 +347,7 @@ The same validator also runs `in the browser`_, where files never leave the comp
 **Job status**
 
 A file with errors is a successful validation: the job finishes and the
-reports say the file is **INVALID**. The job fails only when validation could
+reports say the file is **INVALID** (or, with a profile, **not compliant**). The job fails only when validation could
 not be completed, for example when the input or the genome cannot be read or
 the genome cannot be indexed (duplicate sequence names, lines of different
 lengths inside a record); the reason is in the job's standard error.
@@ -327,6 +369,8 @@ review with the Sequence Ontology group:
 .. _GFF3 specification 1.26: https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 .. _rule catalogue: https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/rules.md
 .. _in the browser: https://fair-bioheaders.github.io/gff3-validator/
+.. _AgBioData GFF3 recommendations: https://github.com/NAL-i5K/AgBioData_GFF3_recommendation
+.. _profile documentation: https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/profiles.md
     ]]></help>
     <expand macro="citations"/>
 </tool>

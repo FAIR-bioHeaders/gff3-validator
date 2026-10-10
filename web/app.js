@@ -112,6 +112,14 @@
         if (entry[0] === m.facts.default_table) option.selected = true;
         select.appendChild(option);
       });
+      var profiles = $("profile");
+      (m.facts.profiles || []).forEach(function (entry) {
+        var option = document.createElement("option");
+        option.value = entry.id;
+        option.textContent = entry.name + " (" + entry.version + ")";
+        profiles.appendChild(option);
+      });
+      profiles.disabled = !(m.facts.profiles || []).length;
       $("engine-version").textContent = m.facts.version + " (catalogue " + m.facts.catalogue + ")";
       status("Ready. Choose a GFF3 file.", 1, 1);
       $("progress").hidden = false;
@@ -136,7 +144,7 @@
     status("Done in " + result.seconds.toFixed(1) + " s.", 1, 1);
     var verdict = $("verdict");
     verdict.textContent = state.file.name + ": " + result.summary;
-    verdict.className = result.valid ? "ok" : "bad";
+    verdict.className = result.valid && result.compliant !== false ? "ok" : "bad";
     $("report").srcdoc = result.html;
     $("results").hidden = false;
     $("results-title").focus();
@@ -169,6 +177,7 @@
     var form = $("form");
     var options = { headerMode: form.elements.header.value };
     if (state.genome) options.translationTable = Number($("table").value);
+    if ($("profile").value) options.profile = $("profile").value;
     state.worker.postMessage({ type: "validate", file: state.file, genome: state.genome, options: options });
   }
 
