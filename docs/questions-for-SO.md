@@ -80,6 +80,8 @@ Each question is marked with what we need:
 
    **Choose.** Proposed: phase is required on CDS and its SO subtypes; a phase on other features is a warning.
 
+   *Implemented as proposed* (GFF-SYN-019 for CDS and its is_a subtypes; GFF-SYN-020 as a warning).
+
 7. **Score.** Which number syntax is "floating point" (exponents yes; `nan`,
    `inf`, hexadecimal no)? ([GFF-SYN-016](rules.md#gff-syn-016))
 
@@ -130,12 +132,21 @@ Each question is marked with what we need:
 
    **Confirm (release), SO expertise (artefact).** Proposed: each validator release bundles the latest SO release, every report states which release it used, CI opens an update when SO publishes a new one, and `--so` selects another release. Which artefact: full SO (`so.obo`), with a warning for terms outside SOFA, the annotation subset that GFF3 historically referenced? A file whose `##feature-ontology` names an old release is validated against the bundled release, with an informational note.
 
+   *Implemented as proposed*: so.obo data-version 2026-08-07 is bundled, full SO
+   with a note (SO-009, info) for terms outside SOFA. SO has published no GitHub
+   release since v3.1 (2018), so the "release" is the so.obo data-version.
+
 14. **Matching types.** Exact label only, or also EXACT synonyms and case
     variants (the specification's NOTE 1 writes `cds`)? Only is_a descendants
     of sequence_feature? ([SO-001](rules.md#so-001), [SO-003](rules.md#so-003),
     [SO-005](rules.md#so-005))
 
    **SO expertise.** Proposed: match the exact label or SO accession, case-sensitive; an EXACT synonym or case variant is a warning that suggests the canonical label; column 3 must be an is_a descendant of sequence_feature (warning until confirmed).
+
+   *Implemented as proposed*, with one level choice: a type that matches no label,
+   accession or synonym (SO-001) is a warning, not an error, until SO answers,
+   because the specification does not name a release and terms are renamed
+   (`lnc_RNA`, used by NCBI and Ensembl, is now `lncRNA` and not a synonym).
 
 15. **Parent and part_of.** The specification says a Parent that is not an SO
     part-of relationship "should trigger a parse exception". Which relations
@@ -144,11 +155,18 @@ Each question is marked with what we need:
 
    **SO expertise.** Proposed: a Parent is allowed when the child is part_of the parent, including via is_a inheritance and transitive part_of; anything else is a warning until SO settles the relation set.
 
+   *Implemented as proposed*, also following member_of: SO relates transcripts to
+   genes only through `gene_member_region member_of gene`, so with part_of alone
+   the canonical gene's `mRNA Parent=gene` would be reported. Is that the
+   intended relation?
+
 16. **Derives_from typing.** Should Derives_from be type-checked at all? The
     specification's examples (CDS derives from gene) may not follow SO
     derives_from. ([SO-007](rules.md#so-007))
 
    **SO expertise.** Proposed: do not type-check Derives_from for now (an informational note at most).
+
+   *Implemented as proposed*: not checked; reports list SO-007 as not checked.
 
 
 ## Biology (optional checks)
@@ -184,6 +202,9 @@ Each question is marked with what we need:
    mirroring the INSDC `/exception="trans-splicing"` qualifier. Is there a
    better marker?
 
+   *Implemented as proposed* for the part_of restriction (the edges SO-006
+   accepts); the trans-splicing exemption is not implemented yet.
+
 ## Suggested corrections to the specification text
 
 Found while drafting; each makes users copy invalid GFF3.
@@ -198,6 +219,10 @@ Found while drafting; each makes users copy invalid GFF3.
   7600, is one base longer than the frame needs), while cds00003 and cds00004
   end on a codon boundary at 7600. ([BIO-009](rules.md#bio-009))
 - Dbxref and Ontology_term examples are quoted. ([GFF-ATT-009](rules.md#gff-att-009))
+- The Gap examples use the type `nucleotide_to_protein_match`, which is not an
+  SO term, and the programmed frameshift example's `Ontology_term=SO:1000069`
+  is obsolete in so.obo data-version 2026-08-07. ([SO-001](rules.md#so-001),
+  [SO-008](rules.md#so-008))
 - The accession pattern is written `SO:000000` (six digits).
   ([SO-002](rules.md#so-002))
 - Dead links: SourceForge SO release URIs, the GO.xrf_abbs FTP registry, and

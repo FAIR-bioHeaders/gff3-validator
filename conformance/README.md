@@ -85,6 +85,11 @@ specification's own example would get BIO-009 notes (two of its CDS are one
 base longer than a whole number of codons; see the suggested corrections in
 questions-for-SO.md), so the genome cases use their own small genes.
 
+Findings of the Sequence Ontology rules (`SO-*`, GFF-SYN-020) assume so.obo
+data-version 2026-08-07, the release bundled with gff3-validator; they are
+`proposed` cases citing questions 6 and 13 to 15, and a later SO release may
+change them (for example by renaming or obsoleting a term).
+
 ## Running a validator over the suite
 
 `scripts/check_conformance.py` (Python 3.9 or later, standard library only)

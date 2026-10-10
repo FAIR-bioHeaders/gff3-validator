@@ -1,0 +1,4 @@
+##gff-version 3
+##sequence-region ctg1 1 1000
+ctg1	.	protein_coding_gene	1	90	.	+	.	ID=g1
+ctg1	.	protein_coding_gene	101	190	.	+	.	ID=g2

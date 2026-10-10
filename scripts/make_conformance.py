@@ -427,10 +427,14 @@ case(
         ),
         t("ctg123 . EST_match 1200 1220 . - . ID=match00004;Target=EST%2099 1 21 +"),
     ],
+    findings=[f("SO-001", "warning", 3)],
+    status="proposed",
+    open_question="Q14",
     section="The Gap Attribute; Alignments; Column 9: Target",
     description="The specification's Gap examples (nucleotide, protein with "
     "frameshifts), match/match_part, and a Target with a strand and an escaped "
-    "space in its id.",
+    "space in its id. The examples' nucleotide_to_protein_match is not an SO "
+    "term: one warning for its three lines.",
 )
 case(
     "percent-encoding",
@@ -581,12 +585,14 @@ case(
         ),
         "###",
     ],
+    findings=[f("SO-009", "info", 5)],
     genome=GENOME,
     status="proposed",
-    open_question="Q17; SO-Ontologies#658",
+    open_question="Q17; SO-Ontologies#658; Q13",
     section="The Canonical Gene",
     description="An in-frame TGA marked as selenocysteine by a recoded_codon "
-    "subtype child of the CDS: no internal stop is reported.",
+    "subtype child of the CDS: no internal stop is reported (the subtype is "
+    "outside SOFA, a note).",
 )
 
 # --------------------------------------------------------------------------
@@ -811,6 +817,35 @@ one(
     t("ctg1 . CDS 1 90 . + . ID=c1"),
     "Column 8: phase",
     "A CDS with phase '.': the phase is required for all CDS features.",
+)
+case(
+    "syn-019-cds-subtype-without-phase",
+    "invalid",
+    [V, t("ctg1 . CDS_predicted 1 90 . + . ID=c1")],
+    rule="GFF-SYN-019",
+    findings=[f("GFF-SYN-019", "error", 2), f("SO-009", "info", 2)],
+    status="proposed",
+    open_question="Q6",
+    section="Column 8: phase",
+    description="CDS_predicted, an is_a subtype of CDS, with phase '.' "
+    "(CDS_predicted is outside SOFA, a note).",
+)
+case(
+    "syn-020-phase-on-exon",
+    "valid",
+    [
+        V,
+        G,
+        t("ctg1 . mRNA 1 90 . + . ID=t1;Parent=g1"),
+        t("ctg1 . exon 1 90 . + 0 Parent=t1"),
+        t("ctg1 . CDS 1 90 . + 0 Parent=t1"),
+    ],
+    rule="GFF-SYN-020",
+    findings=[f("GFF-SYN-020", "warning", 4)],
+    status="proposed",
+    open_question="Q6",
+    section="Column 8: phase",
+    description="A phase on an exon; phase is defined only for CDS.",
 )
 
 # Attributes
@@ -1152,9 +1187,12 @@ case(
         t("ctg1 . mRNA 1 90 . + . ID=b;Parent=a"),
     ],
     rule="GFF-STR-006",
-    findings=[f("GFF-STR-006", "error", 2)],
+    findings=[f("GFF-STR-006", "error", 2), f("SO-006", "warning", 2)],
+    status="proposed",
+    open_question="Q15",
     section="Parent (part_of) Relationships",
-    description="Two features that are each other's Parent.",
+    description="Two features that are each other's Parent (a gene is not "
+    "part_of an mRNA in SO, a warning).",
 )
 case(
     "str-007-derives-from-cycle",
@@ -1222,6 +1260,122 @@ case(
     findings=[f("GFF-STR-011", "error", 2)],
     section="Other Syntax: ##FASTA; Columns 4 & 5",
     description="A feature ends at 90 on a 4 bp embedded sequence.",
+)
+
+# Sequence Ontology (bundled so.obo data-version 2026-08-07)
+one(
+    "so-001-unknown-type",
+    "valid",
+    "SO-001",
+    "warning",
+    t("ctg1 . protein_coding_gene_model 1 90 . + . ID=g1"),
+    "Column 3: type",
+    "A type that is neither an SO term name nor an accession.",
+    status="proposed",
+    open_question="Q14",
+)
+one(
+    "so-002-malformed-accession",
+    "invalid",
+    "SO-002",
+    "error",
+    t("ctg1 . SO:704 1 90 . + . ID=g1"),
+    "Column 3: type",
+    "An SO accession type with three digits instead of seven.",
+    status="proposed",
+    open_question="Q14",
+)
+one(
+    "so-003-not-sequence-feature",
+    "valid",
+    "SO-003",
+    "warning",
+    t("ctg1 . coding_sequence_variant 1 90 . + . ID=v1"),
+    "Column 3: type; Change Log 1.23",
+    "A variant effect term, which is not an is_a descendant of sequence_feature.",
+    status="proposed",
+    open_question="Q14",
+)
+one(
+    "so-004-obsolete-type",
+    "valid",
+    "SO-004",
+    "warning",
+    t("ctg1 . RNA_polymerase_promoter 1 90 . + . ID=p1"),
+    "Column 3: type",
+    "An obsolete SO term (replaced by promoter).",
+    status="proposed",
+    open_question="Q13",
+)
+one(
+    "so-005-case-variant",
+    "valid",
+    "SO-005",
+    "warning",
+    t("ctg1 . five_prime_utr 1 30 . + . ID=u1"),
+    "Column 3: type",
+    "A type that differs from the SO label five_prime_UTR only by case.",
+    status="proposed",
+    open_question="Q14",
+)
+case(
+    "so-006-parent-not-part-of",
+    "valid",
+    [
+        V,
+        G,
+        t("ctg1 . exon 1 90 . + . ID=e1;Parent=g1"),
+        t("ctg1 . mRNA 1 90 . + . ID=t1;Parent=e1"),
+    ],
+    rule="SO-006",
+    findings=[f("SO-006", "warning", 4)],
+    status="proposed",
+    open_question="Q15",
+    section="Parent (part_of) Relationships",
+    description="An mRNA whose Parent is an exon: an exon is part of a "
+    "transcript, not the reverse.",
+)
+case(
+    "so-006-exon-part-of-gene",
+    "valid",
+    [
+        V,
+        G,
+        t("ctg1 . mRNA 1 90 . + . ID=t1;Parent=g1"),
+        t("ctg1 . exon 1 90 . + . Parent=g1"),
+        t("ctg1 . CDS 1 90 . + 0 Parent=t1"),
+    ],
+    status="proposed",
+    open_question="Q15",
+    section="The Canonical Gene NOTE 2",
+    description="An exon attached directly to its gene, allowed by the "
+    "transitivity of part_of.",
+)
+one(
+    "so-008-unknown-ontology-term",
+    "valid",
+    "SO-008",
+    "warning",
+    t("ctg1 . mRNA 1 90 . + . ID=t1;Ontology_term=SO:9999999"),
+    "Pathological Cases: programmed frameshift",
+    "An Ontology_term value with the SO prefix that is not an SO term.",
+    status="proposed",
+    open_question="Q13",
+)
+case(
+    "so-009-outside-sofa",
+    "valid",
+    [
+        V,
+        t("ctg1 . protein_coding_gene 1 90 . + . ID=g1"),
+        t("ctg1 . protein_coding_gene 101 190 . + . ID=g2"),
+    ],
+    rule="SO-009",
+    findings=[f("SO-009", "info", 2)],
+    status="proposed",
+    open_question="Q13",
+    section="Column 3: type",
+    description="An SO term outside SOFA: one note per type, at its first line.",
 )
 
 # Biology (with the genome)

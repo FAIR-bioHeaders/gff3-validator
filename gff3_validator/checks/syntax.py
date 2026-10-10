@@ -23,7 +23,9 @@ INTEGER = re.compile(r"[0-9]+")
 FLOAT = re.compile(r"[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?")
 STRANDS = ("+", "-", ".", "?")
 PHASES = ("0", "1", "2", ".")
-CDS_TYPES = ("CDS", "SO:0000316")
+# CDS by label and accession. The engine passes the SO layer's set (CDS and
+# its is_a subtypes, question 6), which always includes these two.
+CDS_TYPES = frozenset(("CDS", "SO:0000316"))
 # Control characters other than tab (tab separates columns), GFF-SYN-005.
 CONTROL = re.compile(r"[\x00-\x08\x0a-\x1f\x7f]")
 BAD_PERCENT = re.compile(r"%(?![0-9A-Fa-f]{2})")
@@ -59,10 +61,10 @@ def is_version_line(line):
     return VERSION.fullmatch(line) is not None
 
 
-def check_feature(line) -> Iterator[Problem]:
+def check_feature(line, cds_types=CDS_TYPES) -> Iterator[Problem]:
     """Check one feature line (not blank, comment, directive or FASTA)."""
     fields = line.split("\t")
-    yield from check_columns(fields, line)
+    yield from check_columns(fields, line, cds_types)
 
 
 def encoded_inside(value, octets):
@@ -132,8 +134,11 @@ def check_encoding(fields, line) -> List[Problem]:
     return problems
 
 
-def check_columns(fields, line) -> Iterator[Problem]:
-    """Check the columns of a feature line split on tabs."""
+def check_columns(fields, line, cds_types=CDS_TYPES) -> Iterator[Problem]:
+    """Check the columns of a feature line split on tabs.
+
+    ``cds_types`` are the column 3 values that need a phase (GFF-SYN-019).
+    """
     if len(fields) != 9:
         hint = (
             "; the line has no tabs, so columns may be separated by spaces"
@@ -185,7 +190,7 @@ def check_columns(fields, line) -> Iterator[Problem]:
         yield ("GFF-SYN-017", 7, f"strand {show(strand)} is not +, -, . or ?")
     if phase != "" and phase not in PHASES:
         yield ("GFF-SYN-018", 8, f"phase {show(phase)} is not 0, 1, 2 or '.'")
-    elif phase == "." and type_ in CDS_TYPES:
+    elif phase == "." and type_ in cds_types:
         yield ("GFF-SYN-019", 8, f"{type_} feature has no phase ('.')")
     if "#" in attributes and COMMENT.search(attributes):
         yield (

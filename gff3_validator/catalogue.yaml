@@ -22,7 +22,7 @@ sources:
     title: GFF3 specification 1.26 (18 August 2020)
     url: https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md
   so:
-    title: Sequence Ontology (candidate pin so.obo data-version 2026-08-07, SO-Ontologies commit 4340c14; not yet adopted)
+    title: Sequence Ontology so.obo data-version 2026-08-07 (SO-Ontologies commit 4340c14), bundled with the validator (question 13)
     url: https://github.com/The-Sequence-Ontology/SO-Ontologies/blob/4340c143bac3578bba0c013d02e8c5f0e51ad14a/Ontology_Files/so.obo
   fhr-format:
     title: FAIR-bioHeaders format rules R1 to R10 (docs/FORMAT.md)
@@ -346,7 +346,10 @@ rules:
     subtypes of CDS (for example CDS_fragment, edited_CDS)? The
     specification's own single-exon and polycistronic examples write CDS lines
     with phase "."; they are placeholders (XXXX coordinates) but are copied by
-    users.
+    users. With the SO layer, applied as proposed in question 6 to the label
+    and accession of CDS and of every is_a subtype of CDS in the SO release
+    (for example CDS_predicted, edited_CDS); a case variant such as "cds" is
+    SO-005, not this rule.
 
 - id: GFF-SYN-020
   level: warning
@@ -356,13 +359,16 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 8: phase"}
   example: "ctg1\t.\texon\t1\t90\t.\t+\t0\tParent=t1"
   fix: Use "." for the phase of features that are not CDS.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     The specification does not forbid it. GTF-derived files put a phase on
     start_codon and stop_codon. Is a phase on non-CDS features an error, a
-    warning, or allowed?
+    warning, or allowed? Implemented as proposed in question 6, as a warning,
+    for types the SO layer resolves to a current term that is not CDS or an
+    is_a subtype of it; unknown and obsolete types are not judged. Reported
+    once per type, at the first line, with a count.
 
 # --------------------------------------------------------------------------
 # Attributes (column 9)
@@ -809,7 +815,9 @@ rules:
   notes: >-
     The release URIs in the specification (SourceForge CVS) are dead. Should
     the specification list current SO release URIs (PURLs with version), and
-    how should a file that names an old release be validated?
+    how should a file that names an old release be validated? As proposed in
+    question 13, ##feature-ontology is validated against the release in use
+    (bundled, or --so), and the note names it.
 
 - id: GFF-DIR-010
   level: info
@@ -1050,22 +1058,31 @@ rules:
 # --------------------------------------------------------------------------
 
 - id: SO-001
-  level: error
+  level: warning
   layer: so
   title: type is an SO term name or accession
   description: >-
     The type is a term from the Sequence Ontology or an SO accession
-    (SO:0000704), checked against the pinned, recorded SO release.
+    (SO:0000704), checked against the bundled SO release (or the so.obo given
+    with --so), which every report names.
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 3: type"}
   example: "ctg1\t.\tprotein_coding_gene_model\t1\t90\t.\t+\t.\tID=g1"
   fix: Use an SO term (for example gene, mRNA) or accession; see the suggestions in the message.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Exact label matching is case sensitive ("CDS"); the specification's NOTE 1
     table writes "cds". Are exact synonyms (EXACT in so.obo) acceptable as
     types? Are labels with spaces valid? Unknown types in SOFA but not SO?
+    Implemented as proposed in question 14: the exact label or accession
+    matches; a case variant or EXACT synonym is SO-005, not this rule; up to
+    three close labels are suggested. A warning, not an error, until SO
+    answers: the specification constrains the type to an SO term but does not
+    say which release (question 13), and terms are renamed between releases
+    (lnc_RNA, used by NCBI and Ensembl, is now lncRNA and not a synonym), and
+    the specification's own Gap example uses nucleotide_to_protein_match,
+    which is not an SO term. A type of "." is GFF-SYN-012 only.
 
 - id: SO-002
   level: error
@@ -1075,25 +1092,31 @@ rules:
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 3: type (SO:000000 syntax)"}
   example: "ctg1\t.\tSO:704\t1\t90\t.\t+\t.\tID=g1"
   fix: Write the full accession (SO:0000704).
-  status: planned
+  status: implemented
   review: pending-SO
-  notes: The specification writes "SO:000000" (six zeros) as the pattern; SO accessions have seven digits.
+  notes: >-
+    The specification writes "SO:000000" (six zeros) as the pattern; SO
+    accessions have seven digits. Any type starting with "SO:" (in any case)
+    that is not SO: and seven digits is reported; a well-formed accession that
+    is not in the release is SO-001.
 
 - id: SO-003
-  level: error
+  level: warning
   layer: so
   title: type is sequence_feature or a subtype
   description: The type must be sequence_feature (SO:0000110) or an is_a descendant of it, not, for example, an SO attribute or a variant effect term.
   reference: {source: gff3, anchor: description-of-the-format, section: "Column 3: type; Change Log 1.23"}
   example: "ctg1\t.\tcoding_sequence_variant\t1\t90\t.\t+\t.\tID=v1"
   fix: Use a located sequence feature type.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
     Confirm that only is_a (not part_of) descendants count, and how GVF types
     (sequence_alteration is a sequence_feature) and terms outside SOFA are
-    treated.
+    treated. Implemented as proposed in question 14 (is_a descendants only),
+    as a warning until SO confirms; obsolete terms are SO-004 instead, and
+    terms outside SOFA are SO-009.
 
 - id: SO-004
   level: warning
@@ -1101,12 +1124,15 @@ rules:
   title: type is not obsolete
   description: Obsolete SO terms are reported with their replaced_by or consider suggestions from the pinned release.
   reference: {source: so, anchor: "", section: "so.obo is_obsolete, replaced_by, consider"}
-  example: "ctg1\t.\tpseudogenic_exon\t1\t90\t.\t+\t.\tParent=t1"
+  example: "ctg1\t.\tRNA_polymerase_promoter\t1\t90\t.\t+\t.\tID=p1"
   fix: Use the suggested replacement term. The validator never rewrites the type.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
-  notes: The example term is illustrative; fixtures will use terms verified obsolete in the pinned release.
+  notes: >-
+    RNA_polymerase_promoter (SO:0001203) is obsolete in so.obo data-version
+    2026-08-07, replaced by promoter. Implemented as proposed in question 13;
+    an obsolete type is not also reported by SO-003 or SO-009.
 
 - id: SO-005
   level: warning
@@ -1116,10 +1142,17 @@ rules:
   reference: {source: so, anchor: "", section: "so.obo name and synonym"}
   example: "ctg1\t.\tfive_prime_utr\t1\t90\t.\t+\t.\tParent=t1"
   fix: Use the SO label (five_prime_UTR).
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
-  notes: Depends on the SO-001 decision on synonyms.
+  notes: >-
+    Depends on the SO-001 decision on synonyms. Implemented as proposed in
+    question 14: a type that differs from a label only by case, or that equals
+    an EXACT synonym (compared ignoring case), is reported with the label. A
+    unique match is then treated as that term by the other SO rules (SO-003,
+    SO-004, SO-006, SO-009) but not by the CDS, exon and recoded_codon checks,
+    which need the exact label or accession. A synonym of several terms lists
+    them and is not checked further.
 
 - id: SO-006
   level: warning
@@ -1132,7 +1165,7 @@ rules:
   reference: {source: gff3, anchor: parent-part_of-relationships, section: "Parent (part_of) Relationships; Canonical Gene NOTE 2"}
   example: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Parent=e1\nctg1\t.\texon\t1\t90\t.\t+\t.\tID=e1"
   fix: Check the Parent; for example, an exon is part of a transcript, not the reverse.
-  status: planned
+  status: implemented
   review: pending-SO
   needs_so: true
   notes: >-
@@ -1141,6 +1174,15 @@ rules:
     example notes promoters could not be part_of an operon). Which relations
     and inference (part_of, member_of, has_part inverses, is_a, transitivity)
     define "allowed"? Until SO decides, this is a warning, not an error.
+    Implemented as proposed in question 15: a Parent is allowed when the
+    child's type, or an is_a ancestor of it, is part_of the Parent's type or
+    an is_a ancestor of it, directly or through a chain of such steps. SO
+    relates transcripts to genes only through gene_member_region member_of
+    gene, so member_of is followed like part_of; with part_of alone the
+    specification's canonical gene (mRNA Parent=gene) would be reported.
+    has_part inverses are not used. Types that are unknown, ambiguous
+    synonyms or obsolete are not checked. One finding per pair of child and
+    Parent types, at the first line, with a count.
 
 - id: SO-007
   level: info
@@ -1156,7 +1198,9 @@ rules:
   notes: >-
     The Perl validator disabled this check. The specification's examples have
     CDS Derives_from gene and mature_polypeptide Derives_from gene, which may
-    not be derives_from relations in SO. Should this be checked at all?
+    not be derives_from relations in SO. Should this be checked at all? Not
+    checked, as proposed in question 16; reports list the rule as not
+    checked.
 
 - id: SO-008
   level: warning
@@ -1166,8 +1210,33 @@ rules:
   reference: {source: gff3, anchor: pathological-cases, section: "Pathological Cases: programmed frameshift"}
   example: "chrX\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Ontology_term=SO:9999999"
   fix: Use an existing SO accession.
-  status: planned
+  status: implemented
   review: pending-SO
+  notes: >-
+    Values with the DBTAG "SO" that are not SO: and seven digits, or not a
+    term in the release, are reported once per value. Obsolete terms are
+    not reported: the specification's own example, SO:1000069, is obsolete in
+    so.obo data-version 2026-08-07.
+
+- id: SO-009
+  level: info
+  layer: so
+  title: type is outside SOFA
+  description: >-
+    The type is an SO term that is not in SOFA, the SO subset for feature
+    annotation that GFF3 historically referenced. Such types are valid; the
+    note helps tools that accept only SOFA.
+  reference: {source: so, anchor: "", section: "so.obo subset SOFA"}
+  example: "ctg1\t.\tprotein_coding_gene\t1\t90\t.\t+\t.\tID=g1"
+  valid: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
+  fix: None needed; use a SOFA term if a downstream tool needs one.
+  status: implemented
+  review: pending-SO
+  needs_so: true
+  notes: >-
+    Added for question 13, which proposes validating against full SO with a
+    note for terms outside SOFA. Reported once per type, at the first line,
+    with a count.
 
 # --------------------------------------------------------------------------
 # Biology (optional; need --genome)
@@ -1307,8 +1376,10 @@ rules:
     the CDS, is exempt; such a feature carries recoded_amino_acid=<amino acid
     name> and may be split across a splice junction as several lines with one
     ID. The legacy NCBI transl_except attribute on the CDS is honoured as a
-    fallback. The subtypes are listed by name and accession until the SO layer
-    is implemented; the recoded_amino_acid value is not checked yet.
+    fallback. With the SO layer, recoded_codon and every is_a subtype of it in
+    the SO release count (by exact label or accession; the three subtypes
+    above are always included), as do CDS subtypes for the CDS and exon
+    subtypes for BIO-005; the recoded_amino_acid value is not checked yet.
 
 - id: BIO-007
   level: warning
@@ -1353,8 +1424,10 @@ rules:
     the CDS, is exempt; such a feature carries recoded_amino_acid=<amino acid
     name> and may be split across a splice junction as several lines with one
     ID. The legacy NCBI transl_except attribute on the CDS is honoured as a
-    fallback. The subtypes are listed by name and accession until the SO layer
-    is implemented; the recoded_amino_acid value is not checked yet. The last
+    fallback. With the SO layer, recoded_codon and every is_a subtype of it in
+    the SO release count (by exact label or accession; the three subtypes
+    above are always included), as do CDS subtypes for the CDS and exon
+    subtypes for BIO-005; the recoded_amino_acid value is not checked yet. The last
     complete codon is the terminal codon (BIO-007), never internal. One finding
     per CDS gives the first internal stop and the count.
 
@@ -1388,9 +1461,11 @@ rules:
   notes: >-
     Does not need the genome but runs with the biology layer. Trans-splicing and
     genes with strand "?" or "." are exceptions; error or warning? Implemented
-    as a warning along every Parent relation where both lines have strand + or
-    -, because without the SO layer the validator cannot tell which features are
-    parts of a gene; the Parent's strand is that of its first line.
+    as a warning where both lines have strand + or -; the Parent's strand is
+    that of its first line. As proposed in question 18, with the SO layer only
+    Parent relations that SO-006 accepts (part_of or member_of, through is_a
+    and transitivity) are checked; a relation SO-006 reports is skipped, and
+    one involving a type the SO layer cannot resolve is still checked.
     Trans-splicing has no marker yet and is reported.
 
 - id: BIO-011

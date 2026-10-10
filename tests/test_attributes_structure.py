@@ -285,9 +285,9 @@ def test_derives_from_crossing_resolution_point():
 
 def test_discontinuous_feature_with_identical_lines_is_valid():
     report = run(
-        "ctg1|.|mRNA|1|90|.|+|.|ID=t1",
-        "ctg1|.|cDNA_match|1|30|.|+|.|ID=m1;Parent=t1",
-        "ctg1|.|cDNA_match|61|90|.|+|.|ID=m1;Parent=t1",
+        "ctg1|.|match|1|90|.|+|.|ID=t1",
+        "ctg1|.|match_part|1|30|.|+|.|ID=m1;Parent=t1",
+        "ctg1|.|match_part|61|90|.|+|.|ID=m1;Parent=t1",
     )
     assert ids(report) == []
 
@@ -308,7 +308,11 @@ def test_ids_compared_after_decoding():
 
 
 def test_self_parent_is_a_cycle():
-    assert ids(run("ctg1|.|gene|1|90|.|+|.|ID=a;Parent=a")) == ["GFF-STR-006"]
+    # A gene is not part_of a gene in SO, so SO-006 warns too.
+    assert ids(run("ctg1|.|gene|1|90|.|+|.|ID=a;Parent=a")) == [
+        "GFF-STR-006",
+        "SO-006",
+    ]
 
 
 def test_cycle_through_a_later_line_of_a_discontinuous_feature():
@@ -317,7 +321,7 @@ def test_cycle_through_a_later_line_of_a_discontinuous_feature():
         "ctg1|.|CDS|1|30|.|+|0|ID=b;Parent=a",
         "ctg1|.|mRNA|1|90|.|+|.|ID=a;Parent=b",
     )
-    assert ids(report) == ["GFF-STR-003", "GFF-STR-006"]
+    assert ids(report) == ["GFF-STR-003", "GFF-STR-006", "SO-006"]
 
 
 def test_long_cycle_has_no_recursion_limit():
@@ -326,7 +330,7 @@ def test_long_cycle_has_no_recursion_limit():
         f"ctg1|.|gene|1|90|.|+|.|ID=n{i};Parent=n{(i + 1) % size}" for i in range(size)
     ]
     report = run(*lines)
-    (finding,) = report.findings
+    (finding,) = [f for f in report.findings if f.rule != "SO-006"]
     assert finding.rule == "GFF-STR-006"
     assert f"({size} features)" in finding.message
 

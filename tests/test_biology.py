@@ -54,7 +54,8 @@ def test_genome_forms_give_the_same_index_and_report(name):
         assert genome.fetch("chr1", 10, 13) == b"ATG"
         assert genome.spooled == name.endswith(".gz")
     report = validate(VALID, genome=BIOLOGY / name)
-    assert rules(report) == []
+    # recoded_codon and its subtypes are outside SOFA (SO-009, a note).
+    assert rules(report) == ["SO-009", "SO-009"]
     assert report.valid
 
 

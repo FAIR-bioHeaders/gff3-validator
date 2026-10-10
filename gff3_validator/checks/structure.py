@@ -261,6 +261,13 @@ class Structure:
             return None
         return self.combos[self.combo[node]][2]
 
+    def type_of(self, identifier):
+        """The type of the first line with ID ``identifier``, if seen yet."""
+        node = self.index.get(identifier)
+        if node is None or self.first_line[node] == 0:
+            return None
+        return self.combos[self.combo[node]][1]
+
     # -- FASTA ----------------------------------------------------------
 
     def fasta_record(self, name, length):

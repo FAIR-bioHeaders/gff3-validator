@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Sequence Ontology layer (FHR-Specification #65), following the answers
+  proposed in docs/questions-for-SO.md (questions 6, 13 to 16 and 18), at
+  conservative levels: SO-001 (unknown type, warning), SO-002 (malformed
+  accession, error), SO-003 (not a sequence_feature, warning), SO-004
+  (obsolete, warning), SO-005 (case variant or EXACT synonym, warning),
+  SO-006 (Parent not part_of/member_of, warning), SO-008 (unknown SO
+  Ontology_term, warning), the new SO-009 (outside SOFA, info) and
+  GFF-SYN-020 (phase on a non-CDS feature, warning); SO-007 (Derives_from
+  typing) is not checked. 77 of 89 rules are implemented. The package bundles
+  so.obo data-version 2026-08-07 as a 53 kB derived file
+  (`scripts/update_so.py`, standard library only); `--so` uses another
+  so.obo; every report names the release. CDS, exon and recoded_codon
+  subtypes are looked up in SO instead of listed by name (same behaviour for
+  the listed names), and BIO-010 follows only part_of relations. A weekly
+  workflow opens an issue when SO publishes a new so.obo.
+
 - Document the MPL-2.0 transition for new project contributions from March 2025 onward, preserve historical permissions and third-party notices, and align README/package/citation licensing. No runtime behavior changes.
 
 - Galaxy tool wrapper (`galaxy/`, FHR-Specification #71): `gff3_validator`,
