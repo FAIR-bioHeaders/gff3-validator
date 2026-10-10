@@ -5,7 +5,11 @@
   seqid and per ``##sequence-region``.
 - BIO-010 (strand of a child against its Parent) is checked on each line
   with the Parent's strand from :class:`Structure`; for a Parent not defined
-  yet, the first line and count per child strand are kept per Parent ID.
+  yet, the first line and count per child strand and type are kept per Parent
+  ID. With the SO layer only Parent relations that SO accepts as part_of are
+  checked (question 18); relations involving unresolved types still are.
+- CDS, exon and recoded_codon are recognised by exact label or accession,
+  including their is_a subtypes in the SO release in use.
 - BIO-004 to BIO-009 need all segments of a CDS. A CDS is all CDS lines with
   one ID or, for lines without ID, with one Parent list. Its segments
   (coordinates, phase and line: four integers per line in an ``array``), the
@@ -47,9 +51,14 @@ from gff3_validator.checks.syntax import CDS_TYPES
 from gff3_validator.codons import CodonTable
 from gff3_validator.genome import BLOCK, Genome, reverse_complement
 
-EXON_TYPES = ("exon", "SO:0000147")
-# recoded_codon and its is_a descendants (SO:0000145 > SO:0000883 >
-# SO:0000884, SO:0000885). To be replaced by the SO layer's subtype lookup.
+# The types the biology rules need, by label and accession. The engine passes
+# the SO layer's sets (each term and its is_a subtypes in the SO release in
+# use), which always include these names, so their behaviour does not depend
+# on the release: exon, recoded_codon (SO:0000145) with its subtypes
+# stop_codon_read_through (SO:0000883), stop_codon_redefined_as_pyrrolysine
+# (SO:0000884) and stop_codon_redefined_as_selenocysteine (SO:0000885), and
+# CDS (from the syntax rules).
+EXON_TYPES = frozenset(("exon", "SO:0000147"))
 RECODED_TYPES = frozenset(
     (
         "recoded_codon",
@@ -110,14 +119,36 @@ def partial_ends(attributes, strand) -> set:
 
 
 class Biology:
-    def __init__(self, genome: Genome, table: CodonTable, structure: Structure):
+    """The biology rules for one run.
+
+    ``types`` is ``(cds, exon, recoded)``: the column 3 values of each kind
+    (default: the names above). ``relation(child_type, parent_type)``, if
+    given, returns False for a Parent edge that is not an SO part_of
+    relationship; BIO-010 then skips it (question 18), and checks every edge
+    it returns True or None for.
+    """
+
+    def __init__(
+        self,
+        genome: Genome,
+        table: CodonTable,
+        structure: Structure,
+        types=None,
+        relation=None,
+    ):
         self.genome = genome
         self.table = table
         self.structure = structure
+        cds, exon, recoded = types or (CDS_TYPES, EXON_TYPES, RECODED_TYPES)
+        self.cds_types = CDS_TYPES | cds
+        self.exon_types = EXON_TYPES | exon
+        self.recoded_types = RECODED_TYPES | recoded
+        self.relation = relation
         self.chains: Dict[str, Chain] = {}
         self.exons: Dict[str, array] = {}
         self.recoded: Dict[str, array] = {}
-        # Parent ID not defined yet -> {child strand: [first line, count]}.
+        # Parent ID not defined yet -> {(child strand, child type): [first
+        # line, count]}.
         self.pending_strands: Dict[str, Dict[str, list]] = {}
         self.skipped: Counter = Counter()
         self.checked = 0
@@ -134,25 +165,32 @@ class Biology:
         if coordinates is None:
             return
         start, end = coordinates
-        if type_ in EXON_TYPES:
+        if type_ in self.exon_types:
             for parent in parents:
                 self._interval(self.exons, parent, start, end)
-        elif type_ in RECODED_TYPES:
+        elif type_ in self.recoded_types:
             for parent in parents:
                 self._interval(self.recoded, "I" + parent, start, end)
-        elif type_ in CDS_TYPES:
+        elif type_ in self.cds_types:
             self._cds(line, seqid, strand, phase, start, end, attributes)
+
+    def _part_of(self, type_, parent):
+        """Whether BIO-010 checks the edge (question 18)."""
+        if self.relation is None:
+            return True
+        parent_type = self.structure.type_of(parent)
+        return parent_type is None or self.relation(type_, parent_type) is not False
 
     def _strand(self, line, type_, strand, parent):
         other = self.structure.strand_of(parent)
         if other is None:
             known = self.pending_strands.setdefault(parent, {})
-            entry = known.get(strand)
+            entry = known.get((strand, type_))
             if entry is None:
-                known[strand] = [line, 1]
+                known[(strand, type_)] = [line, 1]
             else:
                 entry[1] += 1
-        elif other in STRANDED and other != strand:
+        elif other in STRANDED and other != strand and self._part_of(type_, parent):
             yield (
                 "BIO-010",
                 line,
@@ -209,15 +247,20 @@ class Biology:
             other = self.structure.strand_of(parent)
             if other not in STRANDED:
                 continue  # undefined Parent (GFF-STR-004) or no strand
-            for strand, (line, count) in known.items():
-                if strand != other:
-                    more = f" (and {count - 1} more lines)" if count > 1 else ""
-                    yield (
-                        "BIO-010",
-                        line,
-                        f"feature is on strand {strand} but its Parent "
-                        f"{show_id(parent)} is on strand {other}{more}",
-                    )
+            mismatched: Dict[str, list] = {}
+            for (strand, type_), (line, count) in known.items():
+                if strand != other and self._part_of(type_, parent):
+                    entry = mismatched.setdefault(strand, [line, 0])
+                    entry[0] = min(entry[0], line)
+                    entry[1] += count
+            for strand, (line, count) in mismatched.items():
+                more = f" (and {count - 1} more lines)" if count > 1 else ""
+                yield (
+                    "BIO-010",
+                    line,
+                    f"feature is on strand {strand} but its Parent "
+                    f"{show_id(parent)} is on strand {other}{more}",
+                )
         self.pending_strands.clear()
         yield from self._sequences()
         reasons = self.skip_reasons()

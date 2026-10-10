@@ -84,9 +84,18 @@
     "GFF-SYN-017",
     "GFF-SYN-018",
     "GFF-SYN-019",
+    "GFF-SYN-020",
     "HDR-001",
     "HDR-002",
-    "HDR-003"
+    "HDR-003",
+    "SO-001",
+    "SO-002",
+    "SO-003",
+    "SO-004",
+    "SO-005",
+    "SO-006",
+    "SO-008",
+    "SO-009"
   ],
   "cases": [
     {
@@ -223,10 +232,17 @@
       "file": "valid/alignments-gap.gff3",
       "expected": "valid",
       "rule": null,
-      "findings": [],
+      "findings": [
+        {
+          "rule": "SO-001",
+          "level": "warning",
+          "line": 3
+        }
+      ],
       "section": "The Gap Attribute; Alignments; Column 9: Target",
-      "status": "spec",
-      "description": "The specification's Gap examples (nucleotide, protein with frameshifts), match/match_part, and a Target with a strand and an escaped space in its id."
+      "status": "proposed",
+      "open_question": "Q14",
+      "description": "The specification's Gap examples (nucleotide, protein with frameshifts), match/match_part, and a Target with a strand and an escaped space in its id. The examples' nucleotide_to_protein_match is not an SO term: one warning for its three lines."
     },
     {
       "id": "percent-encoding",
@@ -314,12 +330,18 @@
       "file": "valid/selenocysteine-recoded-codon.gff3",
       "expected": "valid",
       "rule": null,
-      "findings": [],
+      "findings": [
+        {
+          "rule": "SO-009",
+          "level": "info",
+          "line": 5
+        }
+      ],
       "section": "The Canonical Gene",
       "status": "proposed",
-      "open_question": "Q17; SO-Ontologies#658",
+      "open_question": "Q17; SO-Ontologies#658; Q13",
       "genome": "genomes/genome.fa",
-      "description": "An in-frame TGA marked as selenocysteine by a recoded_codon subtype child of the CDS: no internal stop is reported."
+      "description": "An in-frame TGA marked as selenocysteine by a recoded_codon subtype child of the CDS: no internal stop is reported (the subtype is outside SOFA, a note)."
     },
     {
       "id": "syn-001-comment-before-version",
@@ -658,6 +680,45 @@
       "section": "Column 8: phase",
       "status": "spec",
       "description": "A CDS with phase '.': the phase is required for all CDS features."
+    },
+    {
+      "id": "syn-019-cds-subtype-without-phase",
+      "file": "invalid/syn-019-cds-subtype-without-phase.gff3",
+      "expected": "invalid",
+      "rule": "GFF-SYN-019",
+      "findings": [
+        {
+          "rule": "GFF-SYN-019",
+          "level": "error",
+          "line": 2
+        },
+        {
+          "rule": "SO-009",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Column 8: phase",
+      "status": "proposed",
+      "open_question": "Q6",
+      "description": "CDS_predicted, an is_a subtype of CDS, with phase '.' (CDS_predicted is outside SOFA, a note)."
+    },
+    {
+      "id": "syn-020-phase-on-exon",
+      "file": "valid/syn-020-phase-on-exon.gff3",
+      "expected": "valid",
+      "rule": "GFF-SYN-020",
+      "findings": [
+        {
+          "rule": "GFF-SYN-020",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "section": "Column 8: phase",
+      "status": "proposed",
+      "open_question": "Q6",
+      "description": "A phase on an exon; phase is defined only for CDS."
     },
     {
       "id": "att-001-gtf-style",
@@ -1158,11 +1219,17 @@
           "rule": "GFF-STR-006",
           "level": "error",
           "line": 2
+        },
+        {
+          "rule": "SO-006",
+          "level": "warning",
+          "line": 2
         }
       ],
       "section": "Parent (part_of) Relationships",
-      "status": "spec",
-      "description": "Two features that are each other's Parent."
+      "status": "proposed",
+      "open_question": "Q15",
+      "description": "Two features that are each other's Parent (a gene is not part_of an mRNA in SO, a warning)."
     },
     {
       "id": "str-007-derives-from-cycle",
@@ -1244,6 +1311,153 @@
       "section": "Other Syntax: ##FASTA; Columns 4 & 5",
       "status": "spec",
       "description": "A feature ends at 90 on a 4 bp embedded sequence."
+    },
+    {
+      "id": "so-001-unknown-type",
+      "file": "valid/so-001-unknown-type.gff3",
+      "expected": "valid",
+      "rule": "SO-001",
+      "findings": [
+        {
+          "rule": "SO-001",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type",
+      "status": "proposed",
+      "open_question": "Q14",
+      "description": "A type that is neither an SO term name nor an accession."
+    },
+    {
+      "id": "so-002-malformed-accession",
+      "file": "invalid/so-002-malformed-accession.gff3",
+      "expected": "invalid",
+      "rule": "SO-002",
+      "findings": [
+        {
+          "rule": "SO-002",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type",
+      "status": "proposed",
+      "open_question": "Q14",
+      "description": "An SO accession type with three digits instead of seven."
+    },
+    {
+      "id": "so-003-not-sequence-feature",
+      "file": "valid/so-003-not-sequence-feature.gff3",
+      "expected": "valid",
+      "rule": "SO-003",
+      "findings": [
+        {
+          "rule": "SO-003",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type; Change Log 1.23",
+      "status": "proposed",
+      "open_question": "Q14",
+      "description": "A variant effect term, which is not an is_a descendant of sequence_feature."
+    },
+    {
+      "id": "so-004-obsolete-type",
+      "file": "valid/so-004-obsolete-type.gff3",
+      "expected": "valid",
+      "rule": "SO-004",
+      "findings": [
+        {
+          "rule": "SO-004",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type",
+      "status": "proposed",
+      "open_question": "Q13",
+      "description": "An obsolete SO term (replaced by promoter)."
+    },
+    {
+      "id": "so-005-case-variant",
+      "file": "valid/so-005-case-variant.gff3",
+      "expected": "valid",
+      "rule": "SO-005",
+      "findings": [
+        {
+          "rule": "SO-005",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type",
+      "status": "proposed",
+      "open_question": "Q14",
+      "description": "A type that differs from the SO label five_prime_UTR only by case."
+    },
+    {
+      "id": "so-006-parent-not-part-of",
+      "file": "valid/so-006-parent-not-part-of.gff3",
+      "expected": "valid",
+      "rule": "SO-006",
+      "findings": [
+        {
+          "rule": "SO-006",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "section": "Parent (part_of) Relationships",
+      "status": "proposed",
+      "open_question": "Q15",
+      "description": "An mRNA whose Parent is an exon: an exon is part of a transcript, not the reverse."
+    },
+    {
+      "id": "so-006-exon-part-of-gene",
+      "file": "valid/so-006-exon-part-of-gene.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "The Canonical Gene NOTE 2",
+      "status": "proposed",
+      "open_question": "Q15",
+      "description": "An exon attached directly to its gene, allowed by the transitivity of part_of."
+    },
+    {
+      "id": "so-008-unknown-ontology-term",
+      "file": "valid/so-008-unknown-ontology-term.gff3",
+      "expected": "valid",
+      "rule": "SO-008",
+      "findings": [
+        {
+          "rule": "SO-008",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "Pathological Cases: programmed frameshift",
+      "status": "proposed",
+      "open_question": "Q13",
+      "description": "An Ontology_term value with the SO prefix that is not an SO term."
+    },
+    {
+      "id": "so-009-outside-sofa",
+      "file": "valid/so-009-outside-sofa.gff3",
+      "expected": "valid",
+      "rule": "SO-009",
+      "findings": [
+        {
+          "rule": "SO-009",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "Column 3: type",
+      "status": "proposed",
+      "open_question": "Q13",
+      "description": "An SO term outside SOFA: one note per type, at its first line."
     },
     {
       "id": "bio-001-seqid-not-in-genome",

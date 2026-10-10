@@ -1,0 +1,13 @@
+{
+  "ontology": "Sequence Ontology (so.obo)",
+  "data_version": "2026-08-07",
+  "date": "08:07:2026 18:22",
+  "source": "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/4340c143bac3578bba0c013d02e8c5f0e51ad14a/Ontology_Files/so.obo",
+  "commit": "4340c143bac3578bba0c013d02e8c5f0e51ad14a",
+  "sha256": "22a8f3ec2b49125dbb6cee8456f0bca86dd8c98f433165ffa4b554da4f155204",
+  "terms": 2620,
+  "obsolete_terms": 211,
+  "derived_file": "so.json.gz",
+  "derived_sha256": "3803507232a14c9b2e95a63bfa9ad470d90b56a5ce79c762a70e85c3baf06743",
+  "generated_by": "scripts/update_so.py"
+}

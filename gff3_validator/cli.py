@@ -8,6 +8,7 @@ import sys
 
 from gff3_validator import __version__, codons
 from gff3_validator.engine import DEFAULT_MAX_FINDINGS, Validator
+from gff3_validator.ontology import OntologyError
 from gff3_validator.reader import InputError
 from gff3_validator.report import to_html, to_json, to_sarif, to_text
 
@@ -52,6 +53,12 @@ def build_parser():
         f"plastids); one of {', '.join(map(str, sorted(codons.TABLES)))}",
     )
     parser.add_argument(
+        "--so",
+        metavar="OBO",
+        help="check types against this so.obo (plain or gzip) instead of the "
+        "bundled Sequence Ontology release; every report names the release used",
+    )
+    parser.add_argument(
         "--max-findings",
         type=int,
         default=DEFAULT_MAX_FINDINGS,
@@ -69,12 +76,17 @@ def main(argv=None):
     if args.translation_table is not None and not args.genome:
         parser.error("--translation-table needs --genome")
     mode = "require" if args.require_header else "skip" if args.no_header else "auto"
-    validator = Validator(
-        header_mode=mode,
-        genome=args.genome,
-        max_findings=args.max_findings,
-        translation_table=args.translation_table or codons.DEFAULT_TABLE,
-    )
+    try:
+        validator = Validator(
+            header_mode=mode,
+            genome=args.genome,
+            max_findings=args.max_findings,
+            translation_table=args.translation_table or codons.DEFAULT_TABLE,
+            so=args.so,
+        )
+    except OntologyError as error:
+        print(f"gff3-validate: --so: {error}", file=sys.stderr)
+        return 2
     try:
         report = validator.validate(args.input, name=args.input)
     except InputError as error:

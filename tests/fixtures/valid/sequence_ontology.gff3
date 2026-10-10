@@ -1,0 +1,12 @@
+##gff-version 3
+##sequence-region ctg1 1 1000
+ctg1	.	SO:0000704	1	300	.	+	.	ID=g1;Ontology_term=SO:0000704
+ctg1	.	mRNA	1	300	.	+	.	ID=t1;Parent=g1
+ctg1	.	five_prime_UTR	1	30	.	+	.	Parent=t1
+ctg1	.	exon	1	300	.	+	.	Parent=g1
+ctg1	.	CDS	31	300	.	+	0	ID=c1;Parent=t1
+ctg1	.	start_codon	31	33	.	+	.	Parent=t1
+ctg1	.	polypeptide	31	300	.	+	.	Derives_from=t1
+ctg1	.	match	401	500	.	+	.	ID=m1
+ctg1	.	match_part	401	450	.	+	.	Parent=m1
+ctg1	.	match_part	461	500	.	+	.	Parent=m1

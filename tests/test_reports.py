@@ -214,9 +214,11 @@ def test_html_lists_findings_not_checked_layers_and_sources():
     links = {attrs["href"] for tag, attrs in parsed.tags if tag == "a"}
     for finding in report.findings:
         assert rule_url(finding.rule) in links
-    assert "Not checked" in text and "<strong>so</strong>: not implemented" in text
+    assert "Not checked" in text
+    assert "<strong>so</strong>: partial: these SO rules are planned" in text
     assert "<strong>biology</strong>: not run; needs --genome" in text
-    assert CATALOGUE.sources["so"]["url"] in links
+    assert report.ontology["source"] in links
+    assert "so.obo data-version " in text and report.ontology["sha256"] in text
     assert "Limitations" in text
     assert "no errors" in text
 

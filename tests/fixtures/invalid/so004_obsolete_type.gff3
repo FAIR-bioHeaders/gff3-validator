@@ -1,0 +1,3 @@
+##gff-version 3
+##sequence-region ctg1 1 1000
+ctg1	.	RNA_polymerase_promoter	1	90	.	+	.	ID=p1

@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 from gff3_validator.engine import Report, Validator, validate  # noqa: E402
 from gff3_validator.findings import Finding  # noqa: E402
 from gff3_validator.genome import GenomeError  # noqa: E402
+from gff3_validator.ontology import Ontology, OntologyError, load_ontology  # noqa: E402
 from gff3_validator.reader import InputError  # noqa: E402
 from gff3_validator.rules import Catalogue, Rule, load_catalogue  # noqa: E402
 
@@ -16,10 +17,13 @@ __all__ = [
     "Finding",
     "GenomeError",
     "InputError",
+    "Ontology",
+    "OntologyError",
     "Report",
     "Rule",
     "Validator",
     "__version__",
     "load_catalogue",
+    "load_ontology",
     "validate",
 ]

@@ -41,6 +41,15 @@ def rule_url(rule_id):
     return f"{RULES_URL}#{rule_id.lower()}"
 
 
+def ontology_text(report):
+    """The SO release a report used, for example ``so.obo data-version
+    2026-08-07 (bundled)``."""
+    ontology = report.ontology or {}
+    version = ontology.get("data_version") or "unknown data-version"
+    where = "bundled" if ontology.get("bundled") else ontology.get("source") or "--so"
+    return f"so.obo data-version {version} ({where})"
+
+
 def to_json(report):
     return json.dumps(report.to_dict(), indent=2, ensure_ascii=False) + "\n"
 
@@ -59,6 +68,8 @@ def to_text(report):
     if report.truncated:
         lines.append(f"... {report.truncated} more findings not shown")
     lines.append(f"{report.source}: {summary(report)}")
+    if report.ontology is not None:
+        lines.append(f"  Sequence Ontology: {ontology_text(report)}")
     for item in report.skipped:
         lines.append(f"  not checked: {item['layer']}: {item['reason']}")
     return "\n".join(lines) + "\n"
@@ -181,13 +192,21 @@ def to_html(report, catalogue=None):
         f"<dt>Rule catalogue</dt><dd>{e(report.catalogue_version)} "
         f'(<a href="{e(RULES_URL)}"{LINK}>rules</a>)</dd>',
     ]
-    for key, label in (("gff3", "Specification"), ("so", "Sequence Ontology")):
-        source = catalogue.sources.get(key)
-        if source:
-            out.append(
-                f'<dt>{label}</dt><dd><a href="{e(source["url"])}"{LINK}>'
-                f'{e(source["title"])}</a></dd>'
-            )
+    source = catalogue.sources.get("gff3")
+    if source:
+        out.append(
+            f'<dt>Specification</dt><dd><a href="{e(source["url"])}"{LINK}>'
+            f'{e(source["title"])}</a></dd>'
+        )
+    if report.ontology is not None:
+        url = report.ontology.get("source") or ""
+        text = e(ontology_text(report))
+        if url.startswith("https://"):
+            text = f'<a href="{e(url)}"{LINK}>{text}</a>'
+        sha256 = report.ontology.get("sha256")
+        if sha256:
+            text += f" <code>sha256:{e(sha256)}</code>"
+        out.append(f"<dt>Sequence Ontology</dt><dd>{text}</dd>")
     out += [
         "</dl>",
         '<section aria-labelledby="not-checked">',
@@ -361,7 +380,10 @@ def to_sarif_dict(report, catalogue=None):
                 "version": __version__,
                 "informationUri": REPOSITORY,
                 "rules": [_sarif_rule(rule, catalogue) for rule in rules],
-                "properties": {"catalogueVersion": report.catalogue_version},
+                "properties": {
+                    "catalogueVersion": report.catalogue_version,
+                    "sequenceOntology": report.ontology,
+                },
             }
         },
         "invocations": [

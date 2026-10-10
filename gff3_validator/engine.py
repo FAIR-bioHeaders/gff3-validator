@@ -13,9 +13,11 @@ from gff3_validator.checks.directives import (
     sequence_region,
     split_directive,
 )
+from gff3_validator.checks.sequence_ontology import SequenceOntology
 from gff3_validator.checks.structure import Structure
 from gff3_validator.findings import Finding
 from gff3_validator.genome import Genome
+from gff3_validator.ontology import Ontology, load_ontology
 from gff3_validator.reader import iter_lines
 from gff3_validator.rules import load_catalogue
 
@@ -46,6 +48,8 @@ class Report:
     lines: int = 0
     header_lines: int = 0
     skipped: List[Dict[str, str]] = field(default_factory=list)
+    # The SO release used: data_version, date, source, sha256, bundled.
+    ontology: Optional[Dict[str, object]] = None
 
     @property
     def valid(self):
@@ -58,6 +62,7 @@ class Report:
             "report_version": REPORT_VERSION,
             "tool": {"name": "gff3-validator", "version": __version__},
             "catalogue_version": self.catalogue_version,
+            "sequence_ontology": self.ontology,
             "source": self.source,
             "valid": self.valid,
             "counts": dict(self.counts),
@@ -75,7 +80,10 @@ class Validator:
     ``header_mode`` is ``"auto"`` (check a header when present), ``"require"``
     (``--require-header``) or ``"skip"`` (``--no-header``). ``genome`` is
     the path of a genome FASTA (plain or gzip/BGZF); with it the biology rules
-    run, translating CDS with NCBI ``translation_table`` (default 1).
+    run, translating CDS with NCBI ``translation_table`` (default 1). ``so``
+    is the path of a ``so.obo`` to use instead of the bundled SO release
+    (``ontology`` an already loaded :class:`~gff3_validator.ontology.Ontology`).
+    Raises ``OntologyError`` (a ``ValueError``) if ``so`` cannot be read.
     """
 
     def __init__(
@@ -85,6 +93,8 @@ class Validator:
         max_findings=DEFAULT_MAX_FINDINGS,
         catalogue=None,
         translation_table=codons.DEFAULT_TABLE,
+        so: Optional[str] = None,
+        ontology: Optional[Ontology] = None,
     ):
         if header_mode not in header.MODES:
             raise ValueError(f"header_mode must be one of {header.MODES}")
@@ -98,6 +108,7 @@ class Validator:
         self.table = codons.table(translation_table)
         self.max_findings = max_findings
         self.catalogue = catalogue or load_catalogue()
+        self.ontology = ontology or load_ontology(so)
 
     def _add(self, report, rule_id, message, line=None, field=None):
         rule = self.catalogue[rule_id]
@@ -122,7 +133,9 @@ class Validator:
 
     def _validate(self, source, name, genome) -> Report:
         report = Report(
-            source=name or str(source), catalogue_version=self.catalogue.version
+            source=name or str(source),
+            catalogue_version=self.catalogue.version,
+            ontology=self.ontology.to_dict(),
         )
         summary = {}
 
@@ -140,7 +153,17 @@ class Validator:
             emit("GFF-SYN-006", "line is not valid UTF-8", line=number)
 
         structure = Structure()
-        biology = None if genome is None else Biology(genome, self.table, structure)
+        so_layer = SequenceOntology(self.ontology, structure)
+        cds_types = syntax.CDS_TYPES | so_layer.cds_types
+        biology = None
+        if genome is not None:
+            biology = Biology(
+                genome,
+                self.table,
+                structure,
+                types=(cds_types, so_layer.exon_types, so_layer.recoded_types),
+                relation=so_layer.allowed,
+            )
         fasta = None
         version_seen = False
         for number, line in iter_lines(source, invalid_utf8):
@@ -171,9 +194,7 @@ class Validator:
                 if line.startswith(header.HEADER_PREFIX):
                     report.header_lines += 1
                 elif line.startswith("##"):
-                    fasta = self._directive(
-                        report, emit, structure, number, line, version_seen
-                    )
+                    fasta = self._directive(emit, structure, number, line, version_seen)
                     if biology is not None and line.rstrip() == "###":
                         for rule_id, at, message in biology.flush():
                             emit(rule_id, message, line=at)
@@ -194,7 +215,9 @@ class Validator:
             if line.strip() == "":
                 continue
             fields = line.split("\t")
-            for rule_id, column, message in syntax.check_columns(fields, line):
+            for rule_id, column, message in syntax.check_columns(
+                fields, line, cds_types
+            ):
                 emit(rule_id, message, line=number, field=column)
             if len(fields) != 9:
                 continue
@@ -207,6 +230,10 @@ class Validator:
                 emit(rule_id, message, line=number, field=9)
             for rule_id, at, message in structure.feature(
                 number, fields[0], fields[2], fields[6], coordinates, attributes
+            ):
+                emit(rule_id, message, line=at)
+            for rule_id, at, message in so_layer.feature(
+                number, fields[2], fields[7], attributes
             ):
                 emit(rule_id, message, line=at)
             if biology is not None:
@@ -227,6 +254,8 @@ class Validator:
                 emit(rule_id, message, line=at)
         for rule_id, at, message in structure.finish():
             emit(rule_id, message, line=at)
+        for rule_id, at, message in so_layer.finish():
+            emit(rule_id, message, line=at)
         if biology is not None:
             for rule_id, at, message in biology.finish():
                 emit(rule_id, message, line=at)
@@ -238,7 +267,7 @@ class Validator:
         self._record_skipped(report, biology)
         return report
 
-    def _directive(self, report, emit, structure, number, line, version_seen):
+    def _directive(self, emit, structure, number, line, version_seen):
         """Handle a "##" line; return a FastaSection if it starts one."""
         if line.rstrip() == "###":
             structure.resolution_point()
@@ -259,6 +288,9 @@ class Validator:
                     emit(rule_id, message, line=at)
             return None
         for rule_id, message in check_directive(name, arguments):
+            if rule_id == "GFF-DIR-009" and name == "feature-ontology":
+                # Question 13: validated against the release in use.
+                message += f"; types are checked against {self.ontology.description}"
             emit(rule_id, message, line=number)
         return None
 
@@ -298,7 +330,19 @@ class Validator:
                     "checked: " + ", ".join(planned),
                 }
             )
-        report.skipped.append({"layer": "so", "reason": "not implemented"})
+        planned = [
+            rule.id
+            for rule in self.catalogue
+            if rule.layer == "so" and rule.status != "implemented"
+        ]
+        if planned:
+            report.skipped.append(
+                {
+                    "layer": "so",
+                    "reason": "partial: these SO rules are planned and not "
+                    "checked: " + ", ".join(planned),
+                }
+            )
         if biology is None:
             report.skipped.append(
                 {"layer": "biology", "reason": "not run; needs --genome"}

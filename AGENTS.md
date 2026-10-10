@@ -30,6 +30,9 @@ lines. `rules.py` loads the packaged catalogue (`gff3_validator/catalogue.yaml`,
 a generated copy of `rules/catalogue.yaml`). `engine.py` runs the checks in
 `checks/` and collects `Finding`s; `genome.py` indexes the `--genome` FASTA and reads slices on demand;
 `codons.py` holds the NCBI translation tables used by `checks/biology.py`;
+`ontology.py` loads the bundled SO release (`data/so.json.gz`, derived from
+so.obo by `scripts/update_so.py`, recorded in `data/so-release.json`) or a
+`--so` so.obo, and `checks/sequence_ontology.py` holds the SO rules;
 `header.py` holds the optional FHGFF3 hook;
 `report.py` renders text, JSON, HTML and SARIF 2.1.0; `web.py` is the
 Python side of the in-browser page; `cli.py` is the `gff3-validate` command.

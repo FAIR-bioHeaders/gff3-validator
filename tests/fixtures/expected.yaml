@@ -4,7 +4,10 @@
 # every file gets (for example HDR-002 on a file with a header) are listed too.
 # A file is expected to be valid (no errors) when none of its rules is an
 # error; warnings and notes do not make a file invalid.
-valid/alignments.gff3: []
+# nucleotide_to_protein_match, from the specification's Gap example, is not an
+# SO term (SO-001, a warning until SO answers question 14).
+valid/alignments.gff3: [SO-001]
+valid/sequence_ontology.gff3: []
 valid/attributes_and_xrefs.gff3: []
 valid/canonical_gene.gff3: []
 valid/directives.gff3: [GFF-DIR-009, GFF-DIR-010]
@@ -22,7 +25,7 @@ invalid/syn007_end_of_line_comment.gff3: [GFF-SYN-007]
 invalid/syn008_bad_percent.gff3: [GFF-SYN-008]
 invalid/syn009_over_encoded.gff3: [GFF-SYN-009]
 invalid/syn010_seqid_space.gff3: [GFF-SYN-010]
-invalid/syn012_undefined_type.gff3: [GFF-SYN-012, SO-001]
+invalid/syn012_undefined_type.gff3: [GFF-SYN-012]
 invalid/syn013_noninteger.gff3: [GFF-SYN-013]
 invalid/syn014_zero_start.gff3: [GFF-SYN-014]
 invalid/syn015_start_after_end.gff3: [GFF-SYN-015]
@@ -65,8 +68,17 @@ invalid/str009_no_sequence_region.gff3: [GFF-STR-009]
 invalid/str010_seqid_not_in_fasta.gff3: [GFF-STR-010]
 invalid/str011_beyond_fasta_sequence.gff3: [GFF-STR-011]
 invalid/so001_unknown_type.gff3: [SO-001]
+invalid/so002_malformed_accession.gff3: [SO-002]
+invalid/so003_not_sequence_feature.gff3: [SO-003]
+invalid/so004_obsolete_type.gff3: [SO-004]
+invalid/so005_synonym_and_case_variant.gff3: [SO-005]
+invalid/so006_parent_not_part_of.gff3: [SO-006]
+invalid/so008_unknown_ontology_term.gff3: [SO-008]
+invalid/so009_outside_sofa.gff3: [SO-009]
+invalid/syn020_phase_on_exon.gff3: [GFF-SYN-020]
 # Biology fixtures are validated with --genome biology/genome.fa.
-biology/valid_genes.gff3: []
+# recoded_codon and its subtypes are outside SOFA (SO-009, a note).
+biology/valid_genes.gff3: [SO-009]
 biology/bio001_seqid_not_in_genome.gff3: [BIO-001]
 biology/bio002_beyond_genome.gff3: [BIO-002]
 biology/bio003_sequence_region_longer.gff3: [BIO-003]

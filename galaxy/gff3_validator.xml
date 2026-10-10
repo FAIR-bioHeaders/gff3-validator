@@ -315,9 +315,9 @@ lengths inside a record); the reason is in the job's standard error.
 This is an early release (0.1.0) and the rule catalogue is a draft under
 review with the Sequence Ontology group:
 
-- Sequence Ontology checks (that ``type`` is a valid SO term and that
-  parent-child types agree) are not implemented yet; the report lists them
-  under "not checked".
+- Sequence Ontology checks use the SO release bundled with the validator
+  (named in every report) and follow answers proposed to, but not yet given
+  by, the SO group, so most are warnings; Derives_from types are not checked.
 - A few core rules are planned and not yet checked; the report lists them.
 - FAIR-bioHeaders header contents are not validated yet; only the presence
   of a header is checked.
