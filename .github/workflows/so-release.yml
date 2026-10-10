@@ -1,0 +1,56 @@
+name: Sequence Ontology release check
+
+# Weekly: is there a newer so.obo than the one bundled in the package
+# (gff3_validator/data/so-release.json)? If so, open an issue (once) asking a
+# maintainer to run scripts/update_so.py, review the changes and release.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Compare the bundled so.obo with SO-Ontologies
+        id: check
+        run: |
+          set +e
+          python scripts/update_so.py --check | tee check.txt
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          # 0: up to date, 1: newer release, anything else: the check failed.
+          [ "$status" -le 1 ]
+      - name: Open an issue for a newer release
+        if: steps.check.outputs.status == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="New Sequence Ontology so.obo available"
+          if gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "an issue is already open"
+            exit 0
+          fi
+          {
+            echo "scripts/update_so.py --check reports:"
+            echo
+            echo '```'
+            cat check.txt
+            echo '```'
+            echo
+            echo "To update: run \`poetry run python scripts/update_so.py\`, update the"
+            echo "catalogue's \"so\" source and tests that name the release, regenerate"
+            echo "docs and the conformance suite, and note the release in CHANGELOG.md."
+          } > body.md
+          gh issue create --title "$title" --body-file body.md

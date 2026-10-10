@@ -12,7 +12,7 @@ repository = "https://github.com/FAIR-bioHeaders/gff3-validator"
 documentation = "https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/rules.md"
 keywords = ["GFF3", "validator", "Sequence Ontology", "genome annotation", "FAIR"]
 packages = [{include = "gff3_validator"}]
-include = ["gff3_validator/catalogue.yaml"]
+include = ["gff3_validator/catalogue.yaml", "gff3_validator/data/so.json.gz", "gff3_validator/data/so-release.json"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
