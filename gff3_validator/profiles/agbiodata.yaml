@@ -1,0 +1,360 @@
+# AgBioData GFF3 profile for gff3-validator (FHR-Specification #70; the
+# profile mechanism is #51 and spec 009 FR-011).
+#
+# DRAFT, not reviewed by the AgBioData GFF3 working group. Each rule and level
+# change translates a statement of the AgBioData recommendations
+# (Recommendations.md at the commit below, CC0-1.0) that software can check;
+# the other recommendations are listed under "guidance" with the reason they
+# are not checked. Nothing here goes beyond what the document says; where a
+# statement had to be read narrowly, the rule's notes say how.
+#
+# Levels: error where the document's "Validation" entry says "must" or
+# "validation fails"; warning where it says "should", where a validator
+# "should issue a warning" or "should trigger a warning", or where a best
+# practice says "should never" or "do not"; info for other best practices
+# ("strongly encourage", "not recommended", "we recommend").
+#
+# Edit this file, then run scripts/render_rules.py (it writes the packaged
+# copy, docs/profiles/agbiodata.md and the mapping table in docs/profiles.md).
+
+profile_format: 1
+id: agbiodata
+name: AgBioData GFF3 recommendations
+version: 0.1.0-draft
+prefix: AGB
+checks: agbiodata
+docs: https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/profiles/agbiodata.md
+review: not reviewed by the AgBioData GFF3 working group
+description: >-
+  Recommendations of the AgBioData GFF3 working group (AgBioData, the Alliance
+  of Genome Resources and NCBI) for producing GFF3 that databases and tools can
+  use without reformatting. They follow GFF3 1.26 "with emphases and additions";
+  this profile checks the additions that software can check, on top of the core
+  rules.
+source:
+  title: AgBioData GFF3 working group recommendations (Recommendations.md)
+  url: https://github.com/NAL-i5K/AgBioData_GFF3_recommendation/blob/32c8a386d3bca504e61cb6f7d9b9b038b7f7b0f8/Recommendations.md
+  license: CC0-1.0
+  commit: 32c8a386d3bca504e61cb6f7d9b9b038b7f7b0f8
+  date: '2021-12-29'
+
+levels:
+
+- rule: SO-001
+  level: error
+  reference: {section: "Type (column 3), Validation", anchor: type}
+  reason: >-
+    "Must be a valid SO term or SO accession number." The core rule is a
+    warning until SO answers question 14. Case variants and EXACT synonyms
+    (SO-005) name a valid term and stay warnings.
+
+- rule: BIO-008
+  level: error
+  reference: {section: "Phase (column 8), Validation", anchor: phase}
+  reason: >-
+    "If no CDS/protein fasta is available: Check for internal stops in the
+    protein sequence - validation fails if stops are present." Needs --genome;
+    stops covered by a recoded_codon child or a transl_except attribute (the
+    NCBI convention the same section recommends) are exempt, as in the core
+    rule.
+
+rules:
+
+- id: AGB-001
+  level: warning
+  title: Ontology_term is avoided
+  description: >-
+    The working group advises against Ontology_term and against functional
+    annotation in GFF3 in general (use GAF or GPAD); its validation entry asks
+    the validator to warn when Ontology_term is used. Reported once, at the
+    first line, with a count.
+  reference: {section: "Attributes : Ontology_term, Validation", anchor: attributes--ontology_term}
+  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Ontology_term=GO:0046703"
+  valid: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
+  fix: Move the ontology annotations to a GAF or GPAD file, or to the complex metadata attributes described in the recommendations.
+  status: implemented
+  notes: >-
+    The same entry says the value "should be a CURIE that resolves into a
+    published ontology term": the CURIE form is core GFF-ATT-014 and SO terms
+    are checked by SO-008; other ontologies are not fetched.
+
+- id: AGB-002
+  level: warning
+  title: GO terms are not given in Dbxref or Ontology_term
+  description: >-
+    "These use of GO term or functional annotations should never be
+    incorporated into gff within the Dbxref or Ontology_term fields." A Dbxref
+    or Ontology_term value with the GO prefix is reported, once at the first
+    line with a count.
+  reference: {section: "Attributes complex metadata / functional annotations, Best practices", anchor: attributes-complex-metadata--functional-annotations}
+  example: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Dbxref=GO:0004381"
+  valid: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Dbxref=MaizeGDB.locus:12098"
+  fix: Give GO annotations, with their evidence, in a GAF or GPAD file (or the go_annotations attribute) instead.
+  status: implemented
+
+- id: AGB-003
+  level: warning
+  title: Child features lie within their parent
+  description: >-
+    "Child coordinates that are not contained within parent coordinates often
+    indicate an error and should trigger a warning in a gff3 validator." A
+    feature whose start or end is outside the extent of a Parent (all lines of
+    that ID read so far), or on another seqid, is reported.
+  reference: {section: "Modeling hierarchical relationships of a protein-coding gene, Best practices", anchor: modeling-hierarchical-relationships-of-a-protein-coding-gene}
+  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\nctg1\t.\tmRNA\t1\t120\t.\t+\t.\tID=t1;Parent=g1"
+  valid: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\nctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Parent=g1"
+  fix: Correct the coordinates of the child or of the parent so the parent spans its children.
+  status: implemented
+  notes: >-
+    A child listed before its parent is compared with the parent at the end of
+    the file (at most 100,000 such children are kept; beyond that the report
+    says the check was partial). Parent extents cost 16 bytes per ID.
+
+- id: AGB-004
+  level: info
+  title: Child features are listed after their parent
+  description: >-
+    "Child features should be listed after parent features." A Parent that is
+    defined only later in the file is reported, once at the first line with a
+    count. Forward references are valid GFF3.
+  reference: {section: "Modeling hierarchical relationships of a protein-coding gene, Best practices (sort order)", anchor: modeling-hierarchical-relationships-of-a-protein-coding-gene}
+  example: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Parent=g1\nctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
+  valid: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\nctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Parent=g1"
+  fix: Sort the file so that each gene model is written top down, parents first.
+  status: implemented
+
+- id: AGB-005
+  level: info
+  title: One Parent per feature
+  description: >-
+    "Strongly encourage only one parent per feature. However, parsers and
+    validators should still support multiple parents per feature." A feature
+    with several Parent values is noted, once at the first line with a count.
+  reference: {section: "Modeling hierarchical relationships of a protein-coding gene, Best practices", anchor: modeling-hierarchical-relationships-of-a-protein-coding-gene}
+  example: "ctg1\t.\texon\t1\t90\t.\t+\t.\tID=e1;Parent=t1,t2"
+  valid: "ctg1\t.\texon\t1\t90\t.\t+\t.\tID=e1;Parent=t1"
+  fix: Where the model allows it, give each feature one Parent (for example one exon line per transcript); multiple Parents remain valid.
+  status: implemented
+
+- id: AGB-006
+  level: info
+  title: No polypeptide features
+  description: >-
+    "Polypeptide features are not required or recommended", and "we recommend
+    not specifying a polypeptide feature if you're modeling a typical
+    protein-coding gene". A feature whose type is polypeptide or an SO is_a
+    subtype of it is noted, once per type with a count.
+  reference: {section: "Attributes : Derives_from, Best practices; Modeling hierarchical relationships of a protein-coding gene", anchor: attributes--derives_from}
+  example: "ctg1\t.\tpolypeptide\t1\t90\t.\t+\t.\tID=p1;Derives_from=c1"
+  fix: Leave out polypeptide features from protein-coding gene models; the CDS implies the protein.
+  status: implemented
+
+- id: AGB-007
+  level: warning
+  title: CDS and exon features have a Parent
+  description: >-
+    "Entries that are non-parent entries should have a valid parent entry via
+    the ID." In the protein-coding gene model the section describes, the
+    entries that are not parents are the CDS and exon features, so a CDS or
+    exon (or an SO is_a subtype) without a Parent is reported, once at the first
+    line with a count.
+  reference: {section: "Modeling hierarchical relationships of a protein-coding gene, Validation", anchor: modeling-hierarchical-relationships-of-a-protein-coding-gene}
+  example: "ctg1\t.\texon\t1\t90\t.\t+\t.\tID=e1"
+  valid: "ctg1\t.\texon\t1\t90\t.\t+\t.\tID=e1;Parent=t1"
+  fix: Give the exon or CDS the ID of its transcript in Parent.
+  status: implemented
+  notes: >-
+    Read narrowly: the document does not list which types are "non-parent
+    entries"; other leaf features (for example a SNP or a match_part) are not
+    checked. A Parent that does not resolve is core GFF-STR-004.
+
+- id: AGB-008
+  level: warning
+  title: so_term_name names a subtype of the feature's type
+  description: >-
+    "Optionally, include a so_term_name attribute in column 9 to specify the
+    child (type) of gene - e.g. protein_coding_gene, ncRNA_gene". When
+    so_term_name is present, its value is an SO term label or accession that
+    is the column 3 term or an is_a subtype of it.
+  reference: {section: "Type (column 3), Best practice", anchor: type}
+  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;so_term_name=mRNA"
+  valid: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;so_term_name=protein_coding_gene"
+  fix: Give the SO label of the specific kind of gene (for example protein_coding_gene), or leave so_term_name out.
+  status: implemented
+  notes: Not checked when column 3 is not an SO term (SO-001 reports that).
+
+- id: AGB-009
+  level: error
+  title: Target fields are single-space delimited and target_id is a seqid
+  description: >-
+    "The components of the encoded attribute must be single-space delimited
+    and must consist of not less than 3 and not more than 4 fields. Field 1
+    must conform to the same syntax and semantics as specified for Column 1
+    (seqid)." The field count, coordinates and strand are core GFF-ATT-010;
+    this rule adds single spaces (no leading, trailing or repeated spaces) and
+    the seqid character set for target_id (characters outside
+    [a-zA-Z0-9.:^*$@!+_?-|] percent-encoded).
+  reference: {section: "Attributes : Target, Gap, Validation", anchor: attributes--target-gap}
+  example: "ctg1\tblastn\tmatch_part\t1\t90\t.\t+\t.\tID=m1;Target=EST#23  1 90 +"
+  valid: "ctg1\tblastn\tmatch_part\t1\t90\t.\t+\t.\tID=m1;Target=EST23 1 90 +"
+  fix: Separate the Target fields by one space each and percent-encode characters of the target_id outside the seqid set (for example "#" as %23).
+  status: implemented
+  notes: Checked only when the Target passes GFF-ATT-010.
+
+- id: AGB-010
+  level: info
+  title: Ontology directives use OBO PURLs
+  description: >-
+    Ontology URIs in directives such as ##feature-ontology "can be specified
+    via cv URLs ... These URLs should be avoided. Instead, we recommend using
+    the official OBO version IRI PURLs, for example
+    http://purl.obolibrary.org/obo/so.obo." A ##feature-ontology,
+    ##attribute-ontology or ##source-ontology URI that is not under
+    purl.obolibrary.org/obo/ is noted.
+  reference: {section: "Pragmas, Ontology URIs", anchor: pragmas}
+  example: "##feature-ontology http://song.cvs.sourceforge.net/*checkout*/song/ontology/sofa.obo?revision=1.6"
+  valid: "##feature-ontology http://purl.obolibrary.org/obo/so.obo"
+  fix: Use the OBO PURL of the ontology, for example http://purl.obolibrary.org/obo/so.obo.
+  status: implemented
+
+- id: AGB-011
+  level: info
+  title: '##species is an NCBITaxon CURIE'
+  description: >-
+    "The current specification recommends using NCBI URLs to specify the
+    species ... in the ##species pragma. We recommend using an OBO CURIE,
+    instead. Example: ##species NCBITaxon:9606". A ##species value that is not
+    NCBITaxon: followed by digits is noted.
+  reference: {section: "Pragmas, Species", anchor: pragmas}
+  example: "##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606"
+  valid: "##species NCBITaxon:9606"
+  fix: Write the taxon as an OBO CURIE, for example "##species NCBITaxon:9606".
+  status: implemented
+  notes: >-
+    This conflicts with GFF3 1.26, which prefers the NCBI Taxonomy URL (core
+    warning GFF-DIR-007): either form gets one of the two findings. The
+    profile does not lower core rules.
+
+- id: AGB-012
+  level: warning
+  title: '##Score directive has name, min, max and best'
+  description: >-
+    "Optionally, there is a ##score pragma in the following format: ##Score
+    name="[name/calculated-by]";min=[min-value]; max=[max-val];best=[lower/higher]".
+    When the directive is present (any letter case), it has the four
+    semicolon-separated keys, min and max are numbers and best is lower or
+    higher. Spaces around the pairs are allowed, as in the document's example.
+  reference: {section: "Score (column 6), Validation", anchor: score}
+  example: "##Score name=\"AED\";best=low"
+  valid: "##Score name=\"AED (Annotation Edit Distance) score\"; min=0;max=1;best=lower"
+  fix: 'Write the directive as ##Score name="...";min=N;max=N;best=lower (or higher).'
+  status: implemented
+  notes: 'The core rules note ##Score as a directive GFF3 does not define (GFF-DIR-010).'
+
+- id: AGB-013
+  level: warning
+  title: seqid does not list several sequences
+  description: >-
+    "Do not list multiple values in column 1 (for features split across
+    scaffolds)". A seqid with an unescaped comma is reported.
+  reference: {section: "Modeling hierarchical relationships of a protein-coding gene, Best practices", anchor: modeling-hierarchical-relationships-of-a-protein-coding-gene}
+  example: "scaffold1,scaffold2\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
+  valid: "scaffold1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
+  fix: Write one line per sequence, with the same ID on each line of the split feature.
+  status: implemented
+  notes: >-
+    A comma is outside the GFF3 seqid character set, which the core rules do
+    not check yet (GFF-SYN-010, question 3).
+
+guidance:
+
+- reference: {section: "Seqid (column 1), Validation", anchor: seqid}
+  recommendation: 'An optional ##alias-table directive gives a resolvable URL of the GenBank alias table, or starts an inline alias table.'
+  reason: The validator makes no network requests, so it cannot check that the link is active; the document says the inline table is not validated.
+
+- reference: {section: "Source (column 2), Validation", anchor: source}
+  recommendation: Use "." when there is no source; follow the GFF3 encoding rules; separate several sources by a literal comma, not %2C; name the tool, method or database and its version.
+  covered_by: [GFF-SYN-004, GFF-SYN-005, GFF-SYN-008, GFF-SYN-009]
+  reason: 'The encoding rules, including %2C in column 2, are core rules. Whether a source names a tool and version, and the optional ##Source directive (given in two different forms in the document), cannot be checked.'
+
+- reference: {section: "Type (column 3), Validation", anchor: type}
+  recommendation: All child rows should use a type within the hierarchy of the parent; the SO is fetched from sofa.obo by default.
+  covered_by: [SO-006, SO-009]
+  reason: SO-006 checks child and parent types against SO part_of at its core level. The validator never fetches the ontology; it uses the bundled SO release and notes types outside SOFA (SO-009). Which transcript type is "appropriate" cannot be checked.
+
+- reference: {section: "Start, End (columns 4 and 5), Validation", anchor: start-end}
+  recommendation: start and end are 1-based, start is at most end, zero-length and one-base features have start = end, and Is_circular=true allows end beyond the sequence.
+  covered_by: [GFF-SYN-013, GFF-SYN-014, GFF-SYN-015, GFF-ATT-016, GFF-STR-008]
+  reason: Core rules.
+
+- reference: {section: "Score (column 6), Validation", anchor: score}
+  recommendation: 'A score is a floating point number or "."; describe the score in a ##Score directive, using EDAM where possible.'
+  covered_by: [GFF-SYN-016, AGB-012]
+  reason: The number format is a core rule and the directive format is AGB-012; whether the description uses EDAM cannot be checked.
+
+- reference: {section: "Strand (column 7), Validation", anchor: strand}
+  recommendation: Strand is +, -, . or ?.
+  covered_by: [GFF-SYN-017]
+  reason: Core rule.
+
+- reference: {section: "Phase (column 8), Best practices and Validation", anchor: phase}
+  recommendation: Validate the phase; give non-standard translation tables per sequence in a phase directive; compare CDS and protein FASTA, when given, with the sequence derived from the GFF3.
+  covered_by: [BIO-004, BIO-006, BIO-007, BIO-008]
+  reason: 'Phase consistency and codons are checked with --genome (BIO-008 raised to error). The phase directive is written two ways in the document (##phase SEQID TABLE and ##Translation-table TABLE SEQIDS) and per-sequence tables are not supported (use --translation-table); CDS and protein FASTA are not read.'
+
+- reference: {section: "Attributes : ID, Validation", anchor: attributes--id}
+  recommendation: Validate only that IDs are unique in the file, except for discontinuous features; keep persistent identifiers in other attributes (gene_id, transcript_id, protein_id, feature_id, or Dbxref).
+  covered_by: [GFF-STR-001]
+  reason: Uniqueness is a core rule. The document limits validation to uniqueness, so the identifier attribute conventions are not checked.
+
+- reference: {section: "Attributes : Name, Validation", anchor: attributes--name}
+  recommendation: Follow the nomenclature standards of your community; Name is not a unique identifier.
+  reason: '"No automated validation currently possible."'
+
+- reference: {section: "Attributes : Alias, Validation", anchor: attributes--alias}
+  recommendation: Alias is for alternative and historical names; avoid commas, tabs and pipes in alias names; values cannot include a semicolon.
+  covered_by: [GFF-ATT-005]
+  reason: '"The validator won''t check Alias values." Unescaped semicolons are a core error.'
+
+- reference: {section: "Attributes : Dbxref, Validation", anchor: attributes--dbxref}
+  recommendation: A Dbxref refers to the same entity in a registered database and resolves to a URL that returns HTTP 200; it contains no semicolons.
+  covered_by: [GFF-ATT-005, GFF-ATT-014]
+  reason: The DBTAG:ID form and escaping are core rules. Resolving URLs needs network requests, which the validator never makes, and whether a record is the same entity cannot be checked.
+
+- reference: {section: "Attributes : Derives_from, Validation", anchor: attributes--derives_from}
+  recommendation: Avoid Derives_from between CDS and polypeptide by not modelling polypeptides.
+  covered_by: [AGB-006]
+  reason: '"This needs more analysis and discussion." Polypeptide features are noted by AGB-006.'
+
+- reference: {section: "Attributes : Note, Validation", anchor: attributes--note}
+  recommendation: Note may not include a semicolon and may be repeated.
+  covered_by: [GFF-ATT-004, GFF-ATT-005]
+  reason: Repeating the Note tag on one line (as in the document's example) is a GFF3 1.26 error, GFF-ATT-004; give several values separated by commas. The profile does not relax core rules.
+
+- reference: {section: "Attributes : Ontology_term, Validation", anchor: attributes--ontology_term}
+  recommendation: Ontology_term values are CURIEs that resolve to published ontology terms.
+  covered_by: [GFF-ATT-014, SO-008, AGB-001]
+  reason: The CURIE form is a core rule and SO terms are checked against the bundled release; other ontologies are not fetched.
+
+- reference: {section: "Attributes : Target, Gap, Best practices", anchor: attributes--target-gap}
+  recommendation: Prefer BAM or PAF to Target and Gap for alignments; target_id should be a sequence identifier usable in column 1.
+  covered_by: [GFF-ATT-010, GFF-ATT-011, AGB-009]
+  reason: The choice of format cannot be checked; the Target syntax is GFF-ATT-010 and AGB-009.
+
+- reference: {section: "Attributes complex metadata / functional annotations, Validation", anchor: attributes-complex-metadata--functional-annotations}
+  recommendation: go_annotations, gene_product and provenance values are lower-case, URL-encoded lists of rank and key=value annotations; GO annotations carry evidence codes.
+  covered_by: [AGB-002]
+  reason: Not checked. The separators are described inconsistently ("separated by a comma (url-encoded %3B)", "separated by a semi-colon (url-encoded as %2C)"), so a check would have to guess; evidence cannot be judged.
+
+- reference: {section: "Modeling hierarchical relationships of a protein-coding gene, Best practices and Validation", anchor: modeling-hierarchical-relationships-of-a-protein-coding-gene}
+  recommendation: 'Parent and child have a part_of relationship; IDs should be internally resolvable; ### may separate gene models; introns are optional; types are SO terms.'
+  covered_by: [SO-006, GFF-STR-004, GFF-DIR-003, SO-001, AGB-003, AGB-004, AGB-005, AGB-006, AGB-007, AGB-013]
+  reason: Core and SO rules, plus the profile rules listed. Edge cases (ribosome slippage, trans-splicing, split features) have no recommendation yet.
+
+- reference: {section: "Pragmas, Dbxref", anchor: pragmas}
+  recommendation: 'An optional ##dbxref=<Namespace:ID,refsrc=URL> directive registers a cross-reference source with identifiers.org.'
+  reason: The format and the example disagree, and checking registration needs network requests.
+
+- reference: {section: "Other caveats and unresolved issues", anchor: other-caveats-and-unresolved-issues}
+  recommendation: FASTA deflines, QTL and miRNA models, split gene models, pan-genome context and provenance directives.
+  reason: Open issues without a recommendation.

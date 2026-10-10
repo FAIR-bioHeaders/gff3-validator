@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Repository and community profiles (FHR-Specification #51, spec 009
+  FR-011) and the first profile, AgBioData (#70), a draft not reviewed by
+  the AgBioData GFF3 working group. A profile is a YAML file (`profiles/`,
+  packaged) with its source (URL, licence, commit, date), level changes that
+  can only raise core rules, its own rules (`AGB-001` to `AGB-013`, code in
+  `gff3_validator/profiles/`) and the recommendations it leaves as guidance.
+  `--profile ID|PATH` and `--list-profiles`; a profile selector on the web
+  page and in the Galaxy wrapper. Profile findings are reported separately
+  (labelled text lines, a `profile` object in JSON, a profile section in
+  HTML, a SARIF tool extension) and never change core validity; profile
+  errors make the exit status 1. `scripts/render_rules.py` writes
+  `docs/profiles/agbiodata.md` and the mapping table in `docs/profiles.md`;
+  the conformance suite gains 16 profile cases in a separate `profile_cases`
+  list (status `extension:agbiodata`). JSON reports now always have a
+  `profile` key (null without `--profile`).
+
 - Sequence Ontology layer (FHR-Specification #65), following the answers
   proposed in docs/questions-for-SO.md (questions 6, 13 to 16 and 18), at
   conservative levels: SO-001 (unknown type, warning), SO-002 (malformed

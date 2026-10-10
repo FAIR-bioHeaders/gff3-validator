@@ -11,7 +11,8 @@ class Finding:
     ``line`` is the 1-based line number in the decompressed input, or None for
     findings about the whole file. ``field`` is the 1-based GFF3 column (1 to
     9) when the finding concerns one column. Character offsets are not
-    reported.
+    reported. ``core_level`` is set only on a profile finding for a core rule
+    whose level the profile raises: it is the rule's catalogue level.
     """
 
     rule: str
@@ -20,6 +21,7 @@ class Finding:
     line: Optional[int] = None
     field: Optional[int] = None
     fix: Optional[str] = None
+    core_level: Optional[str] = None
 
     def to_dict(self):
         return {

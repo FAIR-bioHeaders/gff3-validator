@@ -11,7 +11,8 @@
     "spec": "The expected verdict follows from the GFF3 1.26 text.",
     "proposed": "The expected verdict or finding depends on an open question (open_question); it follows the proposed answer or the current catalogue behaviour, and may change when the Sequence Ontology group answers.",
     "extension:fhgff3": "FAIR-bioHeaders (FHGFF3) header layer, outside GFF3 1.26.",
-    "extension:insdc": "Reserved for INSDC GFF3 extension cases (none yet)."
+    "extension:insdc": "Reserved for INSDC GFF3 extension cases (none yet).",
+    "extension:agbiodata": "AgBioData GFF3 profile (profile_cases only): the file is valid GFF3; expected_profile says whether it complies with the profile."
   },
   "levels": {
     "error": "the file is invalid",
@@ -1710,6 +1711,358 @@
         "no_header": true
       },
       "description": "Header checks switched off (a note that they were skipped)."
+    }
+  ],
+  "profiles": {
+    "agbiodata": {
+      "name": "AgBioData GFF3 recommendations",
+      "version": "0.1.0-draft",
+      "source": "https://github.com/NAL-i5K/AgBioData_GFF3_recommendation/blob/32c8a386d3bca504e61cb6f7d9b9b038b7f7b0f8/Recommendations.md",
+      "license": "CC0-1.0",
+      "rules": "https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/profiles/agbiodata.md"
+    }
+  },
+  "profile_rules": [
+    "AGB-001",
+    "AGB-002",
+    "AGB-003",
+    "AGB-004",
+    "AGB-005",
+    "AGB-006",
+    "AGB-007",
+    "AGB-008",
+    "AGB-009",
+    "AGB-010",
+    "AGB-011",
+    "AGB-012",
+    "AGB-013",
+    "BIO-008",
+    "SO-001"
+  ],
+  "profile_cases": [
+    {
+      "id": "agbiodata-genes-with-genome",
+      "file": "profiles/agbiodata/compliant/agbiodata-genes-with-genome.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": null,
+      "findings": [],
+      "profile_findings": [],
+      "section": "AgBioData recommendations: Modeling hierarchical relationships of a protein-coding gene",
+      "status": "extension:agbiodata",
+      "genome": "genomes/genome.fa",
+      "description": "Two gene models written top down (gene, mRNA, exon, CDS), separated by ###, with start and stop codons and no internal stop: no core or profile findings."
+    },
+    {
+      "id": "agb-001-ontology-term",
+      "file": "profiles/agbiodata/compliant/agb-001-ontology-term.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-001",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-001",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Attributes : Ontology_term, Validation",
+      "status": "extension:agbiodata",
+      "description": "Ontology_term is used, which the recommendations ask the validator to warn about."
+    },
+    {
+      "id": "agb-002-go-term-in-dbxref",
+      "file": "profiles/agbiodata/compliant/agb-002-go-term-in-dbxref.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-002",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-002",
+          "level": "warning",
+          "line": 3
+        }
+      ],
+      "section": "AgBioData recommendations: Attributes complex metadata / functional annotations, Best practices",
+      "status": "extension:agbiodata",
+      "description": "A GO term given as a Dbxref."
+    },
+    {
+      "id": "agb-003-child-outside-parent",
+      "file": "profiles/agbiodata/compliant/agb-003-child-outside-parent.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-003",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-003",
+          "level": "warning",
+          "line": 3
+        }
+      ],
+      "section": "AgBioData recommendations: Modeling hierarchical relationships of a protein-coding gene, Best practices",
+      "status": "extension:agbiodata",
+      "description": "An mRNA (1..120) that extends beyond its gene (1..90)."
+    },
+    {
+      "id": "agb-004-child-before-parent",
+      "file": "profiles/agbiodata/compliant/agb-004-child-before-parent.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-004",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-004",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Modeling hierarchical relationships of a protein-coding gene, Best practices (sort order)",
+      "status": "extension:agbiodata",
+      "description": "The mRNA comes before its gene; a forward reference is valid GFF3."
+    },
+    {
+      "id": "agb-005-multiple-parents",
+      "file": "profiles/agbiodata/compliant/agb-005-multiple-parents.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-005",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-005",
+          "level": "info",
+          "line": 5
+        }
+      ],
+      "section": "AgBioData recommendations: Modeling hierarchical relationships of a protein-coding gene, Best practices",
+      "status": "extension:agbiodata",
+      "description": "An exon shared by two transcripts through two Parent values."
+    },
+    {
+      "id": "agb-006-polypeptide",
+      "file": "profiles/agbiodata/compliant/agb-006-polypeptide.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-006",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-006",
+          "level": "info",
+          "line": 5
+        }
+      ],
+      "section": "AgBioData recommendations: Attributes : Derives_from, Best practices",
+      "status": "extension:agbiodata",
+      "description": "A polypeptide derived from the CDS, which the recommendations advise leaving out."
+    },
+    {
+      "id": "agb-007-exon-without-parent",
+      "file": "profiles/agbiodata/compliant/agb-007-exon-without-parent.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-007",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-007",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Modeling hierarchical relationships of a protein-coding gene, Validation",
+      "status": "extension:agbiodata",
+      "description": "An exon without a Parent transcript."
+    },
+    {
+      "id": "agb-008-so-term-name",
+      "file": "profiles/agbiodata/compliant/agb-008-so-term-name.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-008",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-008",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Type (column 3), Best practice",
+      "status": "extension:agbiodata",
+      "description": "so_term_name names mRNA, which is not a kind of gene."
+    },
+    {
+      "id": "agb-009-target-spaces",
+      "file": "profiles/agbiodata/noncompliant/agb-009-target-spaces.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "not-compliant",
+      "rule": "AGB-009",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-009",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Attributes : Target, Gap, Validation",
+      "status": "extension:agbiodata",
+      "description": "Two spaces between the target_id and the start; the recommendations require single spaces."
+    },
+    {
+      "id": "agb-010-ontology-uri",
+      "file": "profiles/agbiodata/compliant/agb-010-ontology-uri.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-010",
+      "findings": [
+        {
+          "rule": "GFF-DIR-009",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "profile_findings": [
+        {
+          "rule": "AGB-010",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Pragmas, Ontology URIs",
+      "status": "extension:agbiodata",
+      "description": "A CVS URL for the feature ontology instead of an OBO PURL."
+    },
+    {
+      "id": "agb-011-species-url",
+      "file": "profiles/agbiodata/compliant/agb-011-species-url.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-011",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-011",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Pragmas, Species",
+      "status": "extension:agbiodata",
+      "description": "The NCBI Taxonomy URL that GFF3 1.26 prefers; the recommendations prefer the CURIE NCBITaxon:9606 (which gets the core warning GFF-DIR-007 instead)."
+    },
+    {
+      "id": "agb-012-score-directive",
+      "file": "profiles/agbiodata/compliant/agb-012-score-directive.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-012",
+      "findings": [
+        {
+          "rule": "GFF-DIR-010",
+          "level": "info",
+          "line": 2
+        }
+      ],
+      "profile_findings": [
+        {
+          "rule": "AGB-012",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Score (column 6), Validation",
+      "status": "extension:agbiodata",
+      "description": "A ##Score directive without min and max."
+    },
+    {
+      "id": "agb-013-seqid-comma",
+      "file": "profiles/agbiodata/compliant/agb-013-seqid-comma.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "compliant",
+      "rule": "AGB-013",
+      "findings": [],
+      "profile_findings": [
+        {
+          "rule": "AGB-013",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Modeling hierarchical relationships of a protein-coding gene, Best practices",
+      "status": "extension:agbiodata",
+      "description": "A gene split across scaffolds written with two seqids in column 1."
+    },
+    {
+      "id": "so-001-raised-to-error",
+      "file": "profiles/agbiodata/noncompliant/so-001-raised-to-error.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "not-compliant",
+      "rule": "SO-001",
+      "findings": [
+        {
+          "rule": "SO-001",
+          "level": "warning",
+          "line": 2
+        }
+      ],
+      "profile_findings": [
+        {
+          "rule": "SO-001",
+          "level": "error",
+          "line": 2
+        }
+      ],
+      "section": "AgBioData recommendations: Type (column 3), Validation",
+      "status": "extension:agbiodata",
+      "description": "A type that is not an SO term: a core warning, raised to an error by the profile."
+    },
+    {
+      "id": "bio-008-raised-to-error",
+      "file": "profiles/agbiodata/noncompliant/bio-008-raised-to-error.gff3",
+      "profile": "agbiodata",
+      "expected": "valid",
+      "expected_profile": "not-compliant",
+      "rule": "BIO-008",
+      "findings": [
+        {
+          "rule": "BIO-008",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "profile_findings": [
+        {
+          "rule": "BIO-008",
+          "level": "error",
+          "line": 4
+        }
+      ],
+      "section": "AgBioData recommendations: Phase (column 8), Validation",
+      "status": "extension:agbiodata",
+      "genome": "genomes/genome.fa",
+      "description": "An in-frame TGA: a core warning, raised to an error by the profile."
     }
   ]
 }

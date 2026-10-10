@@ -22,6 +22,9 @@ files.
   other error.
 - `genomes/genome.fa` (and a gzip copy): a 180 bp synthetic genome for the
   cases that compare features with sequence (the `BIO-*` rules).
+- `profiles/PROFILE/compliant/` and `profiles/PROFILE/noncompliant/`: valid
+  GFF3 files checked against a repository or community profile (see
+  [Profile cases](#profile-cases)). Core-only consumers can ignore them.
 - `manifest.json`: the expected outcome of every case.
 - `*.gz`: gzip or BGZF copies. Validate the decompressed bytes.
 
@@ -35,7 +38,9 @@ an editor; change the generator instead.
 Top level: `manifest_version` (1), `specification` (title and pinned URL),
 `rule_catalogue` and `questions` (where rule ids and open questions are
 defined), `statuses` and `levels` (the meanings below), `rules` (the rule ids
-the cases target) and `cases`. Each case has:
+the cases target) and `cases`; then, for profiles, `profiles`,
+`profile_rules` and `profile_cases` (see [Profile cases](#profile-cases)).
+Each case has:
 
 | Field | Meaning |
 | --- | --- |
@@ -71,6 +76,8 @@ Statuses:
   GFF3 1.26.
 - **`extension:insdc`**: reserved for cases of the INSDC GFF3 extension; none
   yet.
+- **`extension:agbiodata`**: profile cases for the AgBioData GFF3 profile
+  (only in `profile_cases`).
 
 Two choices are deliberate. First, `findings` is complete: an invalid case
 has exactly one error rule (its `rule`), a valid case has none, and every
@@ -89,6 +96,31 @@ Findings of the Sequence Ontology rules (`SO-*`, GFF-SYN-020) assume so.obo
 data-version 2026-08-07, the release bundled with gff3-validator; they are
 `proposed` cases citing questions 6 and 13 to 15, and a later SO release may
 change them (for example by renaming or obsoleting a term).
+
+## Profile cases
+
+A profile adds a repository's or community's recommendations to GFF3 1.26
+(see [docs/profiles.md](../docs/profiles.md)). Profile cases are kept apart so
+that a tool that only checks GFF3 never meets them: their files are under
+`profiles/`, and they are listed in the manifest's `profile_cases`, not in
+`cases`. `profiles` gives each profile's name, version, source document (URL
+and licence) and rule documentation; `profile_rules` lists the rules the
+profile cases target.
+
+Every profile case is valid GFF3 (`expected` is `valid`, and its `findings`
+have no error). A profile case has the fields of a case, plus:
+
+| Field | Meaning |
+| --- | --- |
+| `profile` | The profile id, for example `agbiodata` |
+| `expected_profile` | `compliant` (no profile errors) or `not-compliant` |
+| `rule` | The profile rule the case targets (for example `AGB-009`), or a core rule whose level the profile raises (`SO-001`) |
+| `profile_findings` | Every profile finding, as `{rule, level, line}`. A core rule whose level the profile raises appears both in `findings` (at its catalogue level) and here (at the profile's level) |
+| `section` | The section of the profile's source document the case tests |
+
+A non-compliant case has exactly one profile error rule (its `rule`); a
+compliant case has none. gff3-validator is run with `--profile PROFILE`, and
+its exit status is 0 only for a compliant file.
 
 ## Running a validator over the suite
 
@@ -112,6 +144,10 @@ GenomeTools:
 ```bash
 python scripts/check_conformance.py --command 'gt gff3validator {file}' --status spec
 ```
+
+With `--gff3-validate` the profile cases are scored too (with `--profile`),
+comparing the exit status, the core findings and the profile findings; the
+generic `--command` mode ignores them.
 
 Other options: `--status S` (repeatable) scores only cases with that status,
 `--skip-compressed` skips the gzip and BGZF cases, `--markdown` prints a

@@ -4,7 +4,7 @@
 
 **Catalogue version 0.1.0-draft. Draft under review with the Sequence Ontology group ([FHR-Specification #62](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/62)).** Rule ids may still change before the first release. Open questions are collected in [questions-for-SO.md](questions-for-SO.md).
 
-Levels: **error** (the file violates GFF3 1.26 or the layer's requirement), **warning** (probably wrong, or a specification recommendation), **info** (worth knowing; never affects validity). Layers: `core` (GFF3 syntax and structure), `so` (Sequence Ontology), `biology` (optional, needs `--genome`), `fhgff3` (optional FAIR-bioHeaders header). A suggested fix is guidance; the validator never rewrites a file. In examples, `→` stands for a tab.
+Levels: **error** (the file violates GFF3 1.26 or the layer's requirement), **warning** (probably wrong, or a specification recommendation), **info** (worth knowing; never affects validity). Layers: `core` (GFF3 syntax and structure), `so` (Sequence Ontology), `biology` (optional, needs `--genome`), `fhgff3` (optional FAIR-bioHeaders header). A suggested fix is guidance; the validator never rewrites a file. In examples, `→` stands for a tab. Rules of repository and community profiles (for example `AGB-*`) are not part of this catalogue; see [profiles.md](profiles.md).
 
 Sources:
 

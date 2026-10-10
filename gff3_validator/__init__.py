@@ -9,6 +9,7 @@ from gff3_validator.engine import Report, Validator, validate  # noqa: E402
 from gff3_validator.findings import Finding  # noqa: E402
 from gff3_validator.genome import GenomeError  # noqa: E402
 from gff3_validator.ontology import Ontology, OntologyError, load_ontology  # noqa: E402
+from gff3_validator.profiles import Profile, ProfileError, load_profile  # noqa: E402
 from gff3_validator.reader import InputError  # noqa: E402
 from gff3_validator.rules import Catalogue, Rule, load_catalogue  # noqa: E402
 
@@ -19,11 +20,14 @@ __all__ = [
     "InputError",
     "Ontology",
     "OntologyError",
+    "Profile",
+    "ProfileError",
     "Report",
     "Rule",
     "Validator",
     "__version__",
     "load_catalogue",
     "load_ontology",
+    "load_profile",
     "validate",
 ]

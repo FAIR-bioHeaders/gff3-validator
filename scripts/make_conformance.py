@@ -14,6 +14,11 @@ the script reproduces identical bytes.
 
 To add a case, add a ``case(...)`` call below, rerun the script and commit the
 script together with its output.
+
+Profile cases (``profile_case(...)``, status ``extension:PROFILE``) are kept
+apart, under ``profiles/`` and in the manifest's ``profile_cases``, so that
+core-only consumers can ignore them. Every profile case is valid GFF3; its
+``expected_profile`` says whether it complies with the profile.
 """
 
 import argparse
@@ -26,7 +31,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "conformance"
-GENERATED_DIRECTORIES = ("valid", "invalid", "genomes")
+GENERATED_DIRECTORIES = ("valid", "invalid", "genomes", "profiles")
 MANIFEST_VERSION = 1
 
 SPEC = (
@@ -45,6 +50,22 @@ STATUSES = {
     "behaviour, and may change when the Sequence Ontology group answers.",
     "extension:fhgff3": "FAIR-bioHeaders (FHGFF3) header layer, outside GFF3 " "1.26.",
     "extension:insdc": "Reserved for INSDC GFF3 extension cases (none yet).",
+    "extension:agbiodata": "AgBioData GFF3 profile (profile_cases only): the "
+    "file is valid GFF3; expected_profile says whether it complies with the "
+    "profile.",
+}
+# The profiles the profile cases use (the same metadata as profiles/*.yaml;
+# tests/test_profiles.py checks that they agree).
+PROFILES = {
+    "agbiodata": {
+        "name": "AgBioData GFF3 recommendations",
+        "version": "0.1.0-draft",
+        "source": "https://github.com/NAL-i5K/AgBioData_GFF3_recommendation/blob/"
+        "32c8a386d3bca504e61cb6f7d9b9b038b7f7b0f8/Recommendations.md",
+        "license": "CC0-1.0",
+        "rules": "https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/"
+        "docs/profiles/agbiodata.md",
+    },
 }
 LEVELS = ("error", "warning", "info")
 V = "##gff-version 3"
@@ -1582,6 +1603,235 @@ case(
 )
 
 
+# --------------------------------------------------------------------------
+# Profile cases: valid GFF3 files checked against a profile (--profile).
+# A non-compliant case has exactly one profile error rule (its rule); core
+# findings (all below error) and profile findings are both complete.
+# --------------------------------------------------------------------------
+
+PROFILE_CASES = []
+
+
+def profile_case(
+    id,
+    compliant,
+    lines,
+    *,
+    section,
+    description,
+    rule=None,
+    findings=(),
+    profile_findings=(),
+    profile="agbiodata",
+    genome=None,
+):
+    folder = "compliant" if compliant else "noncompliant"
+    entry = {
+        "id": id,
+        "file": f"profiles/{profile}/{folder}/{id}.gff3",
+        "profile": profile,
+        "expected": "valid",
+        "expected_profile": "compliant" if compliant else "not-compliant",
+        "rule": rule,
+        "findings": list(findings),
+        "profile_findings": list(profile_findings),
+        "section": section,
+        "status": f"extension:{profile}",
+    }
+    if genome:
+        entry["genome"] = genome
+    entry["description"] = description
+    PROFILE_CASES.append((entry, "".join(x + "\n" for x in lines).encode()))
+
+
+AGB = "AgBioData recommendations: "
+TX = t("ctg1 . mRNA 1 90 . + . ID=t1;Parent=g1")
+profile_case(
+    "agbiodata-genes-with-genome",
+    True,
+    GENES,
+    genome=GENOME,
+    section=AGB + "Modeling hierarchical relationships of a protein-coding gene",
+    description="Two gene models written top down (gene, mRNA, exon, CDS), "
+    "separated by ###, with start and stop codons and no internal stop: no "
+    "core or profile findings.",
+)
+profile_case(
+    "agb-001-ontology-term",
+    True,
+    [V, t("ctg1 . gene 1 90 . + . ID=g1;Ontology_term=SO:0001217")],
+    rule="AGB-001",
+    profile_findings=[f("AGB-001", "warning", 2)],
+    section=AGB + "Attributes : Ontology_term, Validation",
+    description="Ontology_term is used, which the recommendations ask the "
+    "validator to warn about.",
+)
+profile_case(
+    "agb-002-go-term-in-dbxref",
+    True,
+    [V, G, t("ctg1 . mRNA 1 90 . + . ID=t1;Parent=g1;Dbxref=GO:0004381")],
+    rule="AGB-002",
+    profile_findings=[f("AGB-002", "warning", 3)],
+    section=AGB + "Attributes complex metadata / functional annotations, "
+    "Best practices",
+    description="A GO term given as a Dbxref.",
+)
+profile_case(
+    "agb-003-child-outside-parent",
+    True,
+    [V, G, t("ctg1 . mRNA 1 120 . + . ID=t1;Parent=g1")],
+    rule="AGB-003",
+    profile_findings=[f("AGB-003", "warning", 3)],
+    section=AGB + "Modeling hierarchical relationships of a protein-coding "
+    "gene, Best practices",
+    description="An mRNA (1..120) that extends beyond its gene (1..90).",
+)
+profile_case(
+    "agb-004-child-before-parent",
+    True,
+    [V, TX, G],
+    rule="AGB-004",
+    profile_findings=[f("AGB-004", "info", 2)],
+    section=AGB + "Modeling hierarchical relationships of a protein-coding "
+    "gene, Best practices (sort order)",
+    description="The mRNA comes before its gene; a forward reference is valid " "GFF3.",
+)
+profile_case(
+    "agb-005-multiple-parents",
+    True,
+    [
+        V,
+        G,
+        TX,
+        t("ctg1 . mRNA 1 90 . + . ID=t2;Parent=g1"),
+        t("ctg1 . exon 1 90 . + . ID=e1;Parent=t1,t2"),
+    ],
+    rule="AGB-005",
+    profile_findings=[f("AGB-005", "info", 5)],
+    section=AGB + "Modeling hierarchical relationships of a protein-coding "
+    "gene, Best practices",
+    description="An exon shared by two transcripts through two Parent values.",
+)
+profile_case(
+    "agb-006-polypeptide",
+    True,
+    [
+        V,
+        G,
+        TX,
+        t("ctg1 . CDS 1 90 . + 0 ID=c1;Parent=t1"),
+        t("ctg1 . polypeptide 1 90 . + . ID=p1;Derives_from=c1"),
+    ],
+    rule="AGB-006",
+    profile_findings=[f("AGB-006", "info", 5)],
+    section=AGB + "Attributes : Derives_from, Best practices",
+    description="A polypeptide derived from the CDS, which the recommendations "
+    "advise leaving out.",
+)
+profile_case(
+    "agb-007-exon-without-parent",
+    True,
+    [V, t("ctg1 . exon 1 90 . + . ID=e1")],
+    rule="AGB-007",
+    profile_findings=[f("AGB-007", "warning", 2)],
+    section=AGB + "Modeling hierarchical relationships of a protein-coding "
+    "gene, Validation",
+    description="An exon without a Parent transcript.",
+)
+profile_case(
+    "agb-008-so-term-name",
+    True,
+    [V, t("ctg1 . gene 1 90 . + . ID=g1;so_term_name=mRNA")],
+    rule="AGB-008",
+    profile_findings=[f("AGB-008", "warning", 2)],
+    section=AGB + "Type (column 3), Best practice",
+    description="so_term_name names mRNA, which is not a kind of gene.",
+)
+profile_case(
+    "agb-009-target-spaces",
+    False,
+    [V, t("ctg1 blastn match_part 1 90 . + . ID=m1;Target=EST23  1 90 +")],
+    rule="AGB-009",
+    profile_findings=[f("AGB-009", "error", 2)],
+    section=AGB + "Attributes : Target, Gap, Validation",
+    description="Two spaces between the target_id and the start; the "
+    "recommendations require single spaces.",
+)
+profile_case(
+    "agb-010-ontology-uri",
+    True,
+    [V, "##feature-ontology http://song.cvs.sourceforge.net/sofa.obo", G],
+    rule="AGB-010",
+    findings=[f("GFF-DIR-009", "info", 2)],
+    profile_findings=[f("AGB-010", "info", 2)],
+    section=AGB + "Pragmas, Ontology URIs",
+    description="A CVS URL for the feature ontology instead of an OBO PURL.",
+)
+profile_case(
+    "agb-011-species-url",
+    True,
+    [
+        V,
+        "##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606",
+        G,
+    ],
+    rule="AGB-011",
+    profile_findings=[f("AGB-011", "info", 2)],
+    section=AGB + "Pragmas, Species",
+    description="The NCBI Taxonomy URL that GFF3 1.26 prefers; the "
+    "recommendations prefer the CURIE NCBITaxon:9606 (which gets the core "
+    "warning GFF-DIR-007 instead).",
+)
+profile_case(
+    "agb-012-score-directive",
+    True,
+    [V, '##Score name="AED";best=low', G],
+    rule="AGB-012",
+    findings=[f("GFF-DIR-010", "info", 2)],
+    profile_findings=[f("AGB-012", "warning", 2)],
+    section=AGB + "Score (column 6), Validation",
+    description="A ##Score directive without min and max.",
+)
+profile_case(
+    "agb-013-seqid-comma",
+    True,
+    [V, t("scaffold1,scaffold2 . gene 1 90 . + . ID=g1")],
+    rule="AGB-013",
+    profile_findings=[f("AGB-013", "warning", 2)],
+    section=AGB + "Modeling hierarchical relationships of a protein-coding "
+    "gene, Best practices",
+    description="A gene split across scaffolds written with two seqids in " "column 1.",
+)
+profile_case(
+    "so-001-raised-to-error",
+    False,
+    [V, t("ctg1 . gene_model 1 90 . + . ID=g1")],
+    rule="SO-001",
+    findings=[f("SO-001", "warning", 2)],
+    profile_findings=[f("SO-001", "error", 2)],
+    section=AGB + "Type (column 3), Validation",
+    description="A type that is not an SO term: a core warning, raised to an "
+    "error by the profile.",
+)
+profile_case(
+    "bio-008-raised-to-error",
+    False,
+    [
+        V,
+        t("chr2 . gene 1 30 . + . ID=g1"),
+        t("chr2 . mRNA 1 30 . + . ID=t1;Parent=g1"),
+        t("chr2 . CDS 1 30 . + 0 ID=cds1;Parent=t1"),
+    ],
+    genome=GENOME,
+    rule="BIO-008",
+    findings=[f("BIO-008", "warning", 4)],
+    profile_findings=[f("BIO-008", "error", 4)],
+    section=AGB + "Phase (column 8), Validation",
+    description="An in-frame TGA: a core warning, raised to an error by the "
+    "profile.",
+)
+
+
 def manifest():
     rules = sorted({entry["rule"] for entry, _ in CASES if entry["rule"]})
     return {
@@ -1598,6 +1848,11 @@ def manifest():
         },
         "rules": rules,
         "cases": [entry for entry, _ in CASES],
+        "profiles": PROFILES,
+        "profile_rules": sorted(
+            {entry["rule"] for entry, _ in PROFILE_CASES if entry["rule"]}
+        ),
+        "profile_cases": [entry for entry, _ in PROFILE_CASES],
     }
 
 
@@ -1613,6 +1868,19 @@ def check_cases():
             assert not errors, entry["id"]
         if entry["rule"]:
             assert entry["rule"] in {x["rule"] for x in entry["findings"]}, entry["id"]
+    for entry, _ in PROFILE_CASES:
+        assert entry["id"] not in seen, entry["id"]
+        seen.add(entry["id"])
+        assert entry["profile"] in PROFILES, entry["id"]
+        assert not [x for x in entry["findings"] if x["level"] == "error"], entry["id"]
+        errors = {x["rule"] for x in entry["profile_findings"] if x["level"] == "error"}
+        if entry["expected_profile"] == "not-compliant":
+            assert errors == {entry["rule"]}, entry["id"]
+        else:
+            assert not errors, entry["id"]
+        if entry["rule"]:
+            rules = {x["rule"] for x in entry["profile_findings"]}
+            assert entry["rule"] in rules, entry["id"]
 
 
 def write(output):
@@ -1622,7 +1890,8 @@ def write(output):
     for name in GENERATED_DIRECTORIES:
         shutil.rmtree(output / name, ignore_errors=True)
         (output / name).mkdir()
-    for entry, data in CASES:
+    for entry, data in CASES + PROFILE_CASES:
+        (output / entry["file"]).parent.mkdir(parents=True, exist_ok=True)
         (output / entry["file"]).write_bytes(data)
     genome = fasta(GENOME_SEQUENCES)
     (output / GENOME).write_bytes(genome)
@@ -1636,7 +1905,11 @@ def main(argv=None):
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     args = parser.parse_args(argv)
     write(args.output)
-    print(f"wrote {len(CASES)} cases to {args.output}", file=sys.stderr)
+    print(
+        f"wrote {len(CASES)} cases and {len(PROFILE_CASES)} profile cases to "
+        f"{args.output}",
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":
