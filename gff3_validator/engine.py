@@ -1,7 +1,8 @@
 """The validation engine: reads lines, runs the rules, collects findings."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from types import SimpleNamespace
+from typing import Dict, List, Optional, Union
 
 from gff3_validator import codons, header
 from gff3_validator.checks import syntax
@@ -18,6 +19,7 @@ from gff3_validator.checks.structure import Structure
 from gff3_validator.findings import Finding
 from gff3_validator.genome import Genome
 from gff3_validator.ontology import Ontology, load_ontology
+from gff3_validator.profiles import Profile, load_profile
 from gff3_validator.reader import iter_lines
 from gff3_validator.rules import load_catalogue
 
@@ -28,6 +30,43 @@ BOM = "\ufeff"
 # first occurrence, with a count, so that they cannot crowd errors out of the
 # findings cap.
 SUMMARISED = ("GFF-SYN-006", "GFF-SYN-009", "GFF-ATT-003", "GFF-ATT-009")
+
+
+def _counts():
+    return {"error": 0, "warning": 0, "info": 0}
+
+
+@dataclass
+class ProfileResult:
+    """The findings of a repository or community profile, kept apart from
+    the core findings so that core validity is unchanged by the profile.
+
+    ``findings`` are the profile's own rules and the core findings whose
+    level the profile raises (``core_level`` then gives the catalogue level).
+    ``skipped`` lists profile checks that were not run, with the reason.
+    """
+
+    profile: Profile
+    findings: List[Finding] = field(default_factory=list)
+    counts: Dict[str, int] = field(default_factory=_counts)
+    truncated: int = 0
+    skipped: List[str] = field(default_factory=list)
+
+    def to_dict(self, valid):
+        data = self.profile.to_dict()
+        data.update(
+            {
+                "compliant": valid and self.counts["error"] == 0,
+                "counts": dict(self.counts),
+                "not_checked": list(self.skipped),
+                "truncated_findings": self.truncated,
+                "findings": [
+                    dict(finding.to_dict(), core_level=finding.core_level)
+                    for finding in self.findings
+                ],
+            }
+        )
+        return data
 
 
 @dataclass
@@ -41,19 +80,27 @@ class Report:
     source: str
     catalogue_version: str
     findings: List[Finding] = field(default_factory=list)
-    counts: Dict[str, int] = field(
-        default_factory=lambda: {"error": 0, "warning": 0, "info": 0}
-    )
+    counts: Dict[str, int] = field(default_factory=_counts)
     truncated: int = 0
     lines: int = 0
     header_lines: int = 0
     skipped: List[Dict[str, str]] = field(default_factory=list)
     # The SO release used: data_version, date, source, sha256, bundled.
     ontology: Optional[Dict[str, object]] = None
+    # The profile's findings, when the run used a profile (--profile).
+    profile: Optional[ProfileResult] = None
 
     @property
     def valid(self):
+        """Valid GFF3: no errors from the core rules (profiles never count)."""
         return self.counts["error"] == 0
+
+    @property
+    def compliant(self):
+        """Valid and without profile errors; None when no profile was used."""
+        if self.profile is None:
+            return None
+        return self.valid and self.profile.counts["error"] == 0
 
     def to_dict(self):
         from gff3_validator import __version__
@@ -63,6 +110,9 @@ class Report:
             "tool": {"name": "gff3-validator", "version": __version__},
             "catalogue_version": self.catalogue_version,
             "sequence_ontology": self.ontology,
+            "profile": (
+                None if self.profile is None else self.profile.to_dict(self.valid)
+            ),
             "source": self.source,
             "valid": self.valid,
             "counts": dict(self.counts),
@@ -83,7 +133,11 @@ class Validator:
     run, translating CDS with NCBI ``translation_table`` (default 1). ``so``
     is the path of a ``so.obo`` to use instead of the bundled SO release
     (``ontology`` an already loaded :class:`~gff3_validator.ontology.Ontology`).
-    Raises ``OntologyError`` (a ``ValueError``) if ``so`` cannot be read.
+    ``profile`` is a :class:`~gff3_validator.profiles.Profile`, the id of a
+    shipped profile or the path of a profile YAML file; its findings are
+    reported apart from the core findings (``Report.profile``).
+    Raises ``OntologyError`` (a ``ValueError``) if ``so`` cannot be read and
+    ``ProfileError`` (a ``ValueError``) if the profile cannot be loaded.
     """
 
     def __init__(
@@ -95,6 +149,7 @@ class Validator:
         translation_table=codons.DEFAULT_TABLE,
         so: Optional[str] = None,
         ontology: Optional[Ontology] = None,
+        profile: Union[Profile, str, None] = None,
     ):
         if header_mode not in header.MODES:
             raise ValueError(f"header_mode must be one of {header.MODES}")
@@ -109,16 +164,59 @@ class Validator:
         self.max_findings = max_findings
         self.catalogue = catalogue or load_catalogue()
         self.ontology = ontology or load_ontology(so)
+        if profile is not None and not isinstance(profile, Profile):
+            profile = load_profile(profile)
+        self.profile = profile
 
     def _add(self, report, rule_id, message, line=None, field=None):
         rule = self.catalogue[rule_id]
         report.counts[rule.level] += 1
+        if self.profile is not None:
+            change = self.profile.levels.get(rule_id)
+            if change is not None:
+                self._add_profile(
+                    report.profile,
+                    rule_id,
+                    change.level,
+                    message,
+                    line,
+                    field,
+                    rule.fix,
+                    core_level=rule.level,
+                )
         if self.max_findings is not None and len(report.findings) >= self.max_findings:
             report.truncated += 1
             return
         report.findings.append(
             Finding(rule_id, rule.level, message, line=line, field=field, fix=rule.fix)
         )
+
+    def _add_profile(
+        self, result, rule_id, level, message, line, field, fix, core_level=None
+    ):
+        result.counts[level] += 1
+        if self.max_findings is not None and len(result.findings) >= self.max_findings:
+            result.truncated += 1
+            return
+        result.findings.append(
+            Finding(
+                rule_id,
+                level,
+                message,
+                line=line,
+                field=field,
+                fix=fix,
+                core_level=core_level,
+            )
+        )
+
+    def _profile_problems(self, report, problems):
+        profile = self.profile
+        for rule_id, line, column, message in problems:
+            rule = profile.rules[rule_id]
+            self._add_profile(
+                report.profile, rule_id, rule.level, message, line, column, rule.fix
+            )
 
     def validate(self, source, name=None) -> Report:
         """Validate ``source`` (path, ``"-"`` or binary stream).
@@ -137,6 +235,8 @@ class Validator:
             catalogue_version=self.catalogue.version,
             ontology=self.ontology.to_dict(),
         )
+        if self.profile is not None:
+            report.profile = ProfileResult(self.profile)
         summary = {}
 
         def emit(rule_id, message, line=None, field=None):
@@ -163,6 +263,13 @@ class Validator:
                 structure,
                 types=(cds_types, so_layer.exon_types, so_layer.recoded_types),
                 relation=so_layer.allowed,
+            )
+        checker = None
+        if self.profile is not None:
+            checker = self.profile.checker(
+                SimpleNamespace(
+                    ontology=self.ontology, structure=structure, so_layer=so_layer
+                )
             )
         fasta = None
         version_seen = False
@@ -200,6 +307,11 @@ class Validator:
                             emit(rule_id, message, line=at)
                     if number > 1 and line.startswith("##gff-version"):
                         version_seen = True
+                    if checker is not None and line.rstrip() != "###":
+                        name, arguments = split_directive(line)
+                        self._profile_problems(
+                            report, checker.directive(number, name, arguments, line)
+                        )
                 continue
             if line.startswith(">"):
                 emit(
@@ -236,6 +348,10 @@ class Validator:
                 number, fields[2], fields[7], attributes
             ):
                 emit(rule_id, message, line=at)
+            if checker is not None:
+                self._profile_problems(
+                    report, checker.feature(number, fields, coordinates, attributes)
+                )
             if biology is not None:
                 for rule_id, at, message in biology.feature(
                     number,
@@ -263,8 +379,12 @@ class Validator:
             if count > 1:
                 message += f" (and {count - 1} more like this in the file)"
             self._add(report, rule_id, message, line=line, field=column)
+        if checker is not None:
+            self._profile_problems(report, checker.finish())
         self._finish_header(report)
         self._record_skipped(report, biology)
+        if self.profile is not None:
+            self._record_profile_skipped(report, biology, checker)
         return report
 
     def _directive(self, emit, structure, number, line, version_seen):
@@ -353,6 +473,23 @@ class Validator:
             report.skipped.append(
                 {"layer": "biology", "reason": "partial: " + "; ".join(reasons)}
             )
+
+    def _record_profile_skipped(self, report, biology, checker):
+        profile = self.profile
+        skipped = report.profile.skipped
+        planned = [rule.id for rule in profile if rule.status != "implemented"]
+        if planned:
+            skipped.append("planned and not checked: " + ", ".join(planned))
+        if biology is None:
+            raised = [
+                f"{rule_id} (raised to {change.level})"
+                for rule_id, change in profile.levels.items()
+                if self.catalogue[rule_id].layer == "biology"
+            ]
+            if raised:
+                skipped.append("not run; needs --genome: " + ", ".join(raised))
+        if checker is not None:
+            skipped.extend(checker.skip_reasons())
 
 
 def validate(source, **options) -> Report:

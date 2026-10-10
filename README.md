@@ -129,17 +129,20 @@ files.
 
 ## Planned interfaces
 
-- **CLI** `gff3-validate FILE [--genome genome.fa [--translation-table N]] [--so so.obo] [--format text|json|html|sarif]`, reading
+- **CLI** `gff3-validate FILE [--genome genome.fa [--translation-table N]] [--so so.obo] [--profile ID] [--format text|json|html|sarif]`, reading
   plain, gzip/BGZF or stdin (`-`) input. Exit codes: 0 no errors, 1 errors
-  found, 2 usage error or unreadable input (the run is then incomplete).
+  found (with `--profile`, also profile errors), 2 usage error or unreadable
+  input (the run is then incomplete).
 - **Library** `gff3_validator.validate(path)` returning findings with rule id,
-  level, line, column, message and fix.
+  level, line, column, message and fix (`validate(path, profile="agbiodata")`
+  adds `report.profile` and `report.compliant`).
 - **Web page** running the same engine in the browser through Pyodide, so
   files never leave the computer (see [Use it in your browser](#use-it-in-your-browser)).
 - **Reports** in text, JSON, HTML (one self-contained file) and SARIF 2.1.0
   (for code-scanning annotations in CI).
-- **Repository profiles** (NCBI, Ensembl, Alliance) layered on the core rules,
-  later and only with each repository's review.
+- **Repository and community profiles** layered on the core rules (see
+  [Profiles](#profiles)): AgBioData now, as a draft; NCBI, Ensembl and the
+  Alliance later and only with each repository's review.
 - **Distribution** on PyPI and Bioconda, a Galaxy wrapper, an FHR-Nextflow
   module and a container, after the first reviewed release.
 
@@ -288,6 +291,39 @@ poetry run pytest                                # then update the catalogue's
 `.github/workflows/so-release.yml` runs the check weekly and opens an issue
 when SO publishes a new so.obo.
 
+### Profiles
+
+A profile adds the recommendations of a repository or community to the core
+rules ([docs/profiles.md](docs/profiles.md), FHR-Specification
+[#51](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/51) and
+[#70](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/70)):
+
+```bash
+gff3-validate --list-profiles
+gff3-validate --profile agbiodata annotation.gff3
+gff3-validate --profile my-profile.yaml annotation.gff3
+```
+
+The first profile, `agbiodata`, follows the
+[AgBioData GFF3 working group recommendations](https://github.com/NAL-i5K/AgBioData_GFF3_recommendation/blob/32c8a386d3bca504e61cb6f7d9b9b038b7f7b0f8/Recommendations.md)
+(CC0-1.0, commit 32c8a38 of 2021-12-29). It is a draft that the working group
+has not reviewed. It adds 13 rules (`AGB-001` to `AGB-013`: Ontology_term and
+GO terms in Dbxref, children within and after their parent, one Parent, no
+polypeptide features, CDS and exon with a Parent, `so_term_name`, Target
+spacing, ontology PURLs, `##species` CURIEs, the `##Score` directive and
+seqids listing several sequences), raises SO-001 and BIO-008 to errors, and
+lists the recommendations it does not check, each with the reason
+([docs/profiles/agbiodata.md](docs/profiles/agbiodata.md)).
+
+Profile findings are reported apart from the core findings and never change
+whether a file is valid GFF3: the verdict reads, for example,
+`no errors (...); AgBioData profile: 3 errors, 1 warnings, 0 notes (not compliant)`.
+Text lines are labelled "AgBioData profile", the JSON report has a `profile`
+object (id, version, source with URL, licence and commit, `compliant`,
+counts and findings), the HTML report a separate profile section and SARIF a
+tool extension for the profile. A profile can only raise core levels, and a
+profile file given by path cannot load code.
+
 ## Use it in your browser
 
 <https://fair-bioheaders.github.io/gff3-validator/> (once GitHub Pages is
@@ -295,7 +331,8 @@ enabled for this repository) runs the validator inside the page: the
 `gff3-validator` wheel built from this repository, in Python compiled to
 WebAssembly ([Pyodide](https://pyodide.org/)). Drop or pick a `.gff3` or
 `.gff3.gz` file, optionally add a genome FASTA for the biology checks and a
-translation table, choose how to treat a FAIR-bioHeaders header, and the page
+translation table, choose how to treat a FAIR-bioHeaders header and,
+optionally, a profile, and the page
 shows the HTML report and offers it, the JSON and the SARIF report for
 download. The reports are the ones `gff3-validate --format html|json|sarif`
 writes for the same file and options; CI checks this on every fixture
@@ -356,7 +393,8 @@ then `cd web/test && npm install --save-exact pyodide@VERSION`, rebuild and run
 wrapper (`gff3_validator`) that follows the
 [IUC standards](https://galaxy-iuc-standards.readthedocs.io/). It takes a
 GFF3 dataset (plain or gzip) and, optionally, a genome FASTA with a
-translation table for the biology rules and a FAIR-bioHeaders header mode. It
+translation table for the biology rules, a FAIR-bioHeaders header mode and a
+profile (none, or AgBioData). It
 always writes the HTML report, optionally the JSON and SARIF reports, and puts
 the text summary in the job's standard output. A file with errors (exit
 status 1) is a successful job; only an incomplete run (exit status 2) fails
@@ -379,7 +417,8 @@ invalid, plain and compressed, with a tiny genome for the biology rules) and a
 manifest giving each file's expected verdict, findings, GFF3 1.26 section and
 status (settled by the specification, or depending on an open SO question).
 It covers every implemented rule and is meant for any GFF3 tool, not just
-this one:
+this one. Profile cases (status `extension:agbiodata`) are kept in a separate
+`profile_cases` list and directory, so core-only tools can ignore them:
 
 ```bash
 python scripts/check_conformance.py --gff3-validate gff3-validate          # full findings
@@ -391,7 +430,9 @@ python scripts/check_conformance.py --command 'gt gff3validator {file}'    # exi
 See [CONTRIBUTING.md](CONTRIBUTING.md). The rule catalogue is the source of
 truth: edit `rules/catalogue.yaml`, then run `python scripts/render_rules.py` to
 regenerate `docs/rules.md`, the packaged copy and the list above (CI checks for
-drift with `--check`).
+drift with `--check`). Profiles work the same way: edit `profiles/ID.yaml` and
+rerun the script, which writes the packaged copy, `docs/profiles/ID.md` and
+the mapping table in `docs/profiles.md`.
 
 ## Licensing
 

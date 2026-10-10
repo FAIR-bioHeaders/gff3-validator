@@ -1,6 +1,7 @@
 """The gff3-validate command.
 
-Exit codes: 0 no errors, 1 errors found, 2 usage error or unreadable input.
+Exit codes: 0 no errors, 1 errors found (core errors, or with --profile also
+profile errors), 2 usage error or unreadable input.
 """
 
 import argparse
@@ -9,6 +10,7 @@ import sys
 from gff3_validator import __version__, codons
 from gff3_validator.engine import DEFAULT_MAX_FINDINGS, Validator
 from gff3_validator.ontology import OntologyError
+from gff3_validator.profiles import ProfileError, list_profiles, load_profile
 from gff3_validator.reader import InputError
 from gff3_validator.report import to_html, to_json, to_sarif, to_text
 
@@ -21,7 +23,9 @@ def build_parser():
         description="Validate a GFF3 file (pre-release: only the rules marked "
         "implemented in docs/rules.md are checked).",
     )
-    parser.add_argument("input", help="GFF3 file, plain or gzip/BGZF; - for stdin")
+    parser.add_argument(
+        "input", nargs="?", help="GFF3 file, plain or gzip/BGZF; - for stdin"
+    )
     parser.add_argument(
         "--format",
         choices=tuple(FORMATS),
@@ -59,6 +63,19 @@ def build_parser():
         "bundled Sequence Ontology release; every report names the release used",
     )
     parser.add_argument(
+        "--profile",
+        metavar="ID",
+        help="also check a repository or community profile: the id of a shipped "
+        "profile (see --list-profiles) or the path of a profile YAML file; "
+        "profile findings are reported separately and do not change whether the "
+        "file is valid GFF3, but profile errors make the exit status 1",
+    )
+    parser.add_argument(
+        "--list-profiles",
+        action="store_true",
+        help="list the shipped profiles and exit",
+    )
+    parser.add_argument(
         "--max-findings",
         type=int,
         default=DEFAULT_MAX_FINDINGS,
@@ -73,9 +90,24 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.list_profiles:
+        for profile in list_profiles():
+            print(f"{profile.id}\t{profile.version}\t{profile.name}")
+            print(f"\tsource: {profile.source['url']} ({profile.source['license']})")
+            print(f"\t{profile.review}")
+        return 0
+    if args.input is None:
+        parser.error("the input file is required")
     if args.translation_table is not None and not args.genome:
         parser.error("--translation-table needs --genome")
     mode = "require" if args.require_header else "skip" if args.no_header else "auto"
+    profile = None
+    if args.profile is not None:
+        try:
+            profile = load_profile(args.profile)
+        except ProfileError as error:
+            print(f"gff3-validate: --profile: {error}", file=sys.stderr)
+            return 2
     try:
         validator = Validator(
             header_mode=mode,
@@ -83,6 +115,7 @@ def main(argv=None):
             max_findings=args.max_findings,
             translation_table=args.translation_table or codons.DEFAULT_TABLE,
             so=args.so,
+            profile=profile,
         )
     except OntologyError as error:
         print(f"gff3-validate: --so: {error}", file=sys.stderr)
@@ -93,4 +126,4 @@ def main(argv=None):
         print(f"gff3-validate: {error}; validation incomplete", file=sys.stderr)
         return 2
     sys.stdout.write(FORMATS[args.format](report))
-    return 0 if report.valid else 1
+    return 0 if report.valid and report.compliant is not False else 1

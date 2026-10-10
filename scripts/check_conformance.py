@@ -19,6 +19,11 @@ if present, by the genome FASTA; cases that need a genome are skipped when the
 command has no ``{genome}``, and cases with validator options (FHGFF3 header
 modes) are always skipped. ``--status spec`` scores only the cases the GFF3
 1.26 text settles. The exit status is 1 if any check or case fails.
+
+Profile cases (the manifest's ``profile_cases``, status ``extension:PROFILE``)
+are scored only in the gff3-validator mode, with ``--profile``: the exit status
+(0 for a compliant file), the core findings and the profile findings. The
+generic mode ignores them, as any core-only consumer can.
 """
 
 import argparse
@@ -36,7 +41,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SUITE = ROOT / "conformance"
 GENERATOR = ROOT / "scripts" / "make_conformance.py"
 CATALOGUE = ROOT / "rules" / "catalogue.yaml"
-GENERATED = ("valid", "invalid", "genomes")
+PROFILES = ROOT / "profiles"
+GENERATED = ("valid", "invalid", "genomes", "profiles")
 OPTIONS = {"require_header": "--require-header", "no_header": "--no-header"}
 
 
@@ -92,6 +98,24 @@ def implemented_rules():
     return {rule["id"] for rule in data["rules"] if rule["status"] == "implemented"}
 
 
+def profile_rules():
+    """{profile id: implemented profile rules and raised core rules} from
+    profiles/*.yaml, or None if unavailable."""
+    try:
+        import yaml
+    except ImportError:
+        return None
+    if not PROFILES.is_dir():
+        return None
+    found = {}
+    for path in sorted(PROFILES.glob("*.yaml")):
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        rules = {r["id"] for r in data["rules"] if r["status"] == "implemented"}
+        rules |= {change["rule"] for change in data.get("levels") or ()}
+        found[data["id"]] = rules
+    return found
+
+
 def check_manifest(suite, manifest):
     problems = []
     statuses = set(manifest["statuses"])
@@ -120,6 +144,48 @@ def check_manifest(suite, manifest):
         covered = {case["rule"] for case in manifest["cases"]}
         for rule in sorted(implemented - covered):
             problems.append(f"implemented rule {rule} has no case")
+    problems += check_profile_cases(suite, manifest, statuses, seen)
+    return problems
+
+
+def check_profile_cases(suite, manifest, statuses, seen):
+    problems = []
+    profiles = manifest.get("profiles", {})
+    for case in manifest.get("profile_cases", []):
+        name = case["id"]
+        if name in seen:
+            problems.append(f"{name}: duplicate id")
+        seen.add(name)
+        for key in ("file", "genome"):
+            if key in case and not (suite / case[key]).is_file():
+                problems.append(f"{name}: {key} {case[key]} is missing")
+        if case["profile"] not in profiles:
+            problems.append(f"{name}: unknown profile {case['profile']}")
+        if case["status"] not in statuses or case["status"] != (
+            f"extension:{case['profile']}"
+        ):
+            problems.append(f"{name}: status must be extension:{case['profile']}")
+        if case["expected"] != "valid" or any(
+            x["level"] == "error" for x in case["findings"]
+        ):
+            problems.append(f"{name}: a profile case is valid GFF3")
+        errors = {x["rule"] for x in case["profile_findings"] if x["level"] == "error"}
+        if case["expected_profile"] == "not-compliant" and errors != {case["rule"]}:
+            problems.append(
+                f"{name}: a non-compliant case has exactly its rule as error"
+            )
+        if case["expected_profile"] == "compliant" and errors:
+            problems.append(f"{name}: a compliant case has profile errors")
+    found = profile_rules()
+    if found is not None:
+        for profile, rules in sorted(found.items()):
+            covered = {
+                case["rule"]
+                for case in manifest.get("profile_cases", [])
+                if case["profile"] == profile
+            }
+            for rule in sorted(rules - covered):
+                problems.append(f"profile {profile}: rule {rule} has no case")
     return problems
 
 
@@ -149,6 +215,8 @@ def show(findings):
 def score_json(suite, case, base, timeout):
     """gff3-validator adapter: exit status and every (rule, level, line)."""
     command = list(base) + ["--format", "json"]
+    if "profile" in case:
+        command += ["--profile", case["profile"]]
     if "genome" in case:
         command += ["--genome", str(suite / case["genome"])]
     for option, value in case.get("options", {}).items():
@@ -160,22 +228,36 @@ def score_json(suite, case, base, timeout):
         return "fail", "?", "timed out"
     if result.returncode not in (0, 1):
         return "fail", "?", f"exit {result.returncode}: {result.stderr.strip()[:200]}"
-    got = "valid" if result.returncode == 0 else "invalid"
     try:
         report = json.loads(result.stdout)
     except ValueError:
-        return "fail", got, "output is not JSON"
-    expected = Counter(finding_key(x) for x in case["findings"])
-    actual = Counter(finding_key(x) for x in report["findings"])
+        return "fail", "?", "output is not JSON"
     details = []
-    if got != case["expected"]:
+    if "profile" in case:
+        got = "compliant" if result.returncode == 0 else "not-compliant"
+        wanted = case["expected_profile"]
+        if not report["valid"]:
+            details.append("not valid GFF3")
+        profile = report.get("profile") or {}
+        pairs = [
+            ("", case["findings"], report["findings"]),
+            ("profile: ", case["profile_findings"], profile.get("findings", [])),
+        ]
+    else:
+        got = "valid" if result.returncode == 0 else "invalid"
+        wanted = case["expected"]
+        pairs = [("", case["findings"], report["findings"])]
+    if got != wanted:
         details.append(f"exit {result.returncode}")
-    if actual != expected:
-        missing, extra = expected - actual, actual - expected
-        if missing:
-            details.append("missing " + show(missing.elements()))
-        if extra:
-            details.append("unexpected " + show(extra.elements()))
+    for label, wanted_findings, got_findings in pairs:
+        expected = Counter(finding_key(x) for x in wanted_findings)
+        actual = Counter(finding_key(x) for x in got_findings)
+        if actual != expected:
+            missing, extra = expected - actual, actual - expected
+            if missing:
+                details.append(label + "missing " + show(missing.elements()))
+            if extra:
+                details.append(label + "unexpected " + show(extra.elements()))
     return ("fail" if details else "pass"), got, "; ".join(details)
 
 
@@ -262,7 +344,7 @@ def main(argv=None):
         "--status",
         action="append",
         help="score only cases with this status (repeatable): spec, proposed, "
-        "extension:fhgff3, extension:insdc",
+        "extension:fhgff3, extension:insdc, extension:agbiodata",
     )
     parser.add_argument(
         "--skip-compressed", action="store_true", help="skip gzip and BGZF cases"
@@ -294,7 +376,8 @@ def main(argv=None):
             print(f"suite: {problem}", file=sys.stderr)
         cases = manifest["cases"]
         print(
-            f"suite: {len(cases)} cases, {len(manifest['rules'])} rules"
+            f"suite: {len(cases)} cases, {len(manifest['rules'])} rules, "
+            f"{len(manifest.get('profile_cases', []))} profile cases"
             + (": OK" if not problems else f": {len(problems)} problems"),
             file=sys.stderr,
         )
@@ -302,10 +385,11 @@ def main(argv=None):
 
     if not (args.gff3_validate or args.command):
         return 1 if failed else 0
+    candidates = list(manifest["cases"])
+    if args.gff3_validate:
+        candidates += manifest.get("profile_cases", [])
     cases = [
-        case
-        for case in manifest["cases"]
-        if not args.status or case["status"] in args.status
+        case for case in candidates if not args.status or case["status"] in args.status
     ]
 
     def score(case):
@@ -319,7 +403,14 @@ def main(argv=None):
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
         results = list(pool.map(score, cases))
     rows = [
-        (case["id"], case["status"], case["expected"], got, outcome, detail)
+        (
+            case["id"],
+            case["status"],
+            case.get("expected_profile", case["expected"]),
+            got,
+            outcome,
+            detail,
+        )
         for case, (outcome, got, detail) in zip(cases, results)
     ]
     print(table(rows, args.markdown))

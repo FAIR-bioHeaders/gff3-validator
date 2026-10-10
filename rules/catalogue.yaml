@@ -12,8 +12,9 @@
 #
 # Layers: core = GFF3 1.26 syntax, directives and structure; so = Sequence
 # Ontology terms and relationships; biology = optional checks that need
-# --genome; fhgff3 = the optional FAIR-bioHeaders header. Repository profiles
-# (#70) will be separate catalogues layered on top.
+# --genome; fhgff3 = the optional FAIR-bioHeaders header. Repository and
+# community profiles (#51, #70) are separate files in profiles/, layered on
+# top (docs/profiles.md); they never change this catalogue.
 
 catalogue_version: 0.1.0-draft
 date: 2026-10-08

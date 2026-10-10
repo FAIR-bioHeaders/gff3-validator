@@ -45,6 +45,18 @@
       <label><input type="radio" name="header" value="skip"> Skip header checks (<code>--no-header</code>)</label>
     </fieldset>
 
+    <fieldset>
+      <legend>Profile (optional, <code>--profile</code>)</legend>
+      <label for="profile">Also check the recommendations of a repository or
+      community. Profile findings are reported separately and do not change
+      whether the file is valid GFF3.</label>
+      <select id="profile" name="profile" disabled>
+        <option value="" selected>None: GFF3 1.26 and the Sequence Ontology only</option>
+      </select>
+      <p class="hint">See <a href="https://github.com/FAIR-bioHeaders/gff3-validator/blob/main/docs/profiles.md">profiles</a>
+      for what each profile checks.</p>
+    </fieldset>
+
     <details id="biology">
       <summary>Biology checks with a genome FASTA (optional, <code>--genome</code>)</summary>
       <p class="warning" id="genome-warning">The genome is copied into the

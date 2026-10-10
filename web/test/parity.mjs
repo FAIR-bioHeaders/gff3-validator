@@ -1,7 +1,8 @@
 // Parity test: the in-browser validator (the page's glue.js and the built
 // wheel, in Pyodide under Node.js) must give byte-identical JSON, SARIF and
 // HTML reports to the CLI, for every fixture in tests/fixtures/expected.yaml,
-// plain and gzipped, and for the header and translation-table options.
+// plain and gzipped, for the header and translation-table options, and for
+// the profile cases of the conformance suite with --profile.
 //
 // Usage (from the repository root, after scripts/build_web.py):
 //   (cd web/test && npm ci)
@@ -73,6 +74,7 @@ function add(id, path, options = {}) {
   if (options.headerMode === "skip") cli.push("--no-header");
   if (options.genome) cli.push("--genome", options.genome);
   if (options.translationTable) cli.push("--translation-table", String(options.translationTable));
+  if (options.profile) cli.push("--profile", options.profile);
   cases.push({ id, path, options, args: [...cli, path] });
 }
 for (const name of names) {
@@ -93,6 +95,14 @@ for (const name of names.filter((n) => n.startsWith("biology/"))) {
     add(`${name} --genome genome.fa.gz --translation-table ${table}`,
       relative(root, join(fixtures, name)), { genome: genomeGz, translationTable: table });
   }
+}
+
+const suite = join(root, "conformance");
+const conformance = JSON.parse(readFileSync(join(suite, "manifest.json"), "utf8"));
+for (const item of conformance.profile_cases || []) {
+  const options = { profile: item.profile };
+  if (item.genome) options.genome = relative(root, join(suite, item.genome));
+  add(`${item.file} --profile ${item.profile}`, relative(root, join(suite, item.file)), options);
 }
 
 // -- the CLI, in one Python process -------------------------------------------
@@ -120,7 +130,8 @@ for (const item of cases) {
   const problems = [];
   if (!got.ok) problems.push("page could not validate: " + got.error);
   else {
-    if ((want.exit === 0) !== got.valid || want.exit === 2) problems.push(`exit ${want.exit} but valid=${got.valid}`);
+    const passed = got.valid && got.compliant !== false;
+    if ((want.exit === 0) !== passed || want.exit === 2) problems.push(`exit ${want.exit} but valid=${got.valid} compliant=${got.compliant}`);
     for (const fmt of ["json", "sarif", "html"]) {
       if (got[fmt] !== want[fmt]) problems.push(`${fmt} differs (${differences(got[fmt], want[fmt])})`);
     }

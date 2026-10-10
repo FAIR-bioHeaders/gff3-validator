@@ -11,6 +11,7 @@ import io
 
 from gff3_validator import codons
 from gff3_validator.engine import DEFAULT_MAX_FINDINGS, Validator
+from gff3_validator.profiles import list_profiles
 from gff3_validator.reader import InputError
 from gff3_validator.report import summary, to_html, to_json, to_sarif, to_text
 
@@ -67,16 +68,18 @@ def run(
     genome=None,
     translation_table=None,
     max_findings=DEFAULT_MAX_FINDINGS,
+    profile=None,
 ):
     """Validate ``source`` like ``gff3-validate`` and render every report.
 
     Options mirror the command line: ``header_mode`` is ``auto``,
     ``require`` (``--require-header``) or ``skip`` (``--no-header``);
     ``genome`` is a FASTA path (``--genome``); ``translation_table`` needs a
-    genome. Returns a dict with ``ok`` False and an ``error`` message when the
-    input cannot be read (the command line exits 2), otherwise ``ok`` True,
-    ``valid``, ``counts``, ``summary`` and the ``json``, ``sarif``, ``html``
-    and ``text`` reports.
+    genome; ``profile`` is the id of a shipped profile (``--profile``).
+    Returns a dict with ``ok`` False and an ``error`` message when the input
+    cannot be read (the command line exits 2), otherwise ``ok`` True,
+    ``valid``, ``compliant`` (None without a profile), ``counts``,
+    ``summary`` and the ``json``, ``sarif``, ``html`` and ``text`` reports.
     """
     if translation_table is not None and genome is None:
         return {"ok": False, "error": "a translation table needs a genome FASTA"}
@@ -90,6 +93,7 @@ def run(
                 if translation_table is None
                 else int(translation_table)
             ),
+            profile=profile or None,
         )
         report = validator.validate(source, name=name)
     except (InputError, ValueError) as error:
@@ -97,6 +101,7 @@ def run(
     return {
         "ok": True,
         "valid": report.valid,
+        "compliant": report.compliant,
         "counts": dict(report.counts),
         "summary": summary(report),
         "json": to_json(report),
@@ -104,3 +109,11 @@ def run(
         "html": to_html(report),
         "text": to_text(report),
     }
+
+
+def profiles():
+    """The shipped profiles, for the page's profile selector."""
+    return [
+        {"id": profile.id, "name": profile.name, "version": profile.version}
+        for profile in list_profiles()
+    ]

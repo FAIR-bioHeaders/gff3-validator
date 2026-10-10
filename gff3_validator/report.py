@@ -50,6 +50,32 @@ def ontology_text(report):
     return f"so.obo data-version {version} ({where})"
 
 
+def profile_text(profile):
+    """The profile and the source it follows, for example ``AgBioData GFF3
+    recommendations 0.1.0-draft (Recommendations.md, commit 32c8a38,
+    2021-12-29, CC0-1.0)``."""
+    source = profile.source
+    details = [
+        part
+        for part in (
+            source.get("commit", "")[:7] and f"commit {source['commit'][:7]}",
+            source.get("date"),
+            source.get("license"),
+        )
+        if part
+    ]
+    return f"{profile.name} {profile.version} ({source['url']}; {', '.join(details)})"
+
+
+def finding_url(report, finding):
+    """Where the rule of a finding is documented (profile rules: the
+    profile's page)."""
+    profile = report.profile.profile if report.profile is not None else None
+    if profile is not None and finding.rule in profile.rules:
+        return profile.rule_url(finding.rule)
+    return rule_url(finding.rule)
+
+
 def to_json(report):
     return json.dumps(report.to_dict(), indent=2, ensure_ascii=False) + "\n"
 
@@ -67,22 +93,58 @@ def to_text(report):
             lines.append(f"    fix: {finding.fix}")
     if report.truncated:
         lines.append(f"... {report.truncated} more findings not shown")
+    result = report.profile
+    if result is not None:
+        label = result.profile.label
+        for finding in result.findings:
+            where = report.source
+            if finding.line is not None:
+                where += f":{finding.line}"
+            if finding.field is not None:
+                where += f" (column {finding.field})"
+            core = f" (core level {finding.core_level})" if finding.core_level else ""
+            lines.append(
+                f"{where}: {label} {finding.level} {finding.rule}{core}: "
+                f"{finding.message}"
+            )
+            if finding.fix and finding.level != "info":
+                lines.append(f"    fix: {finding.fix}")
+        if result.truncated:
+            lines.append(f"... {result.truncated} more {label} findings not shown")
     lines.append(f"{report.source}: {summary(report)}")
     if report.ontology is not None:
         lines.append(f"  Sequence Ontology: {ontology_text(report)}")
+    if result is not None:
+        lines.append(f"  profile: {profile_text(result.profile)}")
     for item in report.skipped:
         lines.append(f"  not checked: {item['layer']}: {item['reason']}")
+    if result is not None:
+        for reason in result.skipped:
+            lines.append(f"  not checked: {result.profile.label}: {reason}")
     return "\n".join(lines) + "\n"
 
 
 def summary(report):
-    """One-line verdict, for example "INVALID (1 errors, 0 warnings, ...)"."""
+    """One-line verdict, for example "INVALID (1 errors, 0 warnings, ...)".
+
+    With a profile, the profile's counts follow the core verdict, which they
+    do not change: "no errors (...); AgBioData profile: 3 errors, 0 warnings,
+    1 notes (not compliant)".
+    """
     counts = report.counts
     verdict = "no errors" if report.valid else "INVALID"
-    return (
+    text = (
         f"{verdict} ({counts['error']} errors, {counts['warning']} warnings, "
         f"{counts['info']} notes; {report.lines} lines)"
     )
+    if report.profile is not None:
+        counts = report.profile.counts
+        state = "compliant" if report.compliant else "not compliant"
+        text += (
+            f"; {report.profile.profile.label}: {counts['error']} errors, "
+            f"{counts['warning']} warnings, {counts['info']} notes ({state})"
+        )
+    return text
 
 
 # --------------------------------------------------------------------------
@@ -179,7 +241,8 @@ def to_html(report, catalogue=None):
         "<body>",
         "<main>",
         "<h1>GFF3 validation report</h1>",
-        f'<p class="verdict {"ok" if report.valid else "bad"}" role="status">'
+        f'<p class="verdict {"bad" if not report.valid or report.compliant is False else "ok"}" '
+        'role="status">'
         f"{e(report.source)}: {e(summary(report))}</p>",
         "<dl>",
         f"<dt>File</dt><dd><code>{e(report.source)}</code></dd>",
@@ -207,16 +270,39 @@ def to_html(report, catalogue=None):
         if sha256:
             text += f" <code>sha256:{e(sha256)}</code>"
         out.append(f"<dt>Sequence Ontology</dt><dd>{text}</dd>")
+    result = report.profile
+    if result is not None:
+        profile = result.profile
+        source = profile.source
+        details = ", ".join(
+            e(part)
+            for part in (
+                source.get("commit") and f"commit {source['commit'][:7]}",
+                source.get("date"),
+                source.get("license"),
+            )
+            if part
+        )
+        out.append(
+            f"<dt>Profile</dt><dd>{e(profile.name)} {e(profile.version)} "
+            f'(<a href="{e(source["url"])}"{LINK}>{e(source["title"])}</a>; '
+            f"{details}); {e(profile.review)}</dd>"
+        )
     out += [
         "</dl>",
         '<section aria-labelledby="not-checked">',
         '<h2 id="not-checked">Not checked</h2>',
     ]
-    if report.skipped:
+    profile_skipped = result.skipped if result is not None else []
+    if report.skipped or profile_skipped:
         out.append("<ul>")
         for item in report.skipped:
             out.append(
                 f"<li><strong>{e(item['layer'])}</strong>: {e(item['reason'])}</li>"
+            )
+        for reason in profile_skipped:
+            out.append(
+                f"<li><strong>{e(result.profile.label)}</strong>: {e(reason)}</li>"
             )
         out.append("</ul>")
     else:
@@ -268,8 +354,10 @@ def to_html(report, catalogue=None):
         out += ["</tbody>", "</table>"]
     else:
         out.append("<p>No findings.</p>")
+    out.append("</section>")
+    if result is not None:
+        out += _html_profile(report, result)
     out += [
-        "</section>",
         '<section aria-labelledby="limitations">',
         '<h2 id="limitations">Limitations</h2>',
         f"<p>{e(LIMITATIONS)}</p>",
@@ -280,6 +368,70 @@ def to_html(report, catalogue=None):
         "</html>",
     ]
     return "\n".join(out) + "\n"
+
+
+def _html_profile(report, result):
+    """The profile section: its verdict and findings, apart from the core."""
+    e = html.escape
+    profile = result.profile
+    counts = result.counts
+    state = "compliant" if report.compliant else "not compliant"
+    out = [
+        '<section aria-labelledby="profile-title">',
+        f'<h2 id="profile-title">{e(profile.label)} findings '
+        f"({len(result.findings)})</h2>",
+        f'<p class="verdict {"ok" if report.compliant else "bad"}">'
+        f"{e(profile.name)} {e(profile.version)}: {state} ({counts['error']} "
+        f"errors, {counts['warning']} warnings, {counts['info']} notes). Profile "
+        "findings do not change whether the file is valid GFF3.</p>",
+    ]
+    if result.truncated:
+        out.append(
+            f'<p class="note">{result.truncated} more profile findings are not '
+            "shown (--max-findings); the counts above are complete.</p>"
+        )
+    if result.findings:
+        out += [
+            '<table id="profile-findings">',
+            f"<caption>Findings of the {e(profile.label)}: its own rules and core "
+            "rules whose level it raises.</caption>",
+            "<thead><tr>",
+            '<th scope="col" class="num">Line</th>',
+            '<th scope="col" class="num">GFF3 column</th>',
+            '<th scope="col">Level</th>',
+            '<th scope="col">Rule</th>',
+            '<th scope="col">Message</th>',
+            '<th scope="col">Suggested fix</th>',
+            "</tr></thead>",
+            "<tbody>",
+        ]
+        for finding in result.findings:
+            fix = finding.fix if finding.fix and finding.level != "info" else ""
+            line = "" if finding.line is None else finding.line
+            column = "" if finding.field is None else finding.field
+            core = (
+                f" (core level {e(finding.core_level)})" if finding.core_level else ""
+            )
+            out.append(
+                f'<tr class="{e(finding.level)}">'
+                f'<td class="num">{line}</td><td class="num">{column}</td>'
+                f'<td class="lvl">{e(finding.level)}</td>'
+                f'<td><a href="{e(finding_url(report, finding))}"{LINK}>'
+                f"<code>{e(finding.rule)}</code></a>{core}</td>"
+                f"<td>{e(finding.message)}</td><td>{e(fix)}</td></tr>"
+            )
+        out += ["</tbody>", "</table>"]
+    else:
+        out.append("<p>No profile findings.</p>")
+    if profile.guidance:
+        where = profile.docs or profile.source["url"]
+        out.append(
+            f'<p class="note">{len(profile.guidance)} recommendations of the '
+            f"source are guidance and not checked by profile rules (see the "
+            f'<a href="{e(where)}"{LINK}>profile documentation</a>).</p>'
+        )
+    out.append("</section>")
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -373,6 +525,27 @@ def to_sarif_dict(report, catalogue=None):
                 },
             }
         )
+    extensions = []
+    result = report.profile
+    if result is not None:
+        extension, profile_results = _sarif_profile(report, result, catalogue)
+        extensions.append(extension)
+        results.extend(profile_results)
+        label = result.profile.label
+        notifications += [
+            {"level": "note", "message": {"text": f"not checked: {label}: {reason}"}}
+            for reason in result.skipped
+        ]
+        if result.truncated:
+            notifications.append(
+                {
+                    "level": "warning",
+                    "message": {
+                        "text": f"{result.truncated} more {label} findings not "
+                        "shown (--max-findings)"
+                    },
+                }
+            )
     run = {
         "tool": {
             "driver": {
@@ -384,7 +557,8 @@ def to_sarif_dict(report, catalogue=None):
                     "catalogueVersion": report.catalogue_version,
                     "sequenceOntology": report.ontology,
                 },
-            }
+            },
+            **({"extensions": extensions} if extensions else {}),
         },
         "invocations": [
             {"executionSuccessful": True, "toolExecutionNotifications": notifications}
@@ -399,7 +573,101 @@ def to_sarif_dict(report, catalogue=None):
             "notChecked": list(report.skipped),
         },
     }
+    if result is not None:
+        run["properties"]["profile"] = {
+            **result.profile.to_dict(),
+            "compliant": report.compliant,
+            "counts": dict(result.counts),
+            "truncatedFindings": result.truncated,
+            "notChecked": list(result.skipped),
+        }
     return {"$schema": SARIF_SCHEMA, "version": "2.1.0", "runs": [run]}
+
+
+def _sarif_profile(report, result, catalogue):
+    """The profile as a SARIF tool extension, and its results.
+
+    The extension's rules are the profile's own rules and the core rules whose
+    level it raises (at the raised level). Profile results point at them with
+    a ``rule`` reference to the extension, so code-scanning tools can tell
+    profile findings from core findings; their properties name the profile.
+    """
+    profile = result.profile
+    rules = []
+    for rule in profile:
+        rules.append(
+            {
+                "id": rule.id,
+                "name": rule.id.replace("-", ""),
+                "shortDescription": {"text": rule.title},
+                "fullDescription": {"text": rule.description},
+                "helpUri": profile.rule_url(rule.id),
+                "help": {"text": f"Fix: {rule.fix}"},
+                "defaultConfiguration": {"level": SARIF_LEVELS[rule.level]},
+                "properties": {
+                    "profile": profile.id,
+                    "status": rule.status,
+                    "reference": profile.reference_url(rule.reference),
+                    "tags": ["profile", profile.id],
+                },
+            }
+        )
+    for rule_id, change in profile.levels.items():
+        core = catalogue[rule_id]
+        rules.append(
+            {
+                "id": rule_id,
+                "name": rule_id.replace("-", ""),
+                "shortDescription": {"text": core.title},
+                "fullDescription": {"text": change.reason},
+                "helpUri": rule_url(rule_id),
+                "help": {"text": f"Fix: {core.fix}"},
+                "defaultConfiguration": {"level": SARIF_LEVELS[change.level]},
+                "properties": {
+                    "profile": profile.id,
+                    "coreLevel": core.level,
+                    "reference": profile.reference_url(change.reference),
+                    "tags": ["profile", profile.id, core.layer],
+                },
+            }
+        )
+    index = {rule["id"]: number for number, rule in enumerate(rules)}
+    artifact = _artifact_location(report.source)
+    results = []
+    for finding in result.findings:
+        item = {
+            "ruleId": finding.rule,
+            "rule": {
+                "id": finding.rule,
+                "index": index[finding.rule],
+                "toolComponent": {"name": profile.id, "index": 0},
+            },
+            "level": SARIF_LEVELS[finding.level],
+            "message": {"text": finding.message},
+        }
+        if artifact is not None:
+            location = {"artifactLocation": dict(artifact)}
+            if finding.line is not None:
+                location["region"] = {"startLine": finding.line}
+            item["locations"] = [{"physicalLocation": location}]
+        properties = {"profile": profile.id}
+        if finding.core_level:
+            properties["coreLevel"] = finding.core_level
+        if finding.field is not None:
+            properties["gff3Column"] = finding.field
+        if finding.fix and finding.level != "info":
+            properties["fix"] = finding.fix
+        item["properties"] = properties
+        results.append(item)
+    extension = {
+        "name": profile.id,
+        "fullName": profile.name,
+        "version": profile.version,
+        "informationUri": profile.docs or profile.source["url"],
+        "rules": rules,
+        "properties": {"source": dict(profile.source), "review": profile.review},
+    }
+    return extension, results
 
 
 def to_sarif(report, catalogue=None):
