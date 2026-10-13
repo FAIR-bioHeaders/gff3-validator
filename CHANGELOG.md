@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- FHGFF3 header rules HDR-004 to HDR-009 are implemented, and HDR-010 (warning:
+  the header disagrees with a native directive) is new (FHR-Specification spec
+  007, #48, #62). They use the FAIR-bioHeaders toolkit's own reader
+  (`bioheaders.gff3.header_report`) through the optional `headers` extra, now
+  `fair-bioheaders >=0.5,<0.7`, and run only when the installed toolkit has
+  FHGFF3 support (on its `main`, not yet released); otherwise a present header
+  is noted with HDR-002 as before, as it is on standard input and in the
+  browser. HDR-009 compares the genome link with `--genome` (FHR checksum, or
+  the SeqCol ID the genome's FHR header records); a comparison that cannot be
+  made is listed under skipped checks, never reported as a match. Header and
+  feature findings stay separate. The conformance suite adds eight header cases
+  (`headers: checked`) and an FHR-headed genome, `genomes/genome.fhr.fa`;
+  `hdr-002-header-present` is now `headers: unavailable`, and
+  `scripts/check_conformance.py` runs each kind only in the matching
+  environment. CI installs the toolkit from a pinned commit for the header tests.
 - Repository and community profiles (FHR-Specification #51, spec 009
   FR-011) and the first profile, AgBioData (#70), a draft not reviewed by
   the AgBioData GFF3 working group. A profile is a YAML file (`profiles/`,

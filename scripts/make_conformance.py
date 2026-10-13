@@ -22,6 +22,8 @@ core-only consumers can ignore them. Every profile case is valid GFF3; its
 """
 
 import argparse
+import base64
+import hashlib
 import json
 import shutil
 import struct
@@ -109,11 +111,15 @@ def case(
     compression=None,
     ending="\n",
     raw=None,
+    headers=None,
 ):
     """Register one case.
 
     ``lines`` are text lines (encoded as UTF-8 and joined with ``ending``,
     with a final terminator); ``raw`` gives the exact bytes instead.
+    ``headers`` is ``"checked"`` for a case whose findings assume FHGFF3 header
+    checks (the headers extra with FHGFF3 support) and ``"unavailable"`` for
+    one that assumes they cannot run.
     """
     assert verdict in ("valid", "invalid")
     assert (status == "proposed") == (open_question is not None), id
@@ -136,6 +142,8 @@ def case(
         entry["genome"] = genome
     if options:
         entry["options"] = options
+    if headers:
+        entry["headers"] = headers
     entry["description"] = description
     CASES.append((entry, data))
 
@@ -1587,8 +1595,9 @@ case(
     findings=[f("HDR-002", "info", None)],
     status="extension:fhgff3",
     section="FHR-Specification spec 009 FR-006",
-    description="#~ header lines are '#' comments to GFF3; their content is "
-    "not validated yet (a note).",
+    headers="unavailable",
+    description="#~ header lines are '#' comments to GFF3; without FHGFF3 header "
+    "support their content is not validated (a note).",
 )
 case(
     "hdr-003-header-checks-skipped",
@@ -1600,6 +1609,184 @@ case(
     status="extension:fhgff3",
     section="FHR-Specification spec 009 FR-006",
     description="Header checks switched off (a note that they were skipped).",
+)
+
+
+# FHGFF3 header checks (HDR-004 to HDR-010; FHR-Specification spec 007 and
+# docs/FHGFF3.md). These cases assume the headers extra with FHGFF3 support;
+# the checksums below are computed here, as FHR-Specification R1 to R4 define
+# them: SHA-512/256 over every byte except the root checksum line, padded base64.
+
+FHGFF3_SCHEMA = "https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhgff3.json"
+FHR_SCHEMA = (
+    "https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhr.json"
+)
+GENOME_FHR = "genomes/genome.fhr.fa"
+CHECKSUM_LINE = "{prefix}checksum: @CHECKSUM@"
+
+
+def fhr_digest(data):
+    return base64.b64encode(hashlib.new("sha512_256", data).digest()).decode("ascii")
+
+
+def with_checksum(text, prefix):
+    """Fill the ``@CHECKSUM@`` line of ``text`` (bytes) with the file's checksum."""
+    marker = CHECKSUM_LINE.format(prefix=prefix).encode() + b"\n"
+    assert text.count(marker) == 1
+    value = fhr_digest(text.replace(marker, b""))
+    return text.replace(b"@CHECKSUM@", value.encode()), value
+
+
+GENOME_FHR_HEADER = [
+    f"schema: {FHR_SCHEMA}",
+    "schemaVersion: 1",
+    "genome: Synthetic conformance genome",
+    "taxon:",
+    "  name: Homo sapiens",
+    "  uri: https://identifiers.org/taxonomy:9606",
+    "version: 1.0.0",
+    "metadataAuthor:",
+    "- name: Synthetic metadata author (placeholder)",
+    "assemblyAuthor:",
+    "- name: Synthetic assembly author (placeholder)",
+    "dateCreated: '2026-10-13'",
+    "masking: not-masked",
+]
+
+
+def genome_fhr():
+    """genomes/genome.fa with an FHR header, and its FHR checksum."""
+    header = "".join(f";~{line}\n" for line in GENOME_FHR_HEADER)
+    header += CHECKSUM_LINE.format(prefix=";~") + "\n"
+    return with_checksum(header.encode() + fasta(GENOME_SEQUENCES), ";~")
+
+
+GENOME_FHR_BYTES, GENOME_FHR_CHECKSUM = genome_fhr()
+STALE_CHECKSUM = "B" * 43 + "="  # A placeholder for an older genome version.
+
+
+def fhgff3_header(genome_checksum=GENOME_FHR_CHECKSUM, extra=(), link=True):
+    lines = [
+        f"schema: {FHGFF3_SCHEMA}",
+        "schemaVersion: 1",
+        "annotation: Synthetic conformance annotation",
+        "taxon:",
+        "  name: Homo sapiens",
+        "  uri: https://identifiers.org/taxonomy:9606",
+        "version: 1.0.0",
+        "metadataAuthor:",
+        "- name: Synthetic metadata author (placeholder)",
+        "dateCreated: '2026-10-13'",
+    ]
+    if link:
+        lines += [
+            "derivedFrom:",
+            "- headerType: FHR",
+            f"  checksum: {genome_checksum}",
+            "  relationship: annotates",
+        ]
+    return ["#~" + line for line in lines + list(extra)] + [
+        CHECKSUM_LINE.format(prefix="#~")
+    ]
+
+
+ANNOTATION = [t("chr1 . gene 1 90 . + . ID=g1")]
+
+
+def fhgff3_file(header=None, before=(), after=(), body=ANNOTATION, tail=()):
+    """``##gff-version 3``, native lines, the header, more lines, features."""
+    lines = [V, *before, *(header or fhgff3_header()), *after, *body]
+    data, _ = with_checksum("".join(x + "\n" for x in lines).encode(), "#~")
+    return data + "".join(x + "\n" for x in tail).encode()
+
+
+def header_case(id, verdict, raw, rule, level, description, genome=None):
+    case(
+        id,
+        verdict,
+        None,
+        raw=raw,
+        rule=rule,
+        findings=[f(rule, level, None)] if rule else [],
+        status="extension:fhgff3",
+        section="FHR-Specification docs/FHGFF3.md",
+        headers="checked",
+        genome=genome,
+        description=description,
+    )
+
+
+header_case(
+    "fhgff3-header-valid",
+    "valid",
+    fhgff3_file(before=["##sequence-region chr1 1 120"]),
+    None,
+    None,
+    "A valid FHGFF3 header after ##gff-version 3, with ##sequence-region before "
+    "it, linked by checksum to genomes/genome.fhr.fa: no header findings.",
+    genome=GENOME_FHR,
+)
+header_case(
+    "hdr-004-header-after-feature",
+    "invalid",
+    fhgff3_file(tail=["#~funding: added after the features"]),
+    "HDR-004",
+    "error",
+    "A #~ line after the first feature (R10, G1).",
+)
+data = fhgff3_file()
+header_case(
+    "hdr-005-checksum-mismatch",
+    "invalid",
+    data.replace(b"ID=g1", b"ID=g2"),
+    "HDR-005",
+    "error",
+    "A feature changed after the checksum was computed.",
+)
+header_case(
+    "hdr-006-duplicate-key",
+    "invalid",
+    fhgff3_file(header=fhgff3_header(extra=["annotation: A second annotation key"])),
+    "HDR-006",
+    "error",
+    "The header repeats the key annotation (R8).",
+)
+header_case(
+    "hdr-007-schema-error",
+    "invalid",
+    fhgff3_file(header=fhgff3_header(extra=["genome: An FHR-only key"])),
+    "HDR-007",
+    "error",
+    "The FHR-only key genome is not an FHGFF3 field (G2).",
+)
+header_case(
+    "hdr-008-no-genome-link",
+    "invalid",
+    fhgff3_file(header=fhgff3_header(link=False)),
+    "HDR-008",
+    "error",
+    "Neither an annotates link to an FHR genome nor a genomeReference (G2).",
+)
+header_case(
+    "hdr-009-stale-genome",
+    "invalid",
+    fhgff3_file(header=fhgff3_header(genome_checksum=STALE_CHECKSUM)),
+    "HDR-009",
+    "error",
+    "The annotates checksum names another genome version than genomes/genome.fhr.fa.",
+    genome=GENOME_FHR,
+)
+header_case(
+    "hdr-010-species-disagrees",
+    "valid",
+    fhgff3_file(
+        before=[
+            "##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=10090"
+        ]
+    ),
+    "HDR-010",
+    "warning",
+    "##species names taxonomy 10090 and the header 9606: a warning, nothing rewritten.",
 )
 
 
@@ -1896,6 +2083,7 @@ def write(output):
     genome = fasta(GENOME_SEQUENCES)
     (output / GENOME).write_bytes(genome)
     (output / GENOME_GZ).write_bytes(gzip_bytes(genome))
+    (output / GENOME_FHR).write_bytes(GENOME_FHR_BYTES)
     text = json.dumps(manifest(), indent=2, ensure_ascii=False) + "\n"
     (output / "manifest.json").write_bytes(text.encode())
 

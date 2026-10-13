@@ -19,7 +19,7 @@ python = "^3.9"
 pyyaml = "^6.0.1"
 # Optional: FAIR-bioHeaders (FHGFF3) header checks. Core GFF3 validation never
 # imports it. Install with: pip install "gff3-validator[headers]"
-fair-bioheaders = {version = ">=0.4,<0.5", optional = true}
+fair-bioheaders = {version = ">=0.5,<0.7", optional = true}
 
 [tool.poetry.extras]
 headers = ["fair-bioheaders"]

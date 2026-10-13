@@ -1,0 +1,13 @@
+##gff-version 3
+#~schema: https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhgff3.json
+#~schemaVersion: 1
+#~annotation: Synthetic conformance annotation
+#~taxon:
+#~  name: Homo sapiens
+#~  uri: https://identifiers.org/taxonomy:9606
+#~version: 1.0.0
+#~metadataAuthor:
+#~- name: Synthetic metadata author (placeholder)
+#~dateCreated: '2026-10-13'
+#~checksum: eNhy1/neyoxKG5+GfsfTVO1ZKeXsNzH6IDWiqjyHR1k=
+chr1	.	gene	1	90	.	+	.	ID=g1

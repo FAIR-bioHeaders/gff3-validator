@@ -27,6 +27,11 @@ jobs:
         run: |
           python -m pip install poetry
           poetry install
+      - name: Install the FAIR-bioHeaders toolkit with FHGFF3 support
+        # The header rules (HDR-004 to HDR-010) use the optional toolkit. Until a
+        # fair-bioheaders release has FHGFF3 support, use the commit that added
+        # it (FAIR-bioHeaders-Tools#51); the commit is pinned because branches move.
+        run: poetry run python -m pip install "fair-bioheaders @ git+https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Tools@639e202a8a360fb4e906cfbadeee3f93edbadc5e"
       - name: Test
         run: poetry run pytest
       - name: Conformance suite is up to date and the CLI passes it (full findings)

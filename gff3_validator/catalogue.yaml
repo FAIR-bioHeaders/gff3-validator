@@ -1512,12 +1512,13 @@ rules:
   layer: fhgff3
   title: FHGFF3 header present but not validated
   description: >-
-    The file has #~ header lines, but header validation is not available in
-    this version (it needs the headers extra and FHGFF3 support in the
-    FAIR-bioHeaders toolkit). The header is neither accepted nor rejected.
+    The file has #~ header lines, but they cannot be validated here: the
+    headers extra (the FAIR-bioHeaders toolkit with FHGFF3 support) is not
+    installed, or the input is a stream or standard input rather than a file.
+    The header is neither accepted nor rejected.
   reference: {source: spec009, anchor: requirements-mandatory, section: FR-006}
   example: "##gff-version 3\n#~schema: https://...\nctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1"
-  fix: None in this version; validate the header with the toolkit when FHGFF3 support is released.
+  fix: Install "gff3-validator[headers]" with a fair-bioheaders release that supports FHGFF3, and validate a file path.
   status: implemented
   review: pending-SO
 
@@ -1545,9 +1546,9 @@ rules:
   reference: {source: spec007, anchor: requirements-mandatory, section: "FR-001; FORMAT.md R10"}
   example: "##gff-version 3\nctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\n#~checksum: ..."
   fix: Strip the header and combine it again with the FAIR-bioHeaders toolkit.
-  status: planned
+  status: implemented
   review: pending-SO
-  notes: Delegated to the FAIR-bioHeaders toolkit once it supports GFF3; not a GFF3 core rule.
+  notes: Checked by the FAIR-bioHeaders toolkit (headers extra, FHGFF3 support); not a GFF3 core rule.
 
 - id: HDR-005
   level: error
@@ -1560,7 +1561,7 @@ rules:
   reference: {source: fhr-format, anchor: "", section: "R1 to R5"}
   example: "#~checksum: (value that does not match the file)"
   fix: If the annotation changed on purpose, recompute the header with the toolkit; otherwise the file was altered.
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: HDR-006
@@ -1571,43 +1572,68 @@ rules:
   reference: {source: fhr-format, anchor: "", section: "R6 to R8"}
   example: "#~name: a\n#~name: b"
   fix: Remove the duplicate or unsafe construct.
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: HDR-007
   level: error
   layer: fhgff3
-  title: Header metadata matches the FHR schema
-  description: The header metadata validates against the FAIR-bioHeaders schema for the FHGFF3 subject (annotation).
-  reference: {source: spec007, anchor: requirements-mandatory, section: "FR-003, FR-004"}
+  title: Header metadata matches the FHGFF3 schema
+  description: >-
+    The header metadata validates against the schema of the type its schema URL
+    names (fhgff3.json for FHGFF3; docs/FHGFF3.md G2 and G3). The genome link is
+    reported separately as HDR-008.
+  reference: {source: spec007, anchor: requirements-mandatory, section: "FR-005, FR-010"}
   example: "#~annotation: (missing required fields)"
   fix: Add the required fields reported by the schema.
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: HDR-008
   level: error
   layer: fhgff3
-  title: derivedFrom identifies the annotated genome
+  title: The header identifies the annotated genome
   description: >-
-    FHGFF3 requires derivedFrom with relationship "annotates", giving either the
-    genome's FHR checksum or its accession plus SeqCol ID.
-  reference: {source: spec007, anchor: requirements-mandatory, section: FR-003}
+    FHGFF3 requires a genome link: a derivedFrom item with headerType FHR and
+    relationship "annotates" giving the genome's FHR checksum, or a
+    genomeReference with the genome's accession and SeqCol ID, or both. At most
+    one derivedFrom item annotates, and it names an FHR genome.
+  reference: {source: spec007, anchor: requirements-mandatory, section: "FR-006, FR-007"}
   example: "#~derivedFrom: [] "
   fix: Record the genome's FHR checksum, or its accession and SeqCol ID.
-  status: planned
+  status: implemented
   review: pending-SO
 
 - id: HDR-009
   level: error
   layer: fhgff3
-  title: derivedFrom matches the supplied genome
+  title: The genome link matches the supplied genome
   description: >-
-    With --genome, the genome's FHR checksum (or SeqCol ID, when that is what
-    the header records) matches derivedFrom. An accession plus SeqCol ID is
-    not an FHR file checksum and is reported as such.
-  reference: {source: spec007, anchor: requirements-mandatory, section: "FR-003; spec 009 FR-006"}
+    With --genome, the genome file's FHR checksum matches the annotates link.
+    A header that gives only a genomeReference is compared with the SeqCol ID
+    recorded in the genome's own FHR header; the SeqCol ID is never computed.
+    When neither comparison can be made (for example a genome without an FHR
+    header), the check is reported as not checked, not as a match or an error.
+  reference: {source: spec007, anchor: requirements-mandatory, section: "FR-015; spec 009 FR-006"}
   example: "gff3-validate --genome other_assembly.fa annotated.gff3"
   fix: Use the genome named in the header.
-  status: planned
+  status: implemented
+  review: pending-SO
+
+- id: HDR-010
+  level: warning
+  layer: fhgff3
+  title: The header agrees with the native directives
+  description: >-
+    Where the header and native directives describe the same thing, they agree:
+    the taxon's NCBI Taxonomy ID and ##species; the genome accession and
+    #!genome-build-accession; the genomeReference assemblyName and
+    ##genome-build or #!genome-build. Values missing on either side are not
+    compared, and nothing is rewritten.
+  reference: {source: spec007, anchor: requirements-mandatory, section: FR-011}
+  example: "##species https://identifiers.org/taxonomy:10090
+#~taxon:
+#~  uri: https://identifiers.org/taxonomy:9606"
+  fix: Correct whichever value is stale; the header checksum changes if the file does.
+  status: implemented
   review: pending-SO

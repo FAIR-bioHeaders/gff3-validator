@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from gff3_validator import validate
+from gff3_validator import header, validate
 
 ROOT = Path(__file__).resolve().parents[1]
 SUITE = ROOT / "conformance"
@@ -33,8 +33,20 @@ def test_suite_is_up_to_date_and_consistent():
     assert checker.check_manifest(SUITE, MANIFEST) == []
 
 
-@pytest.mark.parametrize("case", MANIFEST["cases"], ids=lambda case: case["id"])
+def header_marks(case):
+    return [pytest.mark.headers] if case.get("headers") == "checked" else []
+
+
+@pytest.mark.parametrize(
+    "case",
+    [pytest.param(c, id=c["id"], marks=header_marks(c)) for c in MANIFEST["cases"]],
+)
 def test_engine_passes_case(case):
+    # Header cases run with the real toolkit (marked); the others as if it
+    # were absent, so "headers: unavailable" cases always apply here.
+    reason = load_checker().header_skip(case, header.toolkit_supports_fhgff3())
+    if reason:
+        pytest.skip(reason)
     options = {}
     if "genome" in case:
         options["genome"] = str(SUITE / case["genome"])

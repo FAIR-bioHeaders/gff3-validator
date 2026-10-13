@@ -52,10 +52,15 @@ def test_expected_ids_exist_in_catalogue():
         assert set(ids) <= set(CATALOGUE.rules)
 
 
+# Header checks need the FAIR-bioHeaders toolkit; tests/test_header.py and the
+# conformance suite cover them.
+HEADER_CHECK_RULES = {f"HDR-{number:03d}" for number in range(4, 11)}
+
+
 def test_every_implemented_rule_has_a_fixture():
     covered = set().union(*(set(ids) for ids in EXPECTED.values()))
     # HDR-001 and HDR-003 depend on options and are tested in test_cli.py.
-    assert IMPLEMENTED - covered == {"HDR-001", "HDR-003"}
+    assert IMPLEMENTED - covered == {"HDR-001", "HDR-003"} | HEADER_CHECK_RULES
 
 
 def line(*columns):
