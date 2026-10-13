@@ -6,8 +6,8 @@
   the header disagrees with a native directive) is new (FHR-Specification spec
   007, #48, #62). They use the FAIR-bioHeaders toolkit's own reader
   (`bioheaders.gff3.header_report`) through the optional `headers` extra, now
-  `fair-bioheaders >=0.5,<0.7`, and run only when the installed toolkit has
-  FHGFF3 support (on its `main`, not yet released); otherwise a present header
+  `fair-bioheaders >=0.6,<0.7` (0.6.0 is the first release with FHGFF3
+  support), and run only when the installed toolkit has it; otherwise a present header
   is noted with HDR-002 as before, as it is on standard input and in the
   browser. HDR-009 compares the genome link with `--genome` (FHR checksum, or
   the SeqCol ID the genome's FHR header records); a comparison that cannot be
