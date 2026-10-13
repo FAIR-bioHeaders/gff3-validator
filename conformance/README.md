@@ -22,6 +22,8 @@ files.
   other error.
 - `genomes/genome.fa` (and a gzip copy): a 180 bp synthetic genome for the
   cases that compare features with sequence (the `BIO-*` rules).
+  `genomes/genome.fhr.fa` is the same genome with a FAIR-bioHeaders (FHR)
+  header, which the FHGFF3 header cases link to by checksum.
 - `profiles/PROFILE/compliant/` and `profiles/PROFILE/noncompliant/`: valid
   GFF3 files checked against a repository or community profile (see
   [Profile cases](#profile-cases)). Core-only consumers can ignore them.
@@ -55,6 +57,7 @@ Each case has:
 | `compression` | Compressed cases only: `gzip` or `bgzf` |
 | `genome` | Cases that need the genome FASTA: its path |
 | `options` | Cases that need a validator option: `require_header` or `no_header` (FAIR-bioHeaders header checks) |
+| `headers` | FHGFF3 header cases: `checked` when the findings assume header checks (the headers extra with FHGFF3 support), `unavailable` when they assume none. `scripts/check_conformance.py` runs each only in the matching environment |
 | `description` | What the file contains and why it gets its outcome |
 
 Levels: `error` makes a file invalid; `warning` (probably a mistake) and
@@ -138,7 +141,7 @@ python scripts/check_conformance.py --gff3-validate "poetry run gff3-validate"
 Any other tool, comparing only the exit status (0 for valid, anything else for
 invalid). `{file}` is replaced by the case file and `{genome}`, if present, by
 the genome FASTA. Cases that need a genome are skipped when the command has no
-`{genome}`; cases that need `options` are always skipped. For example,
+`{genome}`; cases that need `options` or depend on `headers` are always skipped. For example,
 GenomeTools:
 
 ```bash

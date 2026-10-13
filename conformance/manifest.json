@@ -89,6 +89,13 @@
     "HDR-001",
     "HDR-002",
     "HDR-003",
+    "HDR-004",
+    "HDR-005",
+    "HDR-006",
+    "HDR-007",
+    "HDR-008",
+    "HDR-009",
+    "HDR-010",
     "SO-001",
     "SO-002",
     "SO-003",
@@ -1691,7 +1698,8 @@
       ],
       "section": "FHR-Specification spec 009 FR-006",
       "status": "extension:fhgff3",
-      "description": "#~ header lines are '#' comments to GFF3; their content is not validated yet (a note)."
+      "headers": "unavailable",
+      "description": "#~ header lines are '#' comments to GFF3; without FHGFF3 header support their content is not validated (a note)."
     },
     {
       "id": "hdr-003-header-checks-skipped",
@@ -1711,6 +1719,138 @@
         "no_header": true
       },
       "description": "Header checks switched off (a note that they were skipped)."
+    },
+    {
+      "id": "fhgff3-header-valid",
+      "file": "valid/fhgff3-header-valid.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "genome": "genomes/genome.fhr.fa",
+      "headers": "checked",
+      "description": "A valid FHGFF3 header after ##gff-version 3, with ##sequence-region before it, linked by checksum to genomes/genome.fhr.fa: no header findings."
+    },
+    {
+      "id": "hdr-004-header-after-feature",
+      "file": "invalid/hdr-004-header-after-feature.gff3",
+      "expected": "invalid",
+      "rule": "HDR-004",
+      "findings": [
+        {
+          "rule": "HDR-004",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "A #~ line after the first feature (R10, G1)."
+    },
+    {
+      "id": "hdr-005-checksum-mismatch",
+      "file": "invalid/hdr-005-checksum-mismatch.gff3",
+      "expected": "invalid",
+      "rule": "HDR-005",
+      "findings": [
+        {
+          "rule": "HDR-005",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "A feature changed after the checksum was computed."
+    },
+    {
+      "id": "hdr-006-duplicate-key",
+      "file": "invalid/hdr-006-duplicate-key.gff3",
+      "expected": "invalid",
+      "rule": "HDR-006",
+      "findings": [
+        {
+          "rule": "HDR-006",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "The header repeats the key annotation (R8)."
+    },
+    {
+      "id": "hdr-007-schema-error",
+      "file": "invalid/hdr-007-schema-error.gff3",
+      "expected": "invalid",
+      "rule": "HDR-007",
+      "findings": [
+        {
+          "rule": "HDR-007",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "The FHR-only key genome is not an FHGFF3 field (G2)."
+    },
+    {
+      "id": "hdr-008-no-genome-link",
+      "file": "invalid/hdr-008-no-genome-link.gff3",
+      "expected": "invalid",
+      "rule": "HDR-008",
+      "findings": [
+        {
+          "rule": "HDR-008",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "Neither an annotates link to an FHR genome nor a genomeReference (G2)."
+    },
+    {
+      "id": "hdr-009-stale-genome",
+      "file": "invalid/hdr-009-stale-genome.gff3",
+      "expected": "invalid",
+      "rule": "HDR-009",
+      "findings": [
+        {
+          "rule": "HDR-009",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "genome": "genomes/genome.fhr.fa",
+      "headers": "checked",
+      "description": "The annotates checksum names another genome version than genomes/genome.fhr.fa."
+    },
+    {
+      "id": "hdr-010-species-disagrees",
+      "file": "valid/hdr-010-species-disagrees.gff3",
+      "expected": "valid",
+      "rule": "HDR-010",
+      "findings": [
+        {
+          "rule": "HDR-010",
+          "level": "warning",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "##species names taxonomy 10090 and the header 9606: a warning, nothing rewritten."
     }
   ],
   "profiles": {

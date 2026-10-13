@@ -115,14 +115,16 @@ def test_require_header_on_plain_file():
     assert findings(result) == ["HDR-001"]
 
 
-def test_header_present_is_reported_not_validated():
-    result = run("--format", "json", HEADER)
+def test_header_on_stdin_is_reported_not_validated():
+    # Header checks re-read the file, so they need a path: on standard input a
+    # header is noted (HDR-002) whether or not the toolkit is installed.
+    result = run("--format", "json", "-", stdin=HEADER.read_bytes())
     assert result.returncode == 0
     report = json.loads(result.stdout)
     assert findings(result) == ["HDR-002"]
     assert report["header_lines"] == 3
     assert any(item["layer"] == "fhgff3" for item in report["skipped"])
-    assert run("--require-header", HEADER).returncode == 0
+    assert run("--require-header", "-", stdin=HEADER.read_bytes()).returncode == 0
 
 
 def test_no_header_skips_header_checks():

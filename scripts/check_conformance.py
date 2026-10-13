@@ -17,7 +17,10 @@ Then, optionally, it runs a validator over every case and prints a table:
 In the generic mode ``{file}`` is replaced by the case file and ``{genome}``,
 if present, by the genome FASTA; cases that need a genome are skipped when the
 command has no ``{genome}``, and cases with validator options (FHGFF3 header
-modes) are always skipped. ``--status spec`` scores only the cases the GFF3
+modes) or that depend on FHGFF3 header support (``headers``) are always skipped.
+In the gff3-validator mode, ``headers: checked`` cases run only when the
+FAIR-bioHeaders toolkit with FHGFF3 support is importable here (the headers
+extra), and ``headers: unavailable`` cases only when it is not. ``--status spec`` scores only the cases the GFF3
 1.26 text settles. The exit status is 1 if any check or case fails.
 
 Profile cases (the manifest's ``profile_cases``, status ``extension:PROFILE``)
@@ -44,6 +47,26 @@ CATALOGUE = ROOT / "rules" / "catalogue.yaml"
 PROFILES = ROOT / "profiles"
 GENERATED = ("valid", "invalid", "genomes", "profiles")
 OPTIONS = {"require_header": "--require-header", "no_header": "--no-header"}
+
+
+def header_support():
+    """Whether FHGFF3 header checks can run (the headers extra is installed)."""
+    try:
+        import bioheaders
+        import bioheaders.gff3  # noqa: F401
+    except ImportError:
+        return False
+    return hasattr(bioheaders, "FHGFF3_SCHEMA")
+
+
+def header_skip(case, supported):
+    """A skip reason when ``case`` assumes the other header-support state."""
+    wanted = case.get("headers")
+    if wanted == "checked" and not supported:
+        return "needs FHGFF3 header support (the headers extra)"
+    if wanted == "unavailable" and supported:
+        return "assumes no FHGFF3 header support"
+    return None
 
 
 # -- the suite itself ------------------------------------------------------
@@ -214,6 +237,9 @@ def show(findings):
 
 def score_json(suite, case, base, timeout):
     """gff3-validator adapter: exit status and every (rule, level, line)."""
+    reason = header_skip(case, header_support())
+    if reason:
+        return "skip", "", reason
     command = list(base) + ["--format", "json"]
     if "profile" in case:
         command += ["--profile", case["profile"]]
@@ -265,6 +291,8 @@ def score_exit(suite, case, template, timeout):
     """Generic adapter: only the exit status (0 valid, anything else invalid)."""
     if case.get("options"):
         return "skip", "", "needs validator options"
+    if case.get("headers"):
+        return "skip", "", "depends on FHGFF3 header support"
     if "genome" in case and "{genome}" not in template:
         return "skip", "", "needs a genome ({genome} not in the command)"
     values = {"file": str(suite / case["file"])}

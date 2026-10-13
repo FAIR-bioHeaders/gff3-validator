@@ -381,7 +381,7 @@ class Validator:
             self._add(report, rule_id, message, line=line, field=column)
         if checker is not None:
             self._profile_problems(report, checker.finish())
-        self._finish_header(report)
+        self._finish_header(report, source)
         self._record_skipped(report, biology)
         if self.profile is not None:
             self._record_profile_skipped(report, biology, checker)
@@ -414,7 +414,7 @@ class Validator:
             emit(rule_id, message, line=number)
         return None
 
-    def _finish_header(self, report):
+    def _finish_header(self, report, source=None):
         if self.header_mode == "skip":
             self._add(report, "HDR-003", "header checks skipped (--no-header)")
             report.skipped.append({"layer": "fhgff3", "reason": "--no-header"})
@@ -428,7 +428,20 @@ class Validator:
                     "--require-header was given",
                 )
             return
-        reason = header.unavailable_reason()
+        path = header.file_path(source)
+        if not header.toolkit_supports_fhgff3():
+            reason = header.unavailable_reason()
+        elif path is None:
+            reason = "header checks need a file on disk, not a stream or standard input"
+        else:
+            # Header results are reported in the fhgff3 layer only; they never
+            # add or suppress feature findings (FHR-Specification spec 007 FR-016).
+            findings, notes = header.check(path, self.genome)
+            for rule_id, message in findings:
+                self._add(report, rule_id, message)
+            for note in notes:
+                report.skipped.append({"layer": "fhgff3", "reason": note})
+            return
         self._add(
             report,
             "HDR-002",
