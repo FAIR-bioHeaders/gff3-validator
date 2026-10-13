@@ -13,7 +13,7 @@ annotation files, built by FAIR-bioHeaders with the Sequence Ontology (SO) group
 > rules run with `--genome`. FHGFF3 header rules (HDR-004 to HDR-010) run
 > with the optional headers extra once a fair-bioheaders release supports FHGFF3. Install
 > with `pip install gff3-validator`, or use it in the browser at
-> https://fair-bioheaders.github.io/gff3-validator/. Rule ids, levels and
+> https://fhref.org/gff3-validator/. Rule ids, levels and
 > output formats may still change before 1.0.
 
 ## Goal
@@ -349,8 +349,7 @@ profile file given by path cannot load code.
 
 ## Use it in your browser
 
-<https://fair-bioheaders.github.io/gff3-validator/> (once GitHub Pages is
-enabled for this repository) runs the validator inside the page: the
+<https://fhref.org/gff3-validator/> runs the validator inside the page: the
 `gff3-validator` wheel built from this repository, in Python compiled to
 WebAssembly ([Pyodide](https://pyodide.org/)). Drop or pick a `.gff3` or
 `.gff3.gz` file, optionally add a genome FASTA for the biology checks and a

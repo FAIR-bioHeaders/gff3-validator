@@ -1,7 +1,7 @@
 name: Web page
 
 # Builds the in-browser validator (web/, see scripts/build_web.py) and deploys
-# it to GitHub Pages at https://fair-bioheaders.github.io/gff3-validator/.
+# it to GitHub Pages at https://fhref.org/gff3-validator/.
 # Needs Pages enabled in the repository settings with source "GitHub Actions".
 # The page is deployed only after the parity check (web/test/parity.mjs) has
 # shown that the built wheel in Pyodide gives the same reports as the CLI.
