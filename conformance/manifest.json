@@ -1801,6 +1801,23 @@
       "description": "The FHR-only key genome is not an FHGFF3 field (G2)."
     },
     {
+      "id": "hdr-007-unsupported-schema-version",
+      "file": "invalid/hdr-007-unsupported-schema-version.gff3",
+      "expected": "invalid",
+      "rule": "HDR-007",
+      "findings": [
+        {
+          "rule": "HDR-007",
+          "level": "error",
+          "line": null
+        }
+      ],
+      "section": "FHR-Specification docs/FHGFF3.md",
+      "status": "extension:fhgff3",
+      "headers": "checked",
+      "description": "v0.0.0 is not a release: the toolkit reports an unsupported schema version and checks the header against no other schema (FHR-Specification rule V4)."
+    },
+    {
       "id": "hdr-008-no-genome-link",
       "file": "invalid/hdr-008-no-genome-link.gff3",
       "expected": "invalid",

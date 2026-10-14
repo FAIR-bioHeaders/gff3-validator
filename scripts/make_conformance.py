@@ -1571,9 +1571,8 @@ case(
 # FAIR-bioHeaders (FHGFF3) header layer: outside GFF3 1.26.
 HEADER = [
     V,
-    "#~schema: https://raw.githubusercontent.com/FAIR-bioHeaders/"
-    "FHR-Specification/main/fhr.json",
-    "#~schemaVersion: 1.0",
+    "#~schema: https://w3id.org/fair-bioheaders/fhr/v0.4.0",
+    "#~schemaVersion: '2.0'",
     G,
 ]
 case(
@@ -1617,10 +1616,9 @@ case(
 # the checksums below are computed here, as FHR-Specification R1 to R4 define
 # them: SHA-512/256 over every byte except the root checksum line, padded base64.
 
-FHGFF3_SCHEMA = "https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhgff3.json"
-FHR_SCHEMA = (
-    "https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhr.json"
-)
+# Headers cite the release they target (FHR-Specification docs/SCHEMA-VERSIONS.md).
+FHGFF3_SCHEMA = "https://w3id.org/fair-bioheaders/fhgff3/v0.4.0"
+FHR_SCHEMA = "https://w3id.org/fair-bioheaders/fhr/v0.4.0"
 GENOME_FHR = "genomes/genome.fhr.fa"
 CHECKSUM_LINE = "{prefix}checksum: @CHECKSUM@"
 
@@ -1639,7 +1637,7 @@ def with_checksum(text, prefix):
 
 GENOME_FHR_HEADER = [
     f"schema: {FHR_SCHEMA}",
-    "schemaVersion: 1",
+    "schemaVersion: '2.0'",
     "genome: Synthetic conformance genome",
     "taxon:",
     "  name: Homo sapiens",
@@ -1665,10 +1663,12 @@ GENOME_FHR_BYTES, GENOME_FHR_CHECKSUM = genome_fhr()
 STALE_CHECKSUM = "B" * 43 + "="  # A placeholder for an older genome version.
 
 
-def fhgff3_header(genome_checksum=GENOME_FHR_CHECKSUM, extra=(), link=True):
+def fhgff3_header(
+    genome_checksum=GENOME_FHR_CHECKSUM, extra=(), link=True, schema=FHGFF3_SCHEMA
+):
     lines = [
-        f"schema: {FHGFF3_SCHEMA}",
-        "schemaVersion: 1",
+        f"schema: {schema}",
+        "schemaVersion: '1.0'",
         "annotation: Synthetic conformance annotation",
         "taxon:",
         "  name: Homo sapiens",
@@ -1758,6 +1758,17 @@ header_case(
     "HDR-007",
     "error",
     "The FHR-only key genome is not an FHGFF3 field (G2).",
+)
+header_case(
+    "hdr-007-unsupported-schema-version",
+    "invalid",
+    fhgff3_file(
+        header=fhgff3_header(schema="https://w3id.org/fair-bioheaders/fhgff3/v0.0.0")
+    ),
+    "HDR-007",
+    "error",
+    "v0.0.0 is not a release: the toolkit reports an unsupported schema version "
+    "and checks the header against no other schema (FHR-Specification rule V4).",
 )
 header_case(
     "hdr-008-no-genome-link",

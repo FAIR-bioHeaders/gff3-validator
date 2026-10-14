@@ -1,5 +1,5 @@
-;~schema: https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhr.json
-;~schemaVersion: 1
+;~schema: https://w3id.org/fair-bioheaders/fhr/v0.4.0
+;~schemaVersion: '2.0'
 ;~genome: Synthetic conformance genome
 ;~taxon:
 ;~  name: Homo sapiens
@@ -11,7 +11,7 @@
 ;~- name: Synthetic assembly author (placeholder)
 ;~dateCreated: '2026-10-13'
 ;~masking: not-masked
-;~checksum: VvdZiAJaIppOlF/ryAn8p8QOA6FzBKO0gd8tRRArbx4=
+;~checksum: 6UjQVCrNR/WgS34wN5FAEPIe/SbF5MCkR+vNFOFp1D4=
 >chr1
 CCCCCCCCCCATGCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CCCCCCTAACCCCCCCCCCCTTACCCCCCCCCCCCCCCCCCCCCCCCCATCCCCCCCCCC
