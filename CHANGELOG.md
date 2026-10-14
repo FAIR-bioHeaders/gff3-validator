@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Header checks follow FHR-Specification docs/SCHEMA-VERSIONS.md (spec 012), through
+  the toolkit: a header citing a release the toolkit does not bundle is an HDR-007
+  error, `unsupported schema version`, and is not checked against another schema
+  (new case `hdr-007-unsupported-schema-version`). The header cases cite
+  `https://w3id.org/fair-bioheaders/fhgff3/v0.4.0` with `schemaVersion: '1.0'`, and
+  the FHR genome `fhr/v0.4.0` with `'2.0'`; their checksums are recomputed. They
+  need a toolkit that bundles FHR-Specification v0.4.0.
+
 - Update current maintainer contacts to `molik@fhref.org` and `wright@fhref.org` and project Pages links to `https://fhref.org`. Citation/package metadata and private reporting routes are checked; runtime behavior and historical notices are unchanged.
 
 - FHGFF3 header rules HDR-004 to HDR-009 are implemented, and HDR-010 (warning:

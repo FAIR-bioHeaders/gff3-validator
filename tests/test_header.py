@@ -134,3 +134,29 @@ def test_each_header_rule(name, rule):
     report = validate(SUITE / CASES[name]["file"])
     assert rules(report) == [rule]
     assert not report.valid
+
+
+def test_unsupported_schema_version_is_reported_not_substituted():
+    """FHR-Specification rule V4 (docs/SCHEMA-VERSIONS.md): no other schema is used."""
+    report = validate(SUITE / CASES["hdr-007-unsupported-schema-version"]["file"])
+    assert rules(report) == ["HDR-007"]
+    message = next(f.message for f in report.findings if f.rule == "HDR-007")
+    assert "unsupported schema version" in message
+    assert "https://w3id.org/fair-bioheaders/fhgff3/v0.0.0" in message
+    notes = [item["reason"] for item in report.skipped if item["layer"] == "fhgff3"]
+    assert any(note.startswith("HDR-008 not checked") for note in notes)
+
+
+def test_release_urls_select_the_same_schema(tmp_path):
+    """V1-V3: the raw-main, raw tag and w3id forms of FHGFF3 are all FHGFF3."""
+    from bioheaders.gff3 import header_report
+
+    data = case_bytes("fhgff3-header-valid")
+    w3id = b"https://w3id.org/fair-bioheaders/fhgff3/v0.4.0"
+    assert w3id in data
+    raw = b"https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/"
+    for value in (w3id + b"/", raw + b"v0.4.0/fhgff3.json", raw + b"main/fhgff3.json"):
+        path = write(tmp_path, "a.gff3", data.replace(w3id, value))
+        report = header_report(str(path))
+        assert report["header_type"] == "FHGFF3"
+        assert report["schema"]["ok"] is True, report["schema"]

@@ -1,7 +1,7 @@
 ##gff-version 3
 ##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=10090
-#~schema: https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/main/fhgff3.json
-#~schemaVersion: 1
+#~schema: https://w3id.org/fair-bioheaders/fhgff3/v0.4.0
+#~schemaVersion: '1.0'
 #~annotation: Synthetic conformance annotation
 #~taxon:
 #~  name: Homo sapiens
@@ -12,7 +12,7 @@
 #~dateCreated: '2026-10-13'
 #~derivedFrom:
 #~- headerType: FHR
-#~  checksum: VvdZiAJaIppOlF/ryAn8p8QOA6FzBKO0gd8tRRArbx4=
+#~  checksum: 6UjQVCrNR/WgS34wN5FAEPIe/SbF5MCkR+vNFOFp1D4=
 #~  relationship: annotates
-#~checksum: t+zfLZ3SzWD9uZ65hb+KvZsmDqJ0+MSPb9+BDJMDK6Q=
+#~checksum: oxqW/u+l7+AJ2v0oPofZvGvQUnSE8qoqfrA4/IS4C0A=
 chr1	.	gene	1	90	.	+	.	ID=g1
