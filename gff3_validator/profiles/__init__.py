@@ -1,5 +1,5 @@
 """Repository and community profiles layered on the core rules (spec 009
-FR-011, FHR-Specification #51 and #70).
+FR-011, FAIR-bioHeaders-Specification #51 and #70).
 
 A profile is a YAML file. The profiles shipped with the package are generated
 copies of ``profiles/*.yaml`` in the source repository (see

@@ -10,9 +10,9 @@ Sources:
 
 - `gff3`: [GFF3 specification 1.26 (18 August 2020)](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md)
 - `so`: [Sequence Ontology so.obo data-version 2026-08-07 (SO-Ontologies commit 4340c14), bundled with the validator (question 13)](https://github.com/The-Sequence-Ontology/SO-Ontologies/blob/4340c143bac3578bba0c013d02e8c5f0e51ad14a/Ontology_Files/so.obo)
-- `fhr-format`: [FAIR-bioHeaders format rules R1 to R10 (docs/FORMAT.md)](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/docs/FORMAT.md)
-- `spec007`: [FHR-Specification spec 007, GFF3 annotation header (FHGFF3)](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md)
-- `spec009`: [FHR-Specification spec 009, GFF3 validator](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md)
+- `fhr-format`: [FAIR-bioHeaders format rules R1 to R10 (docs/FORMAT.md)](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md)
+- `spec007`: [FAIR-bioHeaders-Specification spec 007, GFF3 annotation header (FHGFF3)](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md)
+- `spec009`: [FAIR-bioHeaders-Specification spec 009, GFF3 validator](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md)
 
 ## Summary
 
@@ -1496,7 +1496,7 @@ Biology (optional, with --genome)
 **seqid is in the genome**
 
 - Level: error; layer: biology; status: implemented; review: pending-SO
-- Reference: [FR-003, FR-005](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
+- Reference: [FR-003, FR-005](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
 
 Every seqid names a sequence in the genome supplied with --genome.
 
@@ -1689,7 +1689,7 @@ Notes: Does not need the genome but runs with the biology layer. Trans-splicing 
 **Biology checks skipped**
 
 - Level: info; layer: biology; status: implemented; review: pending-SO
-- Reference: [FR-005](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
+- Reference: [FR-005](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
 
 Reported when --genome was given but some biology checks could not run, with the reasons and counts (CDS on seqids not in the genome, on strand . or ?, with a missing phase, with lines on different seqids or strands, beyond the end of the sequence, or with inconsistent phases). Without --genome the whole biology layer is listed as not checked in the report. Skipped checks are never counted as passed.
 
@@ -1725,7 +1725,7 @@ FHGFF3 header (optional, FAIR-bioHeaders)
 **FHGFF3 header present when required**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-001](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
+- Reference: [FR-001](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
 
 With --require-header the file must carry a FAIR-bioHeaders header (#~ lines). Without the option a file without a header is plain GFF3 and valid.
 
@@ -1742,7 +1742,7 @@ Fix: Add a header with the FAIR-bioHeaders toolkit, or drop --require-header.
 **FHGFF3 header present but not validated**
 
 - Level: info; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-006](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
+- Reference: [FR-006](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
 
 The file has #~ header lines, but they cannot be validated here: the headers extra (the FAIR-bioHeaders toolkit with FHGFF3 support) is not installed, or the input is a stream or standard input rather than a file. The header is neither accepted nor rejected.
 
@@ -1761,7 +1761,7 @@ Fix: Install "gff3-validator[headers]" with a fair-bioheaders release that suppo
 **Header checks skipped (--no-header)**
 
 - Level: info; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-006](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
+- Reference: [FR-006](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md#requirements-mandatory) (spec009)
 
 Header checks were skipped on request; #~ lines are treated as ordinary comments.
 
@@ -1778,7 +1778,7 @@ Fix: None needed.
 **Header forms the leading block after ##gff-version**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-001; FORMAT.md R10](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
+- Reference: [FR-001; FORMAT.md R10](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
 
 The first line stays ##gff-version 3; #~ lines follow it and form the leading header block, which ends at the first feature line or ##FASTA. ##sequence-region and other ## directives and comments may appear among the #~ lines. A #~ line later in the file (for example from concatenation) makes the file invalid FHGFF3 (R10).
 
@@ -1799,7 +1799,7 @@ Notes: Checked by the FAIR-bioHeaders toolkit (headers extra, FHGFF3 support); n
 **Header checksum verifies**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [R1 to R5](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/docs/FORMAT.md) (fhr-format)
+- Reference: [R1 to R5](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md) (fhr-format)
 
 Exactly one root-level #~checksum line; SHA-512/256 over the exact decompressed bytes of the whole file, including any ##FASTA section, excluding that line, in padded base64 (R1 to R5).
 
@@ -1816,7 +1816,7 @@ Fix: If the annotation changed on purpose, recompute the header with the toolkit
 **Header lines are safe YAML**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [R6 to R8](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/docs/FORMAT.md) (fhr-format)
+- Reference: [R6 to R8](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md) (fhr-format)
 
 Header lines are UTF-8 without YAML line-break characters; no byte order mark; no duplicate keys, anchors, aliases or merge keys (R6 to R8).
 
@@ -1834,7 +1834,7 @@ Fix: Remove the duplicate or unsafe construct.
 **Header metadata matches the FHGFF3 schema**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-005, FR-010](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
+- Reference: [FR-005, FR-010](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
 
 The header metadata validates against the schema of the type its schema URL names (fhgff3.json for FHGFF3; docs/FHGFF3.md G2 and G3). The genome link is reported separately as HDR-008.
 
@@ -1851,7 +1851,7 @@ Fix: Add the required fields reported by the schema.
 **The header identifies the annotated genome**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-006, FR-007](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
+- Reference: [FR-006, FR-007](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
 
 FHGFF3 requires a genome link: a derivedFrom item with headerType FHR and relationship "annotates" giving the genome's FHR checksum, or a genomeReference with the genome's accession and SeqCol ID, or both. At most one derivedFrom item annotates, and it names an FHR genome.
 
@@ -1868,7 +1868,7 @@ Fix: Record the genome's FHR checksum, or its accession and SeqCol ID.
 **The genome link matches the supplied genome**
 
 - Level: error; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-015; spec 009 FR-006](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
+- Reference: [FR-015; spec 009 FR-006](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
 
 With --genome, the genome file's FHR checksum matches the annotates link. A header that gives only a genomeReference is compared with the SeqCol ID recorded in the genome's own FHR header; the SeqCol ID is never computed. When neither comparison can be made (for example a genome without an FHR header), the check is reported as not checked, not as a match or an error.
 
@@ -1885,7 +1885,7 @@ Fix: Use the genome named in the header.
 **The header agrees with the native directives**
 
 - Level: warning; layer: fhgff3; status: implemented; review: pending-SO
-- Reference: [FR-011](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
+- Reference: [FR-011](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md#requirements-mandatory) (spec007)
 
 Where the header and native directives describe the same thing, they agree: the taxon's NCBI Taxonomy ID and ##species; the genome accession and #!genome-build-accession; the genomeReference assemblyName and ##genome-build or #!genome-build. Values missing on either side are not compared, and nothing is rewritten.
 

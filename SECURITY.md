@@ -1,7 +1,7 @@
 # Security policy
 
 This repository follows the FAIR-bioHeaders
-[security policy](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/SECURITY.md),
+[security policy](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/SECURITY.md),
 including its private reporting addresses and conflict routing. Report suspected
 vulnerabilities privately as described there, naming this repository
 (`gff3-validator`) and the affected version or commit. Do not open a public

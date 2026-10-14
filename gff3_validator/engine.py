@@ -435,7 +435,7 @@ class Validator:
             reason = "header checks need a file on disk, not a stream or standard input"
         else:
             # Header results are reported in the fhgff3 layer only; they never
-            # add or suppress feature findings (FHR-Specification spec 007 FR-016).
+            # add or suppress feature findings (FAIR-bioHeaders-Specification spec 007 FR-016).
             findings, notes = header.check(path, self.genome)
             for rule_id, message in findings:
                 self._add(report, rule_id, message)
