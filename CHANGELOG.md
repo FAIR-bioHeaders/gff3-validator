@@ -10,8 +10,9 @@
   error, `unsupported schema version`, and is not checked against another schema
   (new case `hdr-007-unsupported-schema-version`). The header cases cite
   `https://w3id.org/fair-bioheaders/fhgff3/v0.4.0` with `schemaVersion: '1.0'`, and
-  the FHR genome `fhr/v0.4.0` with `'2.0'`; their checksums are recomputed. They
-  need a toolkit that bundles FHR-Specification v0.4.0.
+  the FHR genome `fhr/v0.4.0` with `'2.0'`; their checksums are recomputed. The
+  `headers` extra now requires `fair-bioheaders >=0.7,<0.8`, the first release that
+  bundles FAIR-bioHeaders-Specification v0.4.0, and CI installs it from PyPI.
 
 - Update current maintainer contacts to `molik@fhref.org` and `wright@fhref.org` and project Pages links to `https://fhref.org`. Citation/package metadata and private reporting routes are checked; runtime behavior and historical notices are unchanged.
 

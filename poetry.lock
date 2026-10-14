@@ -204,15 +204,15 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "fair-bioheaders"
-version = "0.6.0"
+version = "0.7.0"
 description = "Convert and validate FAIR-bioHeaders (FHR) metadata in JSON, YAML, FASTA, GFA, and HTML (formerly the fhr package)"
 optional = true
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 markers = "extra == \"headers\""
 files = [
-    {file = "fair_bioheaders-0.6.0-py3-none-any.whl", hash = "sha256:79b3857d27ed67a5e4c64df7a6686b0c29160e80ace4e290059869e78b54636a"},
-    {file = "fair_bioheaders-0.6.0.tar.gz", hash = "sha256:3b1876ade92b8031d5713539b4a490b4f9afa465a59f43adc05c8d7c0fc387e9"},
+    {file = "fair_bioheaders-0.7.0-py3-none-any.whl", hash = "sha256:e37074b23800abbe592aa1322f74e1575bb2f8c4002ff28e10c476b1fb58b3b8"},
+    {file = "fair_bioheaders-0.7.0.tar.gz", hash = "sha256:e14896b2f1d7522a467781571226b9ea29bca664951675282c5a267e86558086"},
 ]
 
 [package.dependencies]
@@ -1269,4 +1269,4 @@ headers = ["fair-bioheaders"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "b285777248621e90533148bc4f53355cdd3750e1cc6cf00f777ff80e78d72dfc"
+content-hash = "1e4ea4e543f25cbe784ed7d759d56bde0c2b363cecb8897b1c041ab155128f3c"
