@@ -3,7 +3,7 @@
 Core validation never imports the FAIR-bioHeaders toolkit. This module only
 looks for it when a header has to be checked. The header rules HDR-004 to
 HDR-010 come from the toolkit's own reader (``bioheaders.gff3.header_report``,
-FHR-Specification spec 007), so there is one implementation of the header
+FAIR-bioHeaders-Specification spec 007), so there is one implementation of the header
 format. A toolkit without FHGFF3 support (fair-bioheaders before 0.6), or no
 toolkit, leaves a present header unvalidated (HDR-002).
 """
@@ -12,7 +12,7 @@ import os
 
 HEADER_PREFIX = "#~"
 MODES = ("auto", "require", "skip")
-# header_report result -> rule (FHR-Specification specs/007-gff3-header
+# header_report result -> rule (FAIR-bioHeaders-Specification specs/007-gff3-header
 # contracts/validator.md).
 RESULT_RULES = (
     ("placement", "HDR-004"),

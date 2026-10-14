@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The FAIR-bioHeaders specification repository is now `FAIR-bioHeaders-Specification`
+  (renamed from `FHR-Specification`; FAIR-bioHeaders-Specification#108). Links, the rule
+  catalogue's references and `docs/rules.md` use the new name.
 - Header checks follow FHR-Specification docs/SCHEMA-VERSIONS.md (spec 012), through
   the toolkit: a header citing a release the toolkit does not bundle is an HDR-007
   error, `unsupported schema version`, and is not checked against another schema

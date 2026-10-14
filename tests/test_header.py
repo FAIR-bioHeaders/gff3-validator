@@ -1,6 +1,6 @@
 """FHGFF3 header rules HDR-004 to HDR-010 with the real FAIR-bioHeaders toolkit.
 
-FHR-Specification spec 007 (contracts/validator.md). Every test here is marked
+FAIR-bioHeaders-Specification spec 007 (contracts/validator.md). Every test here is marked
 ``headers``: it runs only when the toolkit with FHGFF3 support is installed.
 """
 
@@ -137,7 +137,7 @@ def test_each_header_rule(name, rule):
 
 
 def test_unsupported_schema_version_is_reported_not_substituted():
-    """FHR-Specification rule V4 (docs/SCHEMA-VERSIONS.md): no other schema is used."""
+    """FAIR-bioHeaders-Specification rule V4 (docs/SCHEMA-VERSIONS.md): no other schema is used."""
     report = validate(SUITE / CASES["hdr-007-unsupported-schema-version"]["file"])
     assert rules(report) == ["HDR-007"]
     message = next(f.message for f in report.findings if f.rule == "HDR-007")
@@ -154,8 +154,13 @@ def test_release_urls_select_the_same_schema(tmp_path):
     data = case_bytes("fhgff3-header-valid")
     w3id = b"https://w3id.org/fair-bioheaders/fhgff3/v0.4.0"
     assert w3id in data
-    raw = b"https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/"
-    for value in (w3id + b"/", raw + b"v0.4.0/fhgff3.json", raw + b"main/fhgff3.json"):
+    # Raw URLs under either name of the specification repository
+    # (FAIR-bioHeaders-Specification#108).
+    values = [w3id + b"/"]
+    for repository in (b"FHR-Specification", b"FAIR-bioHeaders-Specification"):
+        raw = b"https://raw.githubusercontent.com/FAIR-bioHeaders/" + repository + b"/"
+        values += [raw + b"v0.4.0/fhgff3.json", raw + b"main/fhgff3.json"]
+    for value in values:
         path = write(tmp_path, "a.gff3", data.replace(w3id, value))
         report = header_report(str(path))
         assert report["header_type"] == "FHGFF3"

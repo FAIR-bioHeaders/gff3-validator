@@ -1,8 +1,8 @@
-> Copied from FHR-Specification
-> [specs/009-gff3-validator/spec.md](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md)
+> Copied from FAIR-bioHeaders-Specification
+> [specs/009-gff3-validator/spec.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md)
 > (main at commit 2ef8da7, 2026-10-08), which remains the authoritative version. Decisions since
 > then: FR-013 was decided in
-> [FHR-Specification #61](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/61)
+> [FAIR-bioHeaders-Specification #61](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/61)
 > (Python with Pyodide; separate `gff3-validator` package; header validated when
 > present, `--require-header`, `--no-header`).
 

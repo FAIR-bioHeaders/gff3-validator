@@ -1,7 +1,7 @@
 # Questions for the Sequence Ontology group
 
 Draft for the catalogue review
-([FHR-Specification #62](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/62)).
+([FAIR-bioHeaders-Specification #62](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/62)).
 Each question is a place where the GFF3 specification 1.26 (commit
 [fe73505](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md))
 is silent, ambiguous or contradicts itself. Every question ends with **our

@@ -5,7 +5,7 @@ annotation files, built by FAIR-bioHeaders with the Sequence Ontology (SO) group
 
 > **Status: early release (0.1.0).** The rule catalogue is a draft under
 > review with the Sequence Ontology group
-> ([FHR-Specification #62](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/62)).
+> ([FAIR-bioHeaders-Specification #62](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/62)).
 > The core syntax, attribute, directive and structure rules that the GFF3
 > specification settles are implemented, the Sequence Ontology rules check
 > types and Parent relationships against a bundled SO release (following the
@@ -23,7 +23,7 @@ whether a GFF3 file is valid against the GFF3 specification (version 1.26) and
 the Sequence Ontology, and that explain every problem in plain language with
 the rule id, the line and a suggested fix. When a file carries a FAIR-bioHeaders
 (FHGFF3) provenance header, the validator also checks it and its link to the
-genome. See [spec 009](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md)
+genome. See [spec 009](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md)
 (copied in [specs/001-gff3-validator](specs/001-gff3-validator/spec.md)).
 
 Plain GFF3 without a header is a first-class input: core validation does not
@@ -157,10 +157,10 @@ files.
 Headers: a FAIR-bioHeaders (FHGFF3) header is validated when present;
 `--require-header` makes it mandatory and `--no-header` skips header checks.
 Header checks need the optional extra, `pip install "gff3-validator[headers]"`,
-with a fair-bioheaders release that supports FHGFF3 (FHR-Specification spec
+with a fair-bioheaders release that supports FHGFF3 (FAIR-bioHeaders-Specification spec
 007; the support is on the toolkit's `main` and not yet released). They use the
 toolkit's own header reader, so the rules match
-[docs/FHGFF3.md](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/docs/FHGFF3.md):
+[docs/FHGFF3.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FHGFF3.md):
 
 - HDR-004 placement after `##gff-version 3` (the block ends at the first
   feature or `##FASTA`), HDR-005 the checksum, HDR-006 safe YAML, HDR-007 the
@@ -317,9 +317,9 @@ when SO publishes a new so.obo.
 ### Profiles
 
 A profile adds the recommendations of a repository or community to the core
-rules ([docs/profiles.md](docs/profiles.md), FHR-Specification
-[#51](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/51) and
-[#70](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/70)):
+rules ([docs/profiles.md](docs/profiles.md), FAIR-bioHeaders-Specification
+[#51](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/51) and
+[#70](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/70)):
 
 ```bash
 gff3-validate --list-profiles

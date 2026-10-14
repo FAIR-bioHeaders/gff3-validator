@@ -3,7 +3,7 @@
 Start with an issue describing the use case or failure and a small reproducible
 GFF3 example. Submit a focused branch/PR with behaviour, the rule ids affected
 and tests. Link related work in
-[FHR-Specification](https://github.com/FAIR-bioHeaders/FHR-Specification)
+[FAIR-bioHeaders-Specification](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification)
 (spec 009 and issues #61 to #71). Do not include private annotation or genome
 data, credentials, or unrelated formatting in fixtures.
 
@@ -39,7 +39,7 @@ poetry build
 ## Maintainers and policies
 
 David Molik and Adam Wright are the maintainers
-([GOVERNANCE](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/GOVERNANCE.md)).
+([GOVERNANCE](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/GOVERNANCE.md)).
 SO review of the catalogue is recorded per rule (`review`). Follow the
 [code of conduct](CODE_OF_CONDUCT.md) and report security issues privately as in
 [SECURITY.md](SECURITY.md).
