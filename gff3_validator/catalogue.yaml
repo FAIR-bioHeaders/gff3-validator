@@ -1,4 +1,4 @@
-# gff3-validator rule catalogue (FHR-Specification #62).
+# gff3-validator rule catalogue (FAIR-bioHeaders-Specification #62).
 #
 # DRAFT for review with the Sequence Ontology group. Rule ids are proposals and
 # may still change before the first release; after it they are stable (retired
@@ -27,13 +27,13 @@ sources:
     url: https://github.com/The-Sequence-Ontology/SO-Ontologies/blob/4340c143bac3578bba0c013d02e8c5f0e51ad14a/Ontology_Files/so.obo
   fhr-format:
     title: FAIR-bioHeaders format rules R1 to R10 (docs/FORMAT.md)
-    url: https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/docs/FORMAT.md
+    url: https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md
   spec007:
-    title: FHR-Specification spec 007, GFF3 annotation header (FHGFF3)
-    url: https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/007-gff3-header/spec.md
+    title: FAIR-bioHeaders-Specification spec 007, GFF3 annotation header (FHGFF3)
+    url: https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md
   spec009:
-    title: FHR-Specification spec 009, GFF3 validator
-    url: https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md
+    title: FAIR-bioHeaders-Specification spec 009, GFF3 validator
+    url: https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md
 
 rules:
 

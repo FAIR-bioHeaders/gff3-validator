@@ -2,8 +2,8 @@
 
 A profile adds the requirements of a repository or community to the core
 GFF3 1.26 and Sequence Ontology rules (spec 009 FR-011; the profile mechanism
-is [FHR-Specification #51](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/51),
-the first profile [#70](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/70)).
+is [FAIR-bioHeaders-Specification #51](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/51),
+the first profile [#70](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/70)).
 Profiles are optional: without `--profile` nothing changes.
 
 | Profile | Version | Source | Rules |

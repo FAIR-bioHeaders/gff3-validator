@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The FAIR-bioHeaders specification repository is now `FAIR-bioHeaders-Specification`
+  (renamed from `FHR-Specification`; FAIR-bioHeaders-Specification#108). Links, the rule
+  catalogue's references and `docs/rules.md` use the new name.
 - Update current maintainer contacts to `molik@fhref.org` and `wright@fhref.org` and project Pages links to `https://fhref.org`. Citation/package metadata and private reporting routes are checked; runtime behavior and historical notices are unchanged.
 
 - FHGFF3 header rules HDR-004 to HDR-009 are implemented, and HDR-010 (warning:

@@ -3,7 +3,7 @@
 ## Strategy and boundaries
 
 Read README, spec 009 (`specs/001-gff3-validator/spec.md`, and the original in
-FHR-Specification), the relevant issue (#61 to #71) and current code before
+FAIR-bioHeaders-Specification), the relevant issue (#61 to #71) and current code before
 editing. The validator reports; it never rewrites annotation files.
 
 - The GFF3 specification 1.26 and the pinned SO release are the authorities.
@@ -25,7 +25,7 @@ editing. The validator reports; it never rewrites annotation files.
 - Skipped or unimplemented checks are reported as such, never as passed.
 
 David and Adam are the maintainers and jointly hold release authority
-(FHR-Specification GOVERNANCE.md).
+(FAIR-bioHeaders-Specification GOVERNANCE.md).
 
 ## Repository map
 
@@ -71,8 +71,8 @@ limitations and failed checks.
 
 Inputs are untrusted. Keep memory and time bounded, escape untrusted text in
 HTML output, make no network requests during validation, and report suspected
-vulnerabilities privately as described in the FHR-Specification
-[SECURITY.md](https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/SECURITY.md),
+vulnerabilities privately as described in the FAIR-bioHeaders-Specification
+[SECURITY.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/SECURITY.md),
 not in a public issue. Publishing packages, tags and DOIs are separate
 maintainer actions; a spec, plan or task list never authorizes them.
 

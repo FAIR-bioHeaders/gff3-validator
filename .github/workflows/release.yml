@@ -1,7 +1,7 @@
 name: Release
 
 # NOT READY FOR USE. gff3-validator is pre-release (0.0.1.dev0) and must not be
-# published until the rule catalogue has been reviewed (FHR-Specification #62).
+# published until the rule catalogue has been reviewed (FAIR-bioHeaders-Specification #62).
 # Before the first release a maintainer must create a PyPI *pending* trusted
 # publisher for the project "gff3-validator" (owner FAIR-bioHeaders, repository
 # gff3-validator, workflow release.yml, environment pypi) and a "pypi"

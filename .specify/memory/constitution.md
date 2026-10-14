@@ -1,8 +1,8 @@
 # gff3-validator Constitution
 
 > **Status: draft.** Proposed for Spec Kit planning gates. It restates
-> FHR-Specification spec 009 (GFF3 validator), the decisions recorded in
-> FHR-Specification #61, and the FAIR-bioHeaders toolkit constitution, and adds
+> FAIR-bioHeaders-Specification spec 009 (GFF3 validator), the decisions recorded in
+> FAIR-bioHeaders-Specification #61, and the FAIR-bioHeaders toolkit constitution, and adds
 > no authority. David and Adam must approve it before it is treated as ratified.
 
 ## Core Principles
@@ -70,7 +70,7 @@ poetry build
 David and Adam hold release authority. Publishing packages, archiving DOIs,
 deploying the web page and claiming SO or repository endorsement are separate
 maintainer actions; a spec, plan or task list never authorizes them.
-Security-relevant findings follow the FHR-Specification SECURITY.md before any
+Security-relevant findings follow the FAIR-bioHeaders-Specification SECURITY.md before any
 public issue or PR.
 
 ## Governance

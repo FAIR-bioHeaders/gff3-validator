@@ -1,6 +1,6 @@
 # Evaluation of the prototype, the LinkML model and existing GFF3 validators
 
-For [FHR-Specification #63](https://github.com/FAIR-bioHeaders/FHR-Specification/issues/63)
+For [FAIR-bioHeaders-Specification #63](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/63)
 (spec 009 FR-014). Run date 2026-10-08. Other tools' results are comparison
 evidence, not the source of truth: where they disagree with the catalogue the
 catalogue cites GFF3 1.26, or the case is a question in
