@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The optional `headers` extra now allows fair-bioheaders 0.8 (`>=0.7,<0.9`).
 - The FAIR-bioHeaders specification repository is now `FAIR-bioHeaders-Specification`
   (renamed from `FHR-Specification`; FAIR-bioHeaders-Specification#108). Links, the rule
   catalogue's references and `docs/rules.md` use the new name.
