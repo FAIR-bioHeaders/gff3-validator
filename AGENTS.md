@@ -42,11 +42,13 @@ for implementing an existing contract. Never rewrite immutable releases, fixed
 schema aliases or existing file-bound headers as incidental cleanup. Header edits
 require checksum recomputation and may affect downstream parent links.
 
-Proposals are not adopted contracts: FAIR-bioHeaders-Specification#139 / draft
-PR #140 (structured vouchers) and profiles still under review in that repository
-(#56) remain proposals until adopted. Implemented subsets do not establish full
-profile or header-family support. The mapping page in fair-bioheaders.github.io#29
-depends on approved profiles.
+Check the adoption decision and released support before implementing a proposal;
+an issue or PR's existence does not establish adoption. Structured vouchers
+(FAIR-bioHeaders-Specification#139/#140) and mapping profiles (#56 in that same
+repository) have their own review history. Implemented subsets do not establish
+full profile or header-family support. The mapping page tracked in
+fair-bioheaders.github.io#29 depends on approved profiles. Recheck these records
+rather than relying on a copied description of their temporary status.
 
 ## Strategy and boundaries
 
@@ -132,3 +134,29 @@ material, previously granted permissions, and third-party licenses/notices;
 do not label all current contributors as government employees. See LICENSE
 for scope. Do not rewrite historical releases or silently relicense upstream
 material. Keep README badges, package metadata and citation metadata consistent.
+
+## Complete verification by changed surface
+
+CI's Python jobs install `poetry install --extras headers` so HDR checks execute
+with fair-bioheaders present. Test that path after header integration changes;
+also preserve the core installation without the optional dependency. Core
+validation must neither import nor require it. Optional checks that cannot run
+must report that state rather than passing.
+
+After rule/catalogue or engine changes, run pytest, generated catalogue checks
+and the generated conformance/CLI check listed above. Inspect
+`scripts/make_conformance.py` and use the existing generation/check workflow for
+new vectors. Build with `poetry build`, install the wheel into a fresh environment,
+and run `gff3-validate --version` and a valid fixture from outside the checkout,
+as in `.github/workflows/pytest.yaml`. Checkout success alone does not verify
+packaged ontology/catalogue/profile data.
+
+After engine/report, wheel-packaging or browser integration changes, build with
+`poetry run python scripts/build_web.py`, install the locked Node dependencies
+in `web/test/` with `npm ci --no-audit --no-fund`, and run
+`node web/test/parity.mjs --python "poetry run python"` from the root. This compares
+JSON, HTML and SARIF through the Pyodide path with CLI behavior. Check browser
+runtime/network behavior separately where relevant; parity is not a full UI test.
+Use the Python/Node versions in the current CI workflow. Python 3.9 jobs require
+an image with available interpreter builds (currently Ubuntu 24.04); do not
+replace runtime pins with latest without checking the supported matrix.
