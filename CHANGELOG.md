@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add a provisional INSDC Annotation v1.0 placement review and SO questions
+  19/20. Keep GFF-STR-015 as a planned, pending-SO candidate citing GFF3's ID
+  semantics and disjunct-region objective. The other three candidates are
+  documentation-only draft profile rules under #20. No rule logic or fixtures
+  are added. Re-check the pin and all placements after INSDC publishes its
+  updated specification; defer INSDC outreach until then.
 - The optional `headers` extra now allows fair-bioheaders 0.8 (`>=0.7,<0.9`).
 - The FAIR-bioHeaders specification repository is now `FAIR-bioHeaders-Specification`
   (renamed from `FHR-Specification`; FAIR-bioHeaders-Specification#108). Links, the rule

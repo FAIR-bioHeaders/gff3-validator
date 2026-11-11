@@ -13,6 +13,7 @@ Sources:
 - `fhr-format`: [FAIR-bioHeaders format rules R1 to R10 (docs/FORMAT.md)](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md)
 - `spec007`: [FAIR-bioHeaders-Specification spec 007, GFF3 annotation header (FHGFF3)](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/007-gff3-header/spec.md)
 - `spec009`: [FAIR-bioHeaders-Specification spec 009, GFF3 validator](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md)
+- `insdc-annotation`: [INSDC Annotation Minimum Specification v1.0, p. 1-4 (insdc/minimum-specifcations commit 41f0dc4, Annotations/Current version/Annotation Minimum Specification v1.0.docx.pdf)](https://github.com/insdc/minimum-specifcations/blob/41f0dc424748c9f7e50a8b6bda9b888218c4b65e/Annotations/Current%20version/Annotation%20Minimum%20Specification%20v1.0.docx.pdf)
 
 ## Summary
 
@@ -21,11 +22,11 @@ Sources:
 | [GFF-SYN](#gff-syn) Syntax: file, lines and columns 1 to 8 | 20 | 19 | 1 | 9 |
 | [GFF-ATT](#gff-att) Attributes (column 9) | 17 | 15 | 2 | 12 |
 | [GFF-DIR](#gff-dir) Directives | 10 | 10 | 0 | 5 |
-| [GFF-STR](#gff-str) Structure: IDs, references and bounds | 13 | 11 | 2 | 7 |
+| [GFF-STR](#gff-str) Structure: IDs, references and bounds | 14 | 11 | 3 | 8 |
 | [SO](#so) Sequence Ontology | 9 | 8 | 1 | 7 |
 | [BIO](#bio) Biology (optional, with --genome) | 11 | 11 | 0 | 6 |
 | [HDR](#hdr) FHGFF3 header (optional, FAIR-bioHeaders) | 10 | 10 | 0 | 0 |
-| **Total** | 90 | 84 | 6 | 46 |
+| **Total** | 91 | 84 | 7 | 47 |
 
 ## GFF-SYN
 
@@ -1009,6 +1010,7 @@ Structure: IDs, references and bounds
 | [GFF-STR-011](#gff-str-011) | error | implemented | Features fit within the embedded sequence |
 | [GFF-STR-012](#gff-str-012) | info | planned | Child extends beyond its parent |
 | [GFF-STR-013](#gff-str-013) | warning | planned | Parent and child are on the same seqid |
+| [GFF-STR-015](#gff-str-015) | warning | planned | Segments of one feature do not overlap |
 
 ### GFF-STR-001
 
@@ -1035,7 +1037,7 @@ ctg1→.→CDS→61→90→.→+→0→ID=c1;Parent=t1
 
 Fix: Give each feature its own ID.
 
-Notes: The specification does not say what lines of one feature must share. Proposal: same type is required (error); seqid, strand and Parent differences are GFF-STR-002 and GFF-STR-003. Is that the intended reading? IDs are compared after percent-decoding; confirm. Until SO answers, lines sharing an ID with different types are reported (one finding per later line); IDs, Parent and Derives_from values are compared after percent- decoding.
+Notes: The specification does not say what lines of one feature must share. Proposal: same type is required (error); seqid, strand and Parent differences are GFF-STR-002 and GFF-STR-003. Is that the intended reading? IDs are compared after percent-decoding; confirm. Until SO answers, lines sharing an ID with different types are reported (one finding per later line); IDs, Parent and Derives_from values are compared after percent- decoding. INSDC Annotation v1.0 b.vii.2 asks for a transcript_id unique "within the full genome annotation": that is this rule within one file, and out of the single-file validator's scope across files (#27, docs/insdc-rule-placement.md).
 
 ### GFF-STR-002
 
@@ -1055,7 +1057,7 @@ chr2→.→CDS→61→90→.→-→0→ID=c1;Parent=t1
 
 Fix: Check that the lines are parts of the same feature.
 
-Notes: Trans-splicing between strands or chromosomes is biologically real; the specification's trans-splicing example stays on one strand and seqid. Should a change of seqid or strand be allowed, warned or an error? Implemented as a warning until SO answers question 8.
+Notes: Trans-splicing between strands or chromosomes is biologically real; the specification's trans-splicing example stays on one strand and seqid. Should a change of seqid or strand be allowed, warned or an error? Implemented as a warning until SO answers question 8. The order of those lines (INSDC Annotation v1.0 b.iii.4) is a separate question and is planned as draft profile INSDC-014; #27 reviews the placement of both.
 
 ### GFF-STR-003
 
@@ -1094,7 +1096,7 @@ ctg1→.→exon→1→90→.→+→.→Parent=mRNA0001
 
 Fix: Add the parent feature, or correct the ID (IDs are case sensitive).
 
-Notes: Checked at the end of the file; a reference that crosses a ### is GFF- DIR-003. One finding per missing ID, at its first reference, with the number of other referencing lines.
+Notes: Checked at the end of the file; a reference that crosses a ### is GFF- DIR-003. One finding per missing ID, at its first reference, with the number of other referencing lines. INSDC Annotation v1.0 b.vii.1 (p. 2 at commit 41f0dc4) goes further and calls Parent= required on a CDS; GFF3 leaves it optional, so that requirement is proposed for a repository profile (#20), where AgBioData already carries the same expectation as AGB-007 - see #27 and docs/insdc-rule-placement.md.
 
 ### GFF-STR-005
 
@@ -1278,6 +1280,35 @@ chr2→.→mRNA→1→90→.→+→.→ID=t1;Parent=g1
 Fix: Check the seqid or the Parent.
 
 Notes: Not addressed by the specification (trans-splicing across chromosomes exists).
+
+### GFF-STR-015
+
+**Segments of one feature do not overlap**
+
+- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Reference: [Column 9: ID; Summary design objective 6 (disjunct regions)](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#column-9-attributes) (gff3)
+
+Two lines sharing one ID cover overlapping coordinates. Lines with one ID are one feature, so an overlapping pair describes a location no single feature has. INSDC submission forbids it (rule b.iv.1).
+
+Example (invalid):
+
+```text
+ctg1→.→mRNA→1→90→.→+→.→ID=t1
+ctg1→.→CDS→1→60→.→+→0→ID=c1;Parent=t1
+ctg1→.→CDS→41→90→.→+→0→ID=c1;Parent=t1
+```
+
+Valid:
+
+```text
+ctg1→.→mRNA→1→90→.→+→.→ID=t1
+ctg1→.→CDS→1→30→.→+→0→ID=c1;Parent=t1
+ctg1→.→CDS→31→90→.→+→0→ID=c1;Parent=t1
+```
+
+Fix: Give the two intervals to one feature without overlap, or separate features with separate IDs.
+
+Notes: Proposed placement of INSDC Annotation Minimum Specification v1.0 b.iv.1 ("Intervals comprising a feature's location must not overlap*", p. 1 of the PDF at insdc/minimum-specifcations commit 41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in #27. Core structure, because the contradiction is inside one feature: the ID column requires the lines of one ID to "collectively represent a single feature", GFF3's stated design objective is "an explicit convention for features that occupy disjunct regions" (Summary, objective 6), and an overlapping join is no location any reader can resolve (sorting does not fix it, unlike draft profile INSDC-014). It needs no genome, and runs with the structure checks. GFF3 1.26 never writes disjointness as a validation rule, hence a warning and not an error until SO answers. The asterisk on b.iv.1 points at table 2e (p. 4 at this pin), which allows one exception: ribosomal slippage. A slippage is marked today as a recoded_codon (SO:0000145) child of the CDS or a stop_codon_read_through (SO:0000883) subtype, the convention of question 17 that BIO-006 and BIO-008 already honour, so the exemption is defined only when the SO layer is on; without it the rule warns, as BIO-008 also does for unmarked recoding. Trans-splicing is NOT an exception to b.iv.1 (table 2e lists it for b.iii.3 and b.iii.4 only). The neighbouring b.iv.2 and b.iv.3 (rRNA not overlapping CDS or rRNA, tRNA not contained in a CDS exon) are not placed here: they compare different features, which GFF3 allows to overlap, and are proposed as INSDC/NCBI profile rules in docs/insdc-rule-placement.md. Not implemented, no fixture yet.
 
 ## SO
 
@@ -1586,7 +1617,7 @@ ctg1→.→CDS→150→250→.→+→0→ID=c1;Parent=t1
 
 Fix: Correct the CDS or exon coordinates.
 
-Notes: Does not need the genome (it could move to the structure layer) but runs with the biology layer. Implemented as a warning: each CDS segment is compared with the exons whose Parent is a Parent of the CDS, collected until the next ### or the end of the file. Not applicable when the exon features are omitted (single-exon case in Pathological Cases).
+Notes: Does not need the genome (it could move to the structure layer) but runs with the biology layer. Implemented as a warning: each CDS segment is compared with the exons whose Parent is a Parent of the CDS, collected until the next ### or the end of the file. Not applicable when the exon features are omitted (single-exon case in Pathological Cases). INSDC Annotation v1.0 b.iii.6 (p. 1 at commit 41f0dc4) asks the paired CDS and mRNA to agree there too, proposed as draft profile INSDC-015 (#27, docs/insdc-rule-placement.md).
 
 ### BIO-006
 
@@ -1662,7 +1693,7 @@ CDS segments 1..31 and 61..90 with phase 0
 
 Fix: Check the coordinates.
 
-Notes: Coding lengths are computed from the coordinates, so the genome is needed only to run the layer. The specification's canonical gene has two such CDS (cds00001 with 2305 and cds00002 with 1402 coding bases), so the example itself is reported (see the suggested corrections in questions-for-SO.md).
+Notes: Coding lengths are computed from the coordinates, so the genome is needed only to run the layer. The specification's canonical gene has two such CDS (cds00001 with 2305 and cds00002 with 1402 coding bases), so the example itself is reported (see the suggested corrections in questions-for-SO.md). The length minima of INSDC Annotation v1.0 b.v.1 to b.v.3 (30 amino acids, 50 to 150 bp, 10 bp; p. 2 at commit 41f0dc4) are thresholds a repository sets, not a GFF3 property, and are proposed for a profile rather than here (#20; #27 and docs/insdc-rule-placement.md); ENA's own engine uses 25 amino acids for b.v.1.
 
 ### BIO-010
 

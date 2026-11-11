@@ -38,6 +38,8 @@ Each question is marked with what we need:
 | 16 | Derives_from typing | SO expertise |
 | 17 | Partial and exceptional CDS | Choose |
 | 18 | Strand within a gene | Choose |
+| 19 | Partiality of a feature in GFF3 | Choose |
+| 20 | Pseudo parents | Choose; SO expertise |
 
 ## Decisions on the core format
 
@@ -204,6 +206,76 @@ Each question is marked with what we need:
 
    *Implemented as proposed* for the part_of restriction (the edges SO-006
    accepts); the trans-splicing exemption is not implemented yet.
+
+## What a repository requires but GFF3 cannot yet say
+
+Added while placing the INSDC Annotation Minimum Specification v1.0 rules
+([#27](https://github.com/FAIR-bioHeaders/gff3-validator/issues/27), evidence in
+[insdc-rule-placement.md](insdc-rule-placement.md)). Both questions cite that
+document at insdc/minimum-specifcations commit
+[41f0dc4](https://github.com/insdc/minimum-specifcations/tree/41f0dc424748c9f7e50a8b6bda9b888218c4b65e/Annotations);
+neither can be answered from the GFF3 1.26 text, and the answer decides whether
+the check lands in the core catalogue or in a repository profile.
+
+19. **Partiality of a feature in GFF3.** Question 17 settled how a *partial
+   CDS* is marked so that the codon checks can exempt it. The INSDC Annotation
+   Minimum Specification v1.0 now asks the harder half, for **every** feature
+   type and about the marker's own semantics (rule b.iii.5, p. 1: "Only the
+   start and/or end of a feature may be marked as partial. Internal interval
+   boundaries must not be marked as partial, and the direction of partiality
+   must only indicate the feature is longer, not shorter (i.e., `<100..>200`
+   and not `>100..<200`)"; rule b.vi.4, p. 2: "Coding regions with a phase ≠ 0
+   must be declared as partial"; rule c.i.1, p. 3, which requires a partial
+   marker to abut an assembly gap or the sequence end). GFF3 1.26 defines no
+   partiality marker of any kind, so there is nothing to validate until SO
+   names one. ([BIO-006](rules.md#bio-006), draft profile `INSDC-016` in [insdc-rule-placement.md](insdc-rule-placement.md);
+   profile rules `INSDC-001`, `INSDC-004`, `INSDC-005` and `INSDC-012` in
+   [insdc-rule-placement.md](insdc-rule-placement.md))
+
+   **Choose.** Proposed: the marker is the INSDC spelling of question 17 —
+   `partial=start`, `partial=end`, `partial=start,end`, with the GVF-derived
+   `start_range` and `end_range` read as legacy synonyms — and it (a) is
+   allowed on any feature, not only a CDS, (b) may appear **only** on the
+   segment a discontinuous feature opens or closes with in 5'-to-3' order, so
+   an internal segment carrying it is a mistake, (c) always means "the real
+   feature continues past this point", never "it is shorter here", and (d)
+   `start` and `end` name the **5' and 3' ends of the feature** (so on a
+   minus-strand feature `start` is the higher coordinate), which is the point
+   question 17 left open and BIO-006 currently exempts both ends for. Confirm
+   (a) to (d). If SO prefers a per-segment spelling over a feature-level one,
+   say so: the validator reads what SO names, and both placements (core biology
+   versus an INSDC profile rule under #20) follow from this answer.
+
+20. **Pseudo parents.** INSDC Annotation Minimum Specification v1.0 b.vi.7
+   (p. 2) says "Product or translation must not be provided for a coding region
+   with any pseudo parent features". In GFF3 neither half is defined:
+   `product`, `translation` and `pseudo` are not reserved attributes (a
+   lower-case `product=` is an application tag, and an upper-case one is the
+   unknown reserved tag of [GFF-ATT-007](rules.md#gff-att-007)), and
+   [GFF-ATT-007](rules.md#gff-att-007) already lists NCBI's `Is_pseudo` as an
+   open practice. The pinned SO release offers a typed route: `pseudogene`
+   (SO:0000336), `pseudogenic_transcript` (SO:0000516, part_of `pseudogene`)
+   and `pseudogenic_CDS` (SO:0002087, part_of `pseudogenic_transcript`), each
+   carrying the synonym `INSDC_qualifier:pseudo`.
+   ([SO-001](rules.md#so-001), [SO-006](rules.md#so-006); INSDC profile rule
+   `INSDC-007` in [insdc-rule-placement.md](insdc-rule-placement.md))
+
+   **Choose, with SO expertise.** Proposed: the *type* states pseudogene
+   status — a `pseudogene`, `pseudogenic_transcript` or `pseudogenic_CDS` (or
+   an is_a subtype of one) in column 3 — and a `pseudo=` attribute is read as a
+   legacy synonym, not as the canonical form. On that reading please confirm
+   three things: (i) a feature whose Parent chain reaches a pseudogene-typed
+   ancestor is "a coding region with a pseudo parent", so the check follows
+   Parent transitively (gene → mRNA → CDS) rather than only the direct Parent;
+   (ii) an mRNA or CDS that is part of a pseudogene is a legitimate GFF3
+   relationship under SO-006 (is `pseudogenic_CDS part_of pseudogene` the
+   intended chain, or must a pseudogenic transcript sit between them?); and
+   (iii) if a pseudogene has no CDS child at all, that is the expected shape —
+   i.e. the annotation should carry the pseudogene and its pseudogenic parts,
+   not an ordinary CDS under it. ENA's gff3tools 5.5.1 recognises `pseudo` and
+   `pseudogene` attributes in its CDS-translation and intron-exemption checks,
+   so an attribute-only answer is also workable; the validator will follow
+   whichever SO names, and no rule leaves `planned` before this answer.
 
 ## Suggested corrections to the specification text
 
