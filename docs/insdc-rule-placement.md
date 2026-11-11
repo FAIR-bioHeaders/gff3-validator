@@ -600,7 +600,7 @@ no GFF3 validity requirement is added. Levels and exception markers need review.
     the slippage, trans-splicing, low-quality-region and heterogeneous-
     population exceptions are listed there for b.iii.2, b.iii.3, b.iii.4,
     b.iii.6, b.iv.1, b.v.1, b.v.3, b.vi.9, c.i.1, c.i.2, d.ii, d.iv and d.v, not
-    for b.vi.4. A 5' partial marker exempt it, and a start_range/end_range file
+    for b.vi.4. A 5' partial marker exempts it, and a start_range/end_range file
     is read as BIO-006 reads it until the INSDC draft fixes the vocabulary. Not
     implemented, no fixture yet.
 ```
