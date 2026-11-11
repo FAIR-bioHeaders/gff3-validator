@@ -547,11 +547,12 @@ no GFF3 validity requirement is added. Levels and exception markers need review.
     41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in #27. It complements
     BIO-005, which checks only that each CDS segment lies within an exon of its
     transcript: containment there, shared boundaries here. Like BIO-005 it needs
-    no genome sequence, only the coordinates, but belongs in a repository profile because GFF3 does not require it. GFF3 1.26 gives no rule here (the canonical gene shows the
-    shape but does not require it), so it is a profile candidate. The pairing is the GFF3
+    no genome sequence, only the coordinates, but belongs in a repository
+    profile because GFF3 does not require it. The canonical gene shows the
+    shape without requiring it. The pairing is the GFF3
     Parent relationship; the feature-table transcript_id that b.iii.6 also names
     is not a GFF3 reserved tag, so a transcript_id-only pairing is out of this
-    catalogue's reach (it is a profile question, docs/insdc-rule-placement.md).
+    core catalogue's reach; the profile pairing convention remains for review.
     The asterisk on b.iii.6 points at table 2e (p. 4 at this pin), which allows
     one exception: "Where coding feature interval boundaries are not also
     represented in the mRNA feature location - ribosomal slippage". A slippage
@@ -706,3 +707,24 @@ placement review
 ([#27](https://github.com/FAIR-bioHeaders/gff3-validator/issues/27): "STOP AND
 WAIT FOR REVIEW of rule placement and unresolved SO semantics"). The initial preparation did not publish a release or implement a rule.
 Review follow-up checks and commits are recorded on PR #28.
+
+## Review follow-up verification — 2026-11-11
+
+The review follow-up leaves 84 of 91 catalogue rules implemented, with three
+additional candidates held in this document as draft profile entries. No
+engine code, fixture or conformance vector changed.
+
+- Python 3.15 with the `headers` extra: **914 passed, 4 skipped**.
+- Without the optional header dependency: **888 passed, 30 skipped**.
+- Generated catalogue check and conformance self-check pass; installed-wheel
+  conformance: **127/127 passed, 1 skipped** (the case assuming no header support).
+- Ruff, Black, isort and `git diff --check` pass.
+- Built a wheel with the project's Poetry backend through `pip wheel`, installed
+  it with the `headers` extra in a fresh temporary environment, and checked
+  `gff3-validate --version` and the canonical-gene fixture from outside the checkout.
+
+The initial Python 3.12 environment had two failures: the outside-checkout CLI
+could not import an uninstalled package, and the deterministic gzip test differed
+in its OS header byte. Both pass under Python 3.15 with the installed wheel.
+Browser parity was not rerun: this follow-up changes catalogue placement and
+review documentation, with no engine, reporting or browser integration changes.
