@@ -228,7 +228,7 @@ the check lands in the core catalogue or in a repository profile.
    must be declared as partial"; rule c.i.1, p. 3, which requires a partial
    marker to abut an assembly gap or the sequence end). GFF3 1.26 defines no
    partiality marker of any kind, so there is nothing to validate until SO
-   names one. ([BIO-006](rules.md#bio-006), [BIO-013](rules.md#bio-013);
+   names one. ([BIO-006](rules.md#bio-006), draft profile `INSDC-016` in [insdc-rule-placement.md](insdc-rule-placement.md);
    profile rules `INSDC-001`, `INSDC-004`, `INSDC-005` and `INSDC-012` in
    [insdc-rule-placement.md](insdc-rule-placement.md))
 

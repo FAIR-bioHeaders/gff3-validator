@@ -2,21 +2,12 @@
 
 ## Unreleased
 
-- INSDC Annotation Minimum Specification v1.0 (insdc/minimum-specifcations
-  commit 41f0dc4) is now cited from the catalogue: a pinned `insdc-annotation`
-  source, four planned rules for the INSDC rules #27 lists that follow from
-  GFF3's own feature model (`GFF-STR-014` segments in 5' to 3' order,
-  `GFF-STR-015` segments of one feature not overlapping, `BIO-012` a CDS
-  sharing its transcript's internal boundaries, `BIO-013` a CDS that starts
-  inside a codon declared partial), and
-  `docs/insdc-rule-placement.md`, which classifies all 18 rule numbers in the
-  issue's table - core, biology, INSDC/NCBI repository profile (#20, entries
-  drafted there but not added, the source declaring no licence at this pin) or
-  out of scope - and writes out the table 2e biological exceptions
-  (trans-splicing, ribosomal slippage, low-quality regions) where they apply.
-  `docs/questions-for-SO.md` gains questions 19 (partiality of a feature in
-  GFF3) and 20 (pseudo parents). No rule logic, fixture or conformance case is
-  added: the placement is pending review (#27).
+- Add a provisional INSDC Annotation v1.0 placement review and SO questions
+  19/20. Keep GFF-STR-015 as a planned, pending-SO candidate citing GFF3's ID
+  semantics and disjunct-region objective. The other three candidates are
+  documentation-only draft profile rules under #20. No rule logic or fixtures
+  are added. Re-check the pin and all placements after INSDC publishes its
+  updated specification; defer INSDC outreach until then.
 - The optional `headers` extra now allows fair-bioheaders 0.8 (`>=0.7,<0.9`).
 - The FAIR-bioHeaders specification repository is now `FAIR-bioHeaders-Specification`
   (renamed from `FHR-Specification`; FAIR-bioHeaders-Specification#108). Links, the rule

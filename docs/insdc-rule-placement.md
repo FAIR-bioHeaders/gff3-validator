@@ -13,6 +13,19 @@ Companion documents: the rule catalogue
 ([docs/profiles.md](profiles.md)) and the SO questions
 ([docs/questions-for-SO.md](questions-for-SO.md)).
 
+## Provisional scope and INSDC update gate
+
+This is a draft review against Annotation v1.0 at `41f0dc4`, not a statement
+about the forthcoming INSDC specification. Re-check the pin, rule numbers,
+thresholds, table 2e exceptions and partial-marker vocabulary when INSDC
+publishes its update. Defer INSDC outreach until that update. Questions 19/20
+remain review questions, not SO decisions.
+
+The catalogue retains only GFF-STR-015 as a planned, pending-SO core candidate,
+with GFF3 as its authority. Segment order, paired internal boundaries and a
+requirement to declare partiality do not follow from GFF3 1.26 or SO; they are
+draft profile candidates INSDC-014/015/016 below, not catalogue rules.
+
 ## Source pin and how to check the citations
 
 | | |
@@ -102,16 +115,16 @@ in the same place.
 
 | INSDC rule (page) | Requirement, verbatim and abbreviated | Placement | Where it lands | Rationale in one line |
 | --- | --- | --- | --- | --- |
-| `b.iii.4` (p. 1) | "The order of intervals comprising a feature's location must be provided in order on the same strand (ascending order on the + strand, and descending order on the – strand)" | **core** (structure), info | [GFF-STR-014](rules.md#gff-str-014), planned | GFF3 fixes no line order, so an unsorted file is ambiguous rather than invalid; info states that in core without failing a file (its two table 2e exceptions, p. 4, are trans-splicing and "use of `order` instead of `join`", and GFF3 has no `order` operator to mark the second). |
+| `b.iii.4` (p. 1) | "The order of intervals comprising a feature's location must be provided in order on the same strand (ascending order on the + strand, and descending order on the – strand)" | **profile** (INSDC/NCBI, #20), draft | draft `INSDC-014` | GFF3 fixes no line order, so ordering is submission policy (its two table 2e exceptions, p. 4, are trans-splicing and "use of `order` instead of `join`", and GFF3 has no `order` operator to mark the second). |
 | `b.iii.5` (p. 1) | "Only the start and/or end of a feature may be marked as partial. Internal interval boundaries must not be marked as partial, and the direction of partiality must only indicate the feature is longer, not shorter (i.e., `<100..>200` and not `>100..<200`)" | **profile** (INSDC/NCBI, #20); blocked | draft `INSDC-001`; needs [question 19](questions-for-SO.md) | Partiality is Feature Table location notation and GFF3 1.26 defines no partial marker at all (BIO-006), so there is nothing for a core rule to read until SO settles the representation. |
-| `b.iii.6` (p. 1) | "Explicitly paired CDS and mRNA features (either by a Parent relationship in GFF3 or a common transcript_id in feature table format) must have locations that are compatible (contained within and share internal interval boundaries denoted by the joined mRNA feature location)" | **biology**, warning | [BIO-012](rules.md#bio-012), planned | It is the other half of BIO-005 — boundary agreement, where BIO-005 has containment — and needs no sequence; table 2e (p. 4) exempts ribosomal slippage, which the catalogue already recognises as `recoded_codon`/`transl_except`. |
+| `b.iii.6` (p. 1) | "Explicitly paired CDS and mRNA features (either by a Parent relationship in GFF3 or a common transcript_id in feature table format) must have locations that are compatible (contained within and share internal interval boundaries denoted by the joined mRNA feature location)" | **profile** (INSDC/NCBI, #20), draft | draft `INSDC-015` | It is the other half of BIO-005 — boundary agreement, where BIO-005 has containment — and needs no sequence; table 2e (p. 4) exempts ribosomal slippage, which the catalogue already recognises as `recoded_codon`/`transl_except`. |
 | `b.iv.1` (p. 1) | "Intervals comprising a feature's location must not overlap" | **core** (structure), warning | [GFF-STR-015](rules.md#gff-str-015), planned | The contradiction is inside one feature: GFF3's own design objective is "an explicit convention for features that occupy disjunct regions" (Summary, objective 6) and its ID column requires the lines of one ID to "collectively represent a single feature", yet disjointness is never written as a rule — hence a warning; sorting cannot rescue an overlap, unlike `b.iii.4`. |
 | `b.iv.2` (p. 1) | "Ribosomal RNA features must not overlap CDS features or other rRNAs" | **profile** (INSDC/NCBI, #20) | draft `INSDC-002` | GFF3 lets distinct features overlap freely (the canonical gene's alternative transcripts and the operon example both do); naming the forbidden type pairs is INSDC content policy, not validity. |
 | `b.iv.3` (p. 1) | "tRNA features must not fully overlap (be completely contained) within CDS exons" | **profile** (INSDC/NCBI, #20) | draft `INSDC-003` | Same reasoning; GFF3 not only allows containment between different features, GFF-STR-012 reports a child outside its parent as info only. |
 | `b.v.1` (p. 2) | "Complete coding regions must be at least 30 amino acids long" | **profile** (INSDC/NCBI, #20) | draft `INSDC-004` | A threshold is policy — ENA's shipped engine enforces 25 aa for the same rule (tool evidence below) — and "complete" depends on the partial marker; its table 2e exception ("evidence or inference must be provided", p. 4) is Feature Table vocabulary. |
 | `b.v.2` (p. 2) | "Complete tRNA features must be between 50 and 150 bps long" | **profile** (INSDC/NCBI, #20) | draft `INSDC-005` | A numeric range with no exception at all is repository policy; ranges differ between repositories and callers, and "complete" is marker-dependent. |
 | `b.v.3` (p. 2) | "Introns must be at least 10 bps long" | **profile** (INSDC/NCBI, #20) | draft `INSDC-006` | Threshold policy whose four table 2e exceptions (p. 4) are all Feature Table vocabulary: `artificial_location` values, transcript or proteomic data, ribosomal slippage. |
-| `b.vi.4` (p. 2) | "Coding regions with a phase ≠ 0 must be declared as partial" | **biology**, warning | [BIO-013](rules.md#bio-013), planned | It reads the GFF3 phase column — which GFF3 does define — against the CDS's 5'-most segment, and is the mirror of the exemption BIO-006 already grants; blocked on the partiality representation, with no table 2e exception. |
+| `b.vi.4` (p. 2) | "Coding regions with a phase ≠ 0 must be declared as partial" | **profile** (INSDC/NCBI, #20); blocked | draft `INSDC-016` | It reads the GFF3 phase column — which GFF3 does define — against the CDS's 5'-most segment, and is the mirror of the exemption BIO-006 already grants; blocked on the partiality representation, with no table 2e exception. |
 | `b.vi.7` (p. 2) | "Product or translation must not be provided for a coding region with any pseudo parent features" | **profile** (INSDC/NCBI, #20); blocked | draft `INSDC-007`; needs [question 20](questions-for-SO.md) | `product`, `translation` and `pseudo` are none of them GFF3 1.26 attributes and "pseudo parent" has no agreed GFF3 representation, so a core rule would have to invent both. |
 | `b.vii.1` (p. 2) | "In GFF3 format, this is indicated by the required `Parent=` attribute on the CDS feature" | **profile** (INSDC/NCBI, #20) | draft `INSDC-008` | GFF3 makes `Parent` optional for a CDS (ID is required only for features with children or spanning several lines), so "required" is submission policy; the community-profile layer already carries this shape as `AGB-007`. |
 | `b.vii.2` (p. 2) | "In feature table format, this is indicated by a `/transcript_id` qualifier … Transcript_id values must be unique within the full genome annotation" | **covered / out of scope** | [GFF-STR-001](rules.md#gff-str-001) (implemented); nothing new | GFF3's analogue is file-wide ID uniqueness, which GFF-STR-001 already enforces; "within the full genome annotation" spans several files and this validator is single-file by design, so the cross-file half is out of scope rather than a missing rule. |
@@ -121,12 +134,11 @@ in the same place.
 | `c.i.1` (p. 3) | "Features can only be labelled partial if partiality is abutting a gap or the end of the sequence (within 2 bases to allow for non-complete codons…)" | **profile**, needs `--genome` | draft `INSDC-012` | Source-dependent and sequence-dependent: it needs a prokaryote declaration, the partial marker, and the assembly's gaps, which only the `--genome` reference carries. |
 | `c.ii` (p. 3) | "Use of `artificial_location` (either low-quality sequence region or heterogeneous population sequenced) must be limited to genome-scale annotation" | **profile** (vocabulary) + **out of scope** (the limit) | draft `INSDC-013` and guidance | The two-value vocabulary of an INSDC qualifier is profile-checkable; that its use is "limited to genome-scale annotation" compares the file with a submission scope no GFF3 file expresses, exactly the reasoning that puts row AN.b.viii of the coverage matrix out of scope. |
 
-Summary: **4 catalogue entries added** (GFF-STR-014 and GFF-STR-015 at core,
-BIO-012 and BIO-013 at biology); **13 rule numbers proposed for the INSDC/NCBI
-profile** under #20, drafted below; **1 already covered** (b.vii.2 by
-GFF-STR-001, in its GFF3 reading); **3 out-of-scope halves** (b.vii.2 cross-file,
-b.ix.2 registry-assigned prefixes, c.ii genome-scale limit); **2 rows blocked on
-SO input** (b.iii.5 and b.vi.7 — questions 19 and 20).
+Summary: **1 provisional catalogue candidate** (GFF-STR-015 at core);
+**16 draft INSDC/NCBI profile candidates** under #20; **1 already covered**
+(b.vii.2 by GFF-STR-001 in its GFF3 reading). Cross-file uniqueness, registry
+assignment and the genome-scale limit remain outside this single-file validator.
+Partiality and pseudo-parent candidates await questions 19/20 and the INSDC update.
 
 ## Cross-reference: what the INSDC tools themselves do
 
@@ -473,20 +485,132 @@ follows the existing workflow — `case(...)` in the generator with status
 | `c.ii` ("limited to genome-scale annotation") | Submission scope is not carried by a GFF3 file; the same reasoning the coverage matrix applies to row AN.b.viii. |
 | `b.vi.6` (product names follow the international protein nomenclature guide) | Not machine-checkable from text; the pattern for guidance rows. #27 does not list it, and it is named here only so the b.vi family is fully dispositioned. |
 
+## Additional draft profile candidates (review follow-up)
+
+These replace the former proposed catalogue IDs GFF-STR-014, BIO-012 and
+BIO-013. They are documentation-only drafts for #20; no profile is shipped and
+no GFF3 validity requirement is added. Levels and exception markers need review.
+
+```yaml
+- id: INSDC-014
+  level: info
+  title: Segments of one feature are given in 5' to 3' order
+  description: >-
+    The lines sharing one ID normally appear in transcript order: ascending
+    start on the + strand, descending on the -. GFF3 1.26 does not require an
+    order, so this is reported as information; INSDC submission requires it
+    (rule b.iii.4).
+  reference: {anchor: "", section: "b.iii.4 Feature location (p. 1)"}
+  example: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1\nctg1\t.\tCDS\t61\t90\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t1\t30\t.\t+\t0\tID=c1;Parent=t1"
+  valid: "ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1\nctg1\t.\tCDS\t1\t30\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t61\t90\t.\t+\t0\tID=c1;Parent=t1"
+  fix: None needed for validity. Listing the segments in transcript order keeps readers that take the order from the file in agreement with readers that sort by coordinate.
+  status: planned
+  notes: >-
+    Proposed placement of INSDC Annotation Minimum Specification v1.0 b.iii.4
+    ("The order of intervals comprising a feature's location must be provided
+    in order on the same strand (ascending order on the + strand, and
+    descending order on the - strand)", p. 1 of the PDF at insdc/minimum-
+    specifcations commit 41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in
+    #27. GFF3 1.26 fixes no line order: the ID column only says that all lines
+    sharing an ID "collectively represent a single feature", so readers
+    diverge - GenomeTools sorts (gt gff3 -sort) and BIO-004 orders a CDS by
+    start on + and by end on -, while INSDC reads the file's order. Kept as a
+    draft profile candidate because GFF3 does not require line order; its
+    profile severity remains for review under #20. Table 2e (p. 4
+    at this pin) allows two exceptions: trans-splicing, and "Use of 'order'
+    instead of 'join'"; GFF3 has no order operator, so the second cannot be
+    expressed by a GFF3 submitter and cannot be told apart from an accident
+    here. The level and the exemption marker follow from question 8 (what the
+    lines of one feature must share); not implemented, no fixture yet.
+
+- id: INSDC-015
+  level: warning
+  title: A CDS shares the internal boundaries of its transcript
+  description: >-
+    When a CDS and an mRNA are paired (the CDS names the mRNA in Parent), every
+    internal boundary of the CDS is also a boundary of the joined mRNA
+    location, and the CDS lies within it. A CDS that stops or starts inside an
+    exon of its own transcript describes a protein the transcript does not
+    carry.
+  reference: {anchor: "", section: "b.iii.6 Feature location (p. 1)"}
+  example: "ctg1\t.\tmRNA\t1\t500\t.\t+\t.\tID=t1\nctg1\t.\texon\t1\t100\t.\t+\t.\tID=e1;Parent=t1\nctg1\t.\texon\t201\t300\t.\t+\t.\tID=e2;Parent=t1\nctg1\t.\texon\t401\t500\t.\t+\t.\tID=e3;Parent=t1\nctg1\t.\tCDS\t1\t100\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t250\t300\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t401\t500\t.\t+\t0\tID=c1;Parent=t1"
+  valid: "ctg1\t.\tmRNA\t1\t500\t.\t+\t.\tID=t1\nctg1\t.\texon\t1\t100\t.\t+\t.\tID=e1;Parent=t1\nctg1\t.\texon\t201\t300\t.\t+\t.\tID=e2;Parent=t1\nctg1\t.\texon\t401\t500\t.\t+\t.\tID=e3;Parent=t1\nctg1\t.\tCDS\t1\t100\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t201\t300\t.\t+\t0\tID=c1;Parent=t1\nctg1\t.\tCDS\t401\t500\t.\t+\t0\tID=c1;Parent=t1"
+  fix: Move the CDS boundary onto the exon boundary of its transcript, or give the CDS the transcript whose exons it follows.
+  status: planned
+  notes: >-
+    Proposed placement of INSDC Annotation Minimum Specification v1.0 b.iii.6
+    ("Explicitly paired CDS and mRNA features (either by a Parent relationship
+    in GFF3 or a common transcript_id in feature table format) must have
+    locations that are compatible (contained within and share internal interval
+    boundaries denoted by the joined mRNA feature location)", p. 1 of the PDF at
+    insdc/minimum-specifcations commit
+    41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in #27. It complements
+    BIO-005, which checks only that each CDS segment lies within an exon of its
+    transcript: containment there, shared boundaries here. Like BIO-005 it needs
+    no genome sequence, only the coordinates, but belongs in a repository profile because GFF3 does not require it. GFF3 1.26 gives no rule here (the canonical gene shows the
+    shape but does not require it), so it is a profile candidate. The pairing is the GFF3
+    Parent relationship; the feature-table transcript_id that b.iii.6 also names
+    is not a GFF3 reserved tag, so a transcript_id-only pairing is out of this
+    catalogue's reach (it is a profile question, docs/insdc-rule-placement.md).
+    The asterisk on b.iii.6 points at table 2e (p. 4 at this pin), which allows
+    one exception: "Where coding feature interval boundaries are not also
+    represented in the mRNA feature location - ribosomal slippage". A slippage
+    is recognised the way BIO-006 and BIO-008 recognise recoding (a recoded_codon
+    SO:0000145 or an is_a subtype of it under the CDS, or the legacy
+    transl_except), so it is exempt only when the SO layer can see it; the
+    GFF3-specification's own programmed-frameshift example (mRNA tagged
+    Ontology_term=SO:1000069, obsolete in the pinned release, and a CDS whose
+    second segment restarts at phase 0) is the shape to test against.
+    Trans-splicing is not an exception to b.iii.6. Not implemented, no fixture
+    yet.
+
+- id: INSDC-016
+  level: warning
+  title: A CDS that starts inside a codon is declared partial
+  description: >-
+    The 5'-most segment of a CDS with phase 1 or 2 begins in the middle of a
+    codon, so the coding region is incomplete at that end. INSDC requires such a
+    coding region to be declared partial.
+  reference: {anchor: "", section: "b.vi.4 Coding regions (p. 2)"}
+  example: "ctg1\t.\tmRNA\t1\t200\t.\t+\t.\tID=t1\nctg1\t.\tCDS\t1\t199\t.\t+\t1\tID=c1;Parent=t1"
+  valid: "ctg1\t.\tmRNA\t1\t200\t.\t+\t.\tID=t1\nctg1\t.\tCDS\t1\t199\t.\t+\t1\tID=c1;Parent=t1;partial=start"
+  fix: Declare the CDS partial at that end (partial=start; the legacy start_range, and on a minus-strand CDS the higher coordinate is the 5' end), or correct the phase.
+  status: planned
+  notes: >-
+    Proposed placement of INSDC Annotation Minimum Specification v1.0 b.vi.4
+    ("Coding regions with a phase != 0 must be declared as partial", p. 2 of the
+    PDF at insdc/minimum-specifcations commit
+    41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in #27. Read as applying
+    to the CDS's 5' end: an internal segment with phase 1 or 2 is the normal
+    continuation of a codon split across a splice junction (the canonical gene's
+    cds00003 has phase 1 on its second and third segments), and BIO-004 already
+    computes the phases along the segments in 5' to 3' order. The rule is the
+    mirror of the exemption BIO-006 grants ("a CDS whose first segment has phase
+    1 or 2 starts inside a codon by definition and is not judged"): what BIO-006
+    excuses, b.vi.4 asks to be said out loud. It is blocked on how partiality is
+    written in GFF3 - question 17 and the new question 19 - because there is no
+    GFF3 1.26 partial marker to require; the same answer settles whether the
+    profile vocabulary can express it (#20). b.vi.4 carries no
+    asterisk, so table 2e (pp. 3-4 at this pin) gives no biological exception:
+    the slippage, trans-splicing, low-quality-region and heterogeneous-
+    population exceptions are listed there for b.iii.2, b.iii.3, b.iii.4,
+    b.iii.6, b.iv.1, b.v.1, b.v.3, b.vi.9, c.i.1, c.i.2, d.ii, d.iv and d.v, not
+    for b.vi.4. A 5' partial marker exempt it, and a start_range/end_range file
+    is read as BIO-006 reads it until the INSDC draft fixes the vocabulary. Not
+    implemented, no fixture yet.
+```
+
 ## Review items for the maintainers
 
-1. **GFF-STR-014's level.** Is unsorted segment order core *info* (as proposed)
-   or an INSDC profile *warning*? For core: BIO-004 and the phase column already
-   read the file's order. Against: GFF3 never requires it, and GenomeTools sorts
-   as a matter of course.
-2. **GFF-STR-015 and BIO-012 exemptions.** Both hinge on recognising ribosomal
+1. **INSDC-014's profile level.** Segment order is submission policy, not a
+   GFF3 core requirement. Confirm its profile severity after the INSDC update.
+2. **GFF-STR-015 and INSDC-015 exemptions.** Both hinge on recognising ribosomal
    slippage. Is `recoded_codon` plus the legacy `transl_except` (the question 17
    convention) the marker, and may the rules warn when it is absent — as BIO-008
    does today for unmarked recoding — or must they stay silent until SO answers?
-3. **BIO-012's layer.** Proposed at biology beside BIO-005; neither needs the
-   sequence. Move BIO-005 and BIO-012 to structure in one labelled change, or
-   keep the current arrangement?
-4. **BIO-013's reading.** Confirm that b.vi.4 applies to the CDS's 5'-most
+3. **INSDC-015's profile placement.** Shared internal boundaries are not a
+   GFF3 requirement. The existing BIO-005 containment check is unchanged.
+4. **INSDC-016's reading.** Confirm that b.vi.4 applies to the CDS's 5'-most
    segment only: an internal segment with phase 1 or 2 is the normal
    continuation of a codon split across a junction, and the specification's own
    canonical gene (cds00003) has phase 1 on its second and third segments.
@@ -502,7 +626,7 @@ follows the existing workflow — `case(...)` in the generator with status
    no header change follows from this work.
 7. **SO answers needed** for [question 19](questions-for-SO.md) (partiality in
    GFF3) and [question 20](questions-for-SO.md) (pseudo parents) before
-   INSDC-001, INSDC-004, INSDC-005, INSDC-007, INSDC-012 and BIO-013 can leave
+   INSDC-001, INSDC-004, INSDC-005, INSDC-007, INSDC-012 and INSDC-016 can leave
    `planned`.
 8. **Two anomalies to report upstream (via
    [#157](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/157)),**
@@ -541,7 +665,7 @@ follows the existing workflow:
    and record the SO answers against questions 19 and 20 in
    [docs/questions-for-SO.md](questions-for-SO.md) as they arrive.
 
-## Checks run on this branch
+## Initial preparation checks (before review follow-up)
 
 ```text
 python scripts/render_rules.py                                     # wrote the packaged catalogue copy and docs/rules.md
@@ -575,5 +699,5 @@ catalogue-only change, and both pass.
 No engine code, fixture or conformance vector was added. Rule logic waits for the
 placement review
 ([#27](https://github.com/FAIR-bioHeaders/gff3-validator/issues/27): "STOP AND
-WAIT FOR REVIEW of rule placement and unresolved SO semantics"). Nothing was
-pushed, opened or posted from this branch.
+WAIT FOR REVIEW of rule placement and unresolved SO semantics"). The initial preparation did not publish a release or implement a rule.
+Review follow-up checks and commits are recorded on PR #28.
