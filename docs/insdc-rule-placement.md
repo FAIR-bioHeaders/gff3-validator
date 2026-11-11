@@ -574,7 +574,12 @@ no GFF3 validity requirement is added. Levels and exception markers need review.
   reference: {anchor: "", section: "b.vi.4 Coding regions (p. 2)"}
   example: "ctg1\t.\tmRNA\t1\t200\t.\t+\t.\tID=t1\nctg1\t.\tCDS\t1\t199\t.\t+\t1\tID=c1;Parent=t1"
   valid: "ctg1\t.\tmRNA\t1\t200\t.\t+\t.\tID=t1\nctg1\t.\tCDS\t1\t199\t.\t+\t1\tID=c1;Parent=t1;partial=start"
-  fix: Declare the CDS partial at that end (partial=start; the legacy start_range, and on a minus-strand CDS the higher coordinate is the 5' end), or correct the phase.
+  fix: >-
+    Check the phase and whether the CDS is incomplete. Partial-marker guidance
+    remains provisional: start_range/end_range refer to low/high genomic ends;
+    until INSDC settles whether partial=start/end is genomic or 5'/3', follow
+    BIO-006's conservative handling on minus-strand CDSs rather than prescribing
+    one marker for the 5' end.
   status: planned
   notes: >-
     Proposed placement of INSDC Annotation Minimum Specification v1.0 b.vi.4
