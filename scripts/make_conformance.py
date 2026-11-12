@@ -1290,6 +1290,55 @@ case(
     section="Other Syntax: ##FASTA; Columns 4 & 5",
     description="A feature ends at 90 on a 4 bp embedded sequence.",
 )
+case(
+    "str-015-disjunct-segments",
+    "valid",
+    [
+        V,
+        t("ctg1 . mRNA 1 90 . + . ID=t1"),
+        t("ctg1 . CDS 1 30 . + 0 ID=c1;Parent=t1"),
+        t("ctg1 . CDS 31 90 . + 0 ID=c1;Parent=t1"),
+        t("ctg1 . CDS 91 120 . + 0 ID=c1;Parent=t1"),
+    ],
+    section="Column 9: ID (discontinuous features)",
+    description="Three segments of one CDS: coordinates are 1-based and closed, "
+    "so 31 after 30 and 91 after 90 are disjunct regions and nothing is "
+    "reported.",
+)
+case(
+    "str-015-overlapping-segments",
+    "valid",
+    [
+        V,
+        t("ctg1 . mRNA 1 90 . + . ID=t1"),
+        t("ctg1 . CDS 1 60 . + 0 ID=c1;Parent=t1"),
+        t("ctg1 . CDS 41 90 . + 0 ID=c1;Parent=t1"),
+    ],
+    rule="GFF-STR-015",
+    findings=[f("GFF-STR-015", "warning", 4)],
+    status="proposed",
+    open_question="GFF-STR-015",
+    section="Column 9: ID; Summary design objective 6 (disjunct regions)",
+    description="The two segments of one CDS both cover 41..60, so no single "
+    "feature has that location. GFF3 states disjunct regions as a design "
+    "objective and never as a rule: a warning, and the file stays valid.",
+)
+case(
+    "str-015-same-interval-twice",
+    "valid",
+    [
+        V,
+        t("ctg1 . CDS 1 90 . + 0 ID=c1"),
+        t("ctg1 . CDS 1 90 . + 0 ID=c1"),
+    ],
+    rule="GFF-STR-015",
+    findings=[f("GFF-STR-015", "warning", 3)],
+    status="proposed",
+    open_question="GFF-STR-015",
+    section="Column 9: ID; Summary design objective 6 (disjunct regions)",
+    description="One line repeated: the two intervals of the ID are identical, "
+    "which describes one feature twice (an overlap, not a disjunct pair).",
+)
 
 # Sequence Ontology (bundled so.obo data-version 2026-08-07)
 one(

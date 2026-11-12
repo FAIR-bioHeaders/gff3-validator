@@ -390,7 +390,8 @@ class Validator:
     def _directive(self, emit, structure, number, line, version_seen):
         """Handle a "##" line; return a FastaSection if it starts one."""
         if line.rstrip() == "###":
-            structure.resolution_point()
+            for rule_id, at, message in structure.resolution_point():
+                emit(rule_id, message, line=at)
             return None
         name, arguments = split_directive(line)
         if line.startswith("##gff-version"):
