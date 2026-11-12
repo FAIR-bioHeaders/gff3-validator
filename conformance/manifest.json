@@ -67,6 +67,7 @@
     "GFF-STR-009",
     "GFF-STR-010",
     "GFF-STR-011",
+    "GFF-STR-015",
     "GFF-SYN-001",
     "GFF-SYN-002",
     "GFF-SYN-003",
@@ -1319,6 +1320,50 @@
       "section": "Other Syntax: ##FASTA; Columns 4 & 5",
       "status": "spec",
       "description": "A feature ends at 90 on a 4 bp embedded sequence."
+    },
+    {
+      "id": "str-015-disjunct-segments",
+      "file": "valid/str-015-disjunct-segments.gff3",
+      "expected": "valid",
+      "rule": null,
+      "findings": [],
+      "section": "Column 9: ID (discontinuous features)",
+      "status": "spec",
+      "description": "Three segments of one CDS: coordinates are 1-based and closed, so 31 after 30 and 91 after 90 are disjunct regions and nothing is reported."
+    },
+    {
+      "id": "str-015-overlapping-segments",
+      "file": "valid/str-015-overlapping-segments.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-015",
+      "findings": [
+        {
+          "rule": "GFF-STR-015",
+          "level": "warning",
+          "line": 4
+        }
+      ],
+      "section": "Column 9: ID; Summary design objective 6 (disjunct regions)",
+      "status": "proposed",
+      "open_question": "GFF-STR-015",
+      "description": "The two segments of one CDS both cover 41..60, so no single feature has that location. GFF3 states disjunct regions as a design objective and never as a rule: a warning, and the file stays valid."
+    },
+    {
+      "id": "str-015-same-interval-twice",
+      "file": "valid/str-015-same-interval-twice.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-015",
+      "findings": [
+        {
+          "rule": "GFF-STR-015",
+          "level": "warning",
+          "line": 3
+        }
+      ],
+      "section": "Column 9: ID; Summary design objective 6 (disjunct regions)",
+      "status": "proposed",
+      "open_question": "GFF-STR-015",
+      "description": "One line repeated: the two intervals of the ID are identical, which describes one feature twice (an overlap, not a disjunct pair)."
     },
     {
       "id": "so-001-unknown-type",

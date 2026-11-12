@@ -4,8 +4,12 @@ Evidence for
 [#27](https://github.com/FAIR-bioHeaders/gff3-validator/issues/27)
 (INSDC Annotation v1.0 rules missing from the catalogue). Nothing here is
 adopted: the placements below are proposals for maintainer review, and no rule
-logic, fixture or conformance case is implemented. The issue stops at "review of
-rule placement and unresolved SO semantics", so this branch stops there too.
+logic, fixture or conformance case was implemented by the review itself. The
+issue stops at "review of rule placement and unresolved SO semantics", so this
+branch stops there too. **Follow-up (2026-11-12):** the maintainer verdict
+recorded on #27 accepted GFF-STR-015 at core, warning level, and it has since
+been implemented (engine, fixture and conformance cases); the other placements
+below are still documentation only.
 
 Companion documents: the rule catalogue
 ([rules/catalogue.yaml](../rules/catalogue.yaml), rendered as
@@ -21,8 +25,10 @@ thresholds, table 2e exceptions and partial-marker vocabulary when INSDC
 publishes its update. Defer INSDC outreach until that update. Questions 19/20
 remain review questions, not SO decisions.
 
-The catalogue retains only GFF-STR-015 as a planned, pending-SO core candidate,
-with GFF3 as its authority. Segment order, paired internal boundaries and a
+The catalogue retains only GFF-STR-015 as a core candidate, with GFF3 as its
+authority: the verdict of 2026-11-12 accepted it at warning level and it is now
+implemented, though still pending SO. Segment order, paired internal
+boundaries and a
 requirement to declare partiality do not follow from GFF3 1.26 or SO; they are
 draft profile candidates INSDC-014/015/016 below, not catalogue rules.
 
@@ -118,7 +124,7 @@ in the same place.
 | `b.iii.4` (p. 1) | "The order of intervals comprising a feature's location must be provided in order on the same strand (ascending order on the + strand, and descending order on the – strand)" | **profile** (INSDC/NCBI, #20), draft | draft `INSDC-014` | GFF3 fixes no line order, so ordering is submission policy (its two table 2e exceptions, p. 4, are trans-splicing and "use of `order` instead of `join`", and GFF3 has no `order` operator to mark the second). |
 | `b.iii.5` (p. 1) | "Only the start and/or end of a feature may be marked as partial. Internal interval boundaries must not be marked as partial, and the direction of partiality must only indicate the feature is longer, not shorter (i.e., `<100..>200` and not `>100..<200`)" | **profile** (INSDC/NCBI, #20); blocked | draft `INSDC-001`; needs [question 19](questions-for-SO.md) | Partiality is Feature Table location notation and GFF3 1.26 defines no partial marker at all (BIO-006), so there is nothing for a core rule to read until SO settles the representation. |
 | `b.iii.6` (p. 1) | "Explicitly paired CDS and mRNA features (either by a Parent relationship in GFF3 or a common transcript_id in feature table format) must have locations that are compatible (contained within and share internal interval boundaries denoted by the joined mRNA feature location)" | **profile** (INSDC/NCBI, #20), draft | draft `INSDC-015` | It is the other half of BIO-005 — boundary agreement, where BIO-005 has containment — and needs no sequence; table 2e (p. 4) exempts ribosomal slippage, which the catalogue already recognises as `recoded_codon`/`transl_except`. |
-| `b.iv.1` (p. 1) | "Intervals comprising a feature's location must not overlap" | **core** (structure), warning | [GFF-STR-015](rules.md#gff-str-015), planned | The contradiction is inside one feature: GFF3's own design objective is "an explicit convention for features that occupy disjunct regions" (Summary, objective 6) and its ID column requires the lines of one ID to "collectively represent a single feature", yet disjointness is never written as a rule — hence a warning; sorting cannot rescue an overlap, unlike `b.iii.4`. |
+| `b.iv.1` (p. 1) | "Intervals comprising a feature's location must not overlap" | **core** (structure), warning | [GFF-STR-015](rules.md#gff-str-015), implemented (2026-11-12) | The contradiction is inside one feature: GFF3's own design objective is "an explicit convention for features that occupy disjunct regions" (Summary, objective 6) and its ID column requires the lines of one ID to "collectively represent a single feature", yet disjointness is never written as a rule — hence a warning; sorting cannot rescue an overlap, unlike `b.iii.4`. |
 | `b.iv.2` (p. 1) | "Ribosomal RNA features must not overlap CDS features or other rRNAs" | **profile** (INSDC/NCBI, #20) | draft `INSDC-002` | GFF3 lets distinct features overlap freely (the canonical gene's alternative transcripts and the operon example both do); naming the forbidden type pairs is INSDC content policy, not validity. |
 | `b.iv.3` (p. 1) | "tRNA features must not fully overlap (be completely contained) within CDS exons" | **profile** (INSDC/NCBI, #20) | draft `INSDC-003` | Same reasoning; GFF3 not only allows containment between different features, GFF-STR-012 reports a child outside its parent as info only. |
 | `b.v.1` (p. 2) | "Complete coding regions must be at least 30 amino acids long" | **profile** (INSDC/NCBI, #20) | draft `INSDC-004` | A threshold is policy — ENA's shipped engine enforces 25 aa for the same rule (tool evidence below) — and "complete" depends on the partial marker; its table 2e exception ("evidence or inference must be provided", p. 4) is Feature Table vocabulary. |

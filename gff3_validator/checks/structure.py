@@ -1,16 +1,21 @@
 """Structure rules: IDs, Parent and Derives_from references, bounds.
 
-GFF-STR-001 to -011, GFF-DIR-002 and GFF-DIR-003.
+GFF-STR-001 to -011 and GFF-STR-015, GFF-DIR-002 and GFF-DIR-003.
 
 Memory is O(number of distinct IDs) plus O(number of seqids):
 
 - each ID (and each referenced but not yet defined ID) gets an integer index
-  in ``index``; four parallel ``array`` columns hold its first line, its
-  (seqid, type, strand) combination, its first Parent and a hash of its
-  Parent list (about 32 bytes per ID plus the dictionary entry and the ID
-  string itself);
+  in ``index``; six parallel ``array`` columns hold its first line, its
+  (seqid, type, strand) combination, its first Parent, a hash of its Parent
+  list and the interval of its first line (start and end): about 56 bytes per
+  ID plus the dictionary entry and the ID string itself;
 - features with several Parents and features with Derives_from keep the
   extra edges in sparse dictionaries;
+- GFF-STR-015 needs the intervals of the IDs that have more than one: the
+  second interval of one ID and seqid opens a list (three integers per
+  interval) that is judged and dropped at the next ``###`` or the end of the
+  file, so memory is O(interval lines between two ``###``) and a file without
+  ``###`` keeps them all to the end (as the biology rules do);
 - forward references that are not resolved yet are kept per referenced ID
   (first line and count), not per referencing line;
 - per seqid a few extremes (first line, furthest start and end) and at most
@@ -75,6 +80,17 @@ class Structure:
         self.combo = array("q")
         self.parent = array("q")  # first Parent index, -1 for none
         self.parent_hash = array("q")
+        # GFF-STR-015: the interval of the ID's first line, as start and end
+        # (0: the ID is not defined yet; -1: its first line had no usable
+        # interval. GFF-SYN-013 to -015 reject a start below 1 or a start after
+        # its end, so a recorded start is at least 1).
+        self.iv_start = array("q")
+        self.iv_end = array("q")
+        # Later intervals of one (ID, seqid): start, end and line, three
+        # integers per interval; only an ID whose second interval on one seqid
+        # has arrived has an entry, and every entry is judged and dropped at
+        # the next ###.
+        self.intervals: Dict[Tuple[int, str], array] = {}
         self.extra_parents: Dict[int, List[int]] = {}
         self.derives: Dict[int, List[int]] = {}
         # Unresolved references: index -> [Parent line, Parent count,
@@ -89,9 +105,12 @@ class Structure:
 
     # -- directives -----------------------------------------------------
 
-    def resolution_point(self):
-        """A ### line: all forward references seen so far must be resolved."""
+    def resolution_point(self) -> Iterator[Problem]:
+        """A ### line: all forward references seen so far must be resolved,
+        and the interval lists kept so far for GFF-STR-015 are judged and
+        dropped (the first interval of an ID is always remembered)."""
         self.generation += 1
+        yield from self._segments()
 
     def sequence_region(self, line, seqid, start, end) -> Iterator[Problem]:
         known = self.regions.get(seqid)
@@ -116,6 +135,8 @@ class Structure:
             self.combo.append(-1)
             self.parent.append(-1)
             self.parent_hash.append(0)
+            self.iv_start.append(0)
+            self.iv_end.append(0)
         return found
 
     def _reference(self, value, line, derives):
@@ -156,6 +177,10 @@ class Structure:
             self.first_line[node] = line
             self.combo[node] = combo
             self.parent_hash[node] = parent_hash
+            if coordinates is not None and seqid not in UNDEFINED:
+                self.iv_start[node], self.iv_end[node] = coordinates
+            else:
+                self.iv_start[node] = -1
             if parents:
                 self.parent[node] = parents[0]
                 if len(parents) > 1:
@@ -196,6 +221,7 @@ class Structure:
                 line,
                 f"line of ID {show_id(identifier)} has " + " and ".join(changes),
             )
+        self._interval(node, seqid, line, coordinates)
         if parent_hash != self.parent_hash[node]:
             yield (
                 "GFF-STR-003",
@@ -254,6 +280,70 @@ class Structure:
                 if start > high:
                     sequence.more[1] += 1
 
+    def _interval(self, node, seqid, line, coordinates):
+        """GFF-STR-015: one more interval of an ID that is already defined.
+
+        The first interval of an ID is kept in the columns; the second
+        interval of one ID and seqid opens the ID's list, which holds three
+        integers per interval and is judged and dropped by
+        :meth:`_segments`. Lines of one ID on another seqid are reported by
+        GFF-STR-002; their intervals are on a different sequence and so are
+        compared among themselves, in a list of their own.
+        """
+        if coordinates is None or seqid in UNDEFINED:
+            return
+        key = (node, seqid)
+        group = self.intervals.get(key)
+        if group is None:
+            group = self.intervals[key] = array("q")
+            start = self.iv_start[node]
+            if start > 0 and seqid == self.combos[self.combo[node]][0]:
+                group.extend((start, self.iv_end[node], self.first_line[node]))
+        group.extend((coordinates[0], coordinates[1], line))
+
+    def _segments(self) -> Iterator[Problem]:
+        """GFF-STR-015: judge the interval lists kept so far and drop them.
+
+        The intervals of one ID and seqid are put in order of start and each
+        one is compared with the interval that reaches furthest before it: a
+        start at or before the end of that interval is a pair no single
+        feature has, and the two are named in the message. Intervals that only
+        touch (a start one past the end of the previous interval, the disjunct
+        regions GFF3 asks for) are not reported. A warning is given for each
+        later interval of an overlapping run, at its own line, as GFF-STR-001
+        reports one finding per later line.
+        """
+        if not self.intervals:
+            return
+        groups, self.intervals = self.intervals, {}
+        names = None
+        found = []
+        for (node, _), group in groups.items():
+            if len(group) < 6:
+                continue
+            spans = sorted(zip(group[0::3], group[1::3], group[2::3]))
+            furthest = spans[0]
+            for start, end, line in spans[1:]:
+                if start <= furthest[1]:
+                    if names is None:
+                        names = list(self.index)
+                    found.append(
+                        (
+                            line,
+                            (
+                                "GFF-STR-015",
+                                line,
+                                f"segments of ID {show_id(names[node])} overlap: "
+                                f"{start}..{end} on this line and "
+                                f"{furthest[0]}..{furthest[1]} on line {furthest[2]}",
+                            ),
+                        )
+                    )
+                if end > furthest[1]:
+                    furthest = (start, end, line)
+        for _, problem in sorted(found):
+            yield problem
+
     def strand_of(self, identifier):
         """The strand of the first line with ID ``identifier``, if seen yet."""
         node = self.index.get(identifier)
@@ -277,6 +367,7 @@ class Structure:
 
     def finish(self) -> Iterator[Problem]:
         yield from self._unresolved()
+        yield from self._segments()
         names = None
         for rule, edges in (
             ("GFF-STR-006", self._parent_edges),

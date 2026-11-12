@@ -22,11 +22,11 @@ Sources:
 | [GFF-SYN](#gff-syn) Syntax: file, lines and columns 1 to 8 | 20 | 19 | 1 | 9 |
 | [GFF-ATT](#gff-att) Attributes (column 9) | 17 | 15 | 2 | 12 |
 | [GFF-DIR](#gff-dir) Directives | 10 | 10 | 0 | 5 |
-| [GFF-STR](#gff-str) Structure: IDs, references and bounds | 14 | 11 | 3 | 8 |
+| [GFF-STR](#gff-str) Structure: IDs, references and bounds | 14 | 12 | 2 | 8 |
 | [SO](#so) Sequence Ontology | 9 | 8 | 1 | 7 |
 | [BIO](#bio) Biology (optional, with --genome) | 11 | 11 | 0 | 6 |
 | [HDR](#hdr) FHGFF3 header (optional, FAIR-bioHeaders) | 10 | 10 | 0 | 0 |
-| **Total** | 91 | 84 | 7 | 47 |
+| **Total** | 91 | 85 | 6 | 47 |
 
 ## GFF-SYN
 
@@ -1010,7 +1010,7 @@ Structure: IDs, references and bounds
 | [GFF-STR-011](#gff-str-011) | error | implemented | Features fit within the embedded sequence |
 | [GFF-STR-012](#gff-str-012) | info | planned | Child extends beyond its parent |
 | [GFF-STR-013](#gff-str-013) | warning | planned | Parent and child are on the same seqid |
-| [GFF-STR-015](#gff-str-015) | warning | planned | Segments of one feature do not overlap |
+| [GFF-STR-015](#gff-str-015) | warning | implemented | Segments of one feature do not overlap |
 
 ### GFF-STR-001
 
@@ -1285,7 +1285,7 @@ Notes: Not addressed by the specification (trans-splicing across chromosomes exi
 
 **Segments of one feature do not overlap**
 
-- Level: warning; layer: core; status: planned; review: pending-SO; **needs SO input**
+- Level: warning; layer: core; status: implemented; review: pending-SO; **needs SO input**
 - Reference: [Column 9: ID; Summary design objective 6 (disjunct regions)](https://github.com/The-Sequence-Ontology/Specifications/blob/fe73505276dd324bf6a55773f3413fe2bed47af4/gff3.md#column-9-attributes) (gff3)
 
 Two lines sharing one ID cover overlapping coordinates. Lines with one ID are one feature, so an overlapping pair describes a location no single feature has. INSDC submission forbids it (rule b.iv.1).
@@ -1308,7 +1308,7 @@ ctg1→.→CDS→31→90→.→+→0→ID=c1;Parent=t1
 
 Fix: Give the two intervals to one feature without overlap, or separate features with separate IDs.
 
-Notes: Proposed placement of INSDC Annotation Minimum Specification v1.0 b.iv.1 ("Intervals comprising a feature's location must not overlap*", p. 1 of the PDF at insdc/minimum-specifcations commit 41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in #27. Core structure, because the contradiction is inside one feature: the ID column requires the lines of one ID to "collectively represent a single feature", GFF3's stated design objective is "an explicit convention for features that occupy disjunct regions" (Summary, objective 6), and an overlapping join is no location any reader can resolve (sorting does not fix it, unlike draft profile INSDC-014). It needs no genome, and runs with the structure checks. GFF3 1.26 never writes disjointness as a validation rule, hence a warning and not an error until SO answers. The asterisk on b.iv.1 points at table 2e (p. 4 at this pin), which allows one exception: ribosomal slippage. A slippage is marked today as a recoded_codon (SO:0000145) child of the CDS or a stop_codon_read_through (SO:0000883) subtype, the convention of question 17 that BIO-006 and BIO-008 already honour, so the exemption is defined only when the SO layer is on; without it the rule warns, as BIO-008 also does for unmarked recoding. Trans-splicing is NOT an exception to b.iv.1 (table 2e lists it for b.iii.3 and b.iii.4 only). The neighbouring b.iv.2 and b.iv.3 (rRNA not overlapping CDS or rRNA, tRNA not contained in a CDS exon) are not placed here: they compare different features, which GFF3 allows to overlap, and are proposed as INSDC/NCBI profile rules in docs/insdc-rule-placement.md. Not implemented, no fixture yet.
+Notes: Placement of INSDC Annotation Minimum Specification v1.0 b.iv.1 ("Intervals comprising a feature's location must not overlap*", p. 1 of the PDF at insdc/minimum-specifcations commit 41f0dc424748c9f7e50a8b6bda9b888218c4b65e), reviewed in #27; the verdict (core, warning) was recorded there on 2026-11-12. Core structure, because the contradiction is inside one feature: the ID column requires the lines of one ID to "collectively represent a single feature", GFF3's stated design objective is "an explicit convention for features that occupy disjunct regions" (Summary, objective 6), and an overlapping join is no location any reader can resolve (sorting does not fix it, unlike draft profile INSDC-014). It needs no genome, and runs with the structure checks. GFF3 1.26 never writes disjointness as a validation rule, hence a warning and not an error until SO answers. Implemented as a warning: the intervals of one ID on one seqid are put in order of start and each one that begins at or before the end reached so far is reported, at its own line and naming the interval it meets. Coordinates are 1-based and closed, so segments that only touch (1..30 and 31..90, the disjunct regions GFF3 asks for) are not reported, and two lines with the same interval of the same ID are one feature described twice and are. Lines of one ID with another type are two features (GFF-STR-001) and are never compared, and lines on another seqid (GFF-STR-002) are compared only among themselves, since coordinates say nothing across sequences; a line whose start or end is not a usable interval is already an error (GFF-SYN-013 to -015) and is not compared. Intervals are judged at the next ### or the end of the file and the list kept for that is then dropped, as the biology rules do: the first interval of an ID is remembered, so a feature whose lines continue after a ### is still compared with it, while its second and later intervals before the ### are not compared with the lines after it. The asterisk on b.iv.1 points at table 2e (p. 4 at this pin), which allows one exception: ribosomal slippage. A slippage is marked today as a recoded_codon (SO:0000145) child of the CDS or a stop_codon_read_through (SO:0000883) subtype, the convention of question 17 that BIO-006 and BIO-008 already honour, so it can only be recognised when the SO layer is on; this core rule does not read the SO layer and warns either way, as BIO-008 warns for unmarked recoding. Whether a marked slippage may exempt the warning is a profile question, left with the other b.iv.1 exemptions to #20 (docs/insdc-rule-placement.md, review item 2). Trans-splicing is NOT an exception to b.iv.1 (table 2e lists it for b.iii.3 and b.iii.4 only). The neighbouring b.iv.2 and b.iv.3 (rRNA not overlapping CDS or rRNA, tRNA not contained in a CDS exon) are not placed here: they compare different features, which GFF3 allows to overlap, and are proposed as INSDC/NCBI profile rules in docs/insdc-rule-placement.md.
 
 ## SO
 

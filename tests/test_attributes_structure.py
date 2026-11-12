@@ -321,7 +321,13 @@ def test_cycle_through_a_later_line_of_a_discontinuous_feature():
         "ctg1|.|CDS|1|30|.|+|0|ID=b;Parent=a",
         "ctg1|.|mRNA|1|90|.|+|.|ID=a;Parent=b",
     )
-    assert ids(report) == ["GFF-STR-003", "GFF-STR-006", "SO-006"]
+    # the two lines of ID a cover one interval twice: GFF-STR-015 as well.
+    assert ids(report) == [
+        "GFF-STR-003",
+        "GFF-STR-006",
+        "GFF-STR-015",
+        "SO-006",
+    ]
 
 
 def test_long_cycle_has_no_recursion_limit():
@@ -339,6 +345,171 @@ def test_find_cycles_reports_each_cycle():
     graph = {0: [1], 1: [0], 2: [3], 3: [4], 4: [2], 5: [0]}
     cycles = list(find_cycles(6, lambda n: graph[n], iter(range(6))))
     assert sorted(sorted(c) for c in cycles) == [[0, 1], [2, 3, 4]]
+
+
+# -- segment intervals of one ID (GFF-STR-015) -------------------------------
+
+
+def test_overlapping_segments_of_one_id_are_str015():
+    report = run(
+        "ctg1|.|mRNA|1|90|.|+|.|ID=t1",
+        "ctg1|.|CDS|1|60|.|+|0|ID=c1;Parent=t1",
+        "ctg1|.|CDS|41|90|.|+|0|ID=c1;Parent=t1",
+    )
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 4)]
+    assert report.findings[0].message == (
+        'segments of ID "c1" overlap: 41..90 on this line and 1..60 on line 3'
+    )
+
+
+def test_touching_segments_of_one_id_are_valid():
+    # 1-based closed coordinates: 31 after 30 are disjunct regions.
+    report = run(
+        "ctg1|.|CDS|1|30|.|+|0|ID=c1",
+        "ctg1|.|CDS|31|90|.|+|0|ID=c1",
+    )
+    assert ids(report) == []
+
+
+def test_the_same_interval_twice_is_an_overlap():
+    # Two lines of one ID over one interval describe the feature twice.
+    report = run("ctg1|.|CDS|1|90|.|+|0|ID=c1", "ctg1|.|CDS|1|90|.|+|0|ID=c1")
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 3)]
+    assert "1..90 on this line and 1..90 on line 2" in report.findings[0].message
+
+
+@pytest.mark.parametrize(
+    "spans",
+    [
+        ("1|30", "31|90"),  # in order, one base apart
+        ("1|30", "31|90", "91|120"),  # the canonical discontinuous feature
+        ("61|90", "1|30"),  # reverse order: a minus-strand CDS, 5' to 3'
+        ("61|90", "1|30", "31|60"),  # out of order, but disjunct once sorted
+        ("1|90", "101|120"),  # a gap between the segments
+    ],
+)
+def test_disjoint_segments_are_valid(spans):
+    lines = [f"ctg1|.|CDS|{span}|.|+|0|ID=c1" for span in spans]
+    assert ids(run(*lines)) == []
+
+
+@pytest.mark.parametrize(
+    "spans",
+    [
+        ("1|30", "30|90"),  # one base in common: 1-based closed coordinates
+        ("1|30", "20|90"),
+        ("1|90", "20|30"),  # one interval inside the other
+        ("1|30", "1|30"),  # the same interval twice
+    ],
+)
+def test_overlapping_segments_are_warned(spans):
+    lines = [f"ctg1|.|CDS|{span}|.|+|0|ID=c1" for span in spans]
+    report = run(*lines)
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 3)]
+
+
+def test_segments_out_of_order_are_compared_after_sorting():
+    # Intervals are judged in order of start, so a file whose lines are not in
+    # coordinate order is still found; reordering its lines would not help.
+    report = run("ctg1|.|CDS|61|90|.|+|0|ID=c1", "ctg1|.|CDS|41|70|.|+|0|ID=c1")
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 2)]
+    assert "61..90 on this line and 41..70 on line 3" in report.findings[0].message
+
+
+def test_each_redundant_segment_of_a_run_is_reported():
+    report = run(
+        "ctg1|.|CDS|1|90|.|+|0|ID=c1",
+        "ctg1|.|CDS|20|30|.|+|0|ID=c1",
+        "ctg1|.|CDS|40|50|.|+|0|ID=c1",
+    )
+    assert [(f.rule, f.line) for f in report.findings] == [
+        ("GFF-STR-015", 3),
+        ("GFF-STR-015", 4),
+    ]
+    assert all("on line 2" in f.message for f in report.findings)
+
+
+def test_other_features_may_overlap():
+    # Different IDs are different features; GFF3 lets them overlap.
+    report = run(
+        "ctg1|.|mRNA|1|90|.|+|.|ID=t1",
+        "ctg1|.|exon|1|90|.|+|.|ID=e1;Parent=t1",
+        "ctg1|.|CDS|1|90|.|+|0|ID=c1;Parent=t1",
+    )
+    assert ids(report) == []
+
+
+def test_features_without_an_id_are_not_compared():
+    report = run(
+        "ctg1|.|CDS|1|60|.|+|0|Parent=t1",
+        "ctg1|.|CDS|41|90|.|+|0|Parent=t1",
+    )
+    assert "GFF-STR-015" not in ids(report)
+
+
+def test_lines_of_another_type_are_not_compared():
+    # GFF-STR-001 reads these as two features that share an ID, so their
+    # coordinates are not the segments of one feature.
+    report = run("ctg1|.|gene|1|90|.|+|.|ID=x1", "ctg1|.|mRNA|1|90|.|+|.|ID=x1")
+    assert ids(report) == ["GFF-STR-001"]
+
+
+def test_lines_of_another_seqid_are_compared_apart():
+    report = run(
+        "chr1|.|CDS|1|90|.|+|0|ID=c1",
+        "chr2|.|CDS|1|30|.|+|0|ID=c1",
+        "chr2|.|CDS|20|40|.|+|0|ID=c1",
+    )
+    assert [(f.rule, f.line) for f in report.findings] == [
+        ("GFF-STR-002", 3),
+        ("GFF-STR-002", 4),
+        ("GFF-STR-015", 4),
+    ]
+
+
+def test_unusable_coordinates_are_not_compared():
+    # The line is already an error (GFF-SYN-015); its numbers say nothing.
+    report = run("ctg1|.|CDS|90|1|.|+|0|ID=c1", "ctg1|.|CDS|1|90|.|+|0|ID=c1")
+    assert ids(report) == ["GFF-SYN-015"]
+
+
+def test_segments_are_judged_at_the_resolution_point():
+    # The ### reports the overlap there and then, before the rest of the file
+    # can fill the findings cap.
+    report = run(
+        "ctg1|.|CDS|1|60|.|+|0|ID=c1",
+        "ctg1|.|CDS|41|90|.|+|0|ID=c1",
+        "###",
+        *["bad line"] * 5,
+        max_findings=2,
+    )
+    assert [(f.rule, f.line) for f in report.findings] == [
+        ("GFF-STR-015", 3),
+        ("GFF-SYN-003", 5),
+    ]
+    assert report.truncated == 4
+    assert report.counts["warning"] == 1 and report.counts["error"] == 5
+
+
+def test_segments_across_a_resolution_point_are_still_compared():
+    # The first interval of an ID is always remembered, so a feature whose
+    # lines continue after ### is still judged against it.
+    report = run(
+        "ctg1|.|CDS|1|60|.|+|0|ID=c1",
+        "###",
+        "ctg1|.|CDS|41|90|.|+|0|ID=c1",
+    )
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 4)]
+
+
+def test_a_feature_crossing_the_origin_of_a_circle_is_valid():
+    report = run(
+        "##sequence-region J 1 6407",
+        "J|.|region|1|6407|.|+|.|ID=J;Is_circular=true",
+        "J|.|CDS|6006|6407|.|+|0|ID=g1",
+        "J|.|CDS|1|831|.|+|0|ID=g1",
+    )
+    assert ids(report) == []
 
 
 # -- bounds -----------------------------------------------------------------

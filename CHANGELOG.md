@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- GFF-STR-015 (warning, core structure) is implemented: the intervals of one
+  feature ID on one seqid may not overlap. The lines of one ID "collectively
+  represent a single feature" and GFF3's design objective is "an explicit
+  convention for features that occupy disjunct regions" (Column 9: ID; Summary
+  objective 6), so intervals that begin at or before the end reached so far are
+  reported, one finding per later line; segments that only touch (31 after 30)
+  are disjunct and stay silent, and the same interval twice describes one
+  feature twice and is reported. It warns whether or not the SO layer is on:
+  the ribosomal-slippage exception of INSDC b.iv.1 (table 2e) needs the SO
+  vocabulary and is left to the INSDC/NCBI profile (#20). The engine emits it at
+  the next `###` or the end of the file. One test fixture
+  (`invalid/str015_overlapping_segments.gff3`) and three conformance cases
+  (`str-015-disjunct-segments`, `str-015-overlapping-segments`,
+  `str-015-same-interval-twice`); the catalogue is now 85 of 91 implemented.
+  Placement verdict from #27 (2026-11-12).
 - Add a provisional INSDC Annotation v1.0 placement review and SO questions
   19/20. Keep GFF-STR-015 as a planned, pending-SO candidate citing GFF3's ID
   semantics and disjunct-region objective. The other three candidates are
