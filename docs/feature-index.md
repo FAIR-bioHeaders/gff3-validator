@@ -19,8 +19,8 @@ file valid GFF3.
 from gff3_validator import build_feature_index, resolve_feature_id
 
 index = build_feature_index("annotation.gff3")     # path, "-" or a binary stream
-match = index.resolve("gene:My%20gene")            # one K4 predicate
-match = resolve_feature_id("annotation.gff3", "gene:My%20gene")   # both steps
+match = index.resolve("gene:A,B")                 # one K4 predicate
+match = resolve_feature_id("annotation.gff3", "gene:A%2CB")        # both steps
 ```
 
 It reads each feature row and records the facts a pointer target needs:
@@ -93,10 +93,10 @@ Two details of the four scored outcomes:
 ## Percent-decoding: decoded on both sides
 
 GFF3 escapes the characters that would break column 9, so a gene row writes
-`ID=gene:My%20gene` for the identifier `gene:My gene`. An FHGM `featureId` is a
-YAML string, not a column-9 value, and nothing forces its author to repeat the
-file's escaping. The index therefore **percent-decodes both sides and compares
-identifiers**:
+`ID=gene:A%2CB` for the identifier `gene:A,B` (a comma is reserved there and
+must be escaped). An FHGM `featureId` is a YAML string, not a column-9 value, and
+nothing forces its author to repeat the file's escaping. The index therefore
+**percent-decodes both sides and compares identifiers**:
 
 ```python
 decoded_row    = unquote(row["ID"] value as written)     # index key
@@ -106,37 +106,42 @@ decoded_target = unquote(feature_id)                     # lookup
 Three candidate semantics exist, and the choice should be visible:
 
 1. **Raw lookup on both sides** — compare the header string to the column-9
-   bytes. This makes K4 a test of *spelling*, so a correct model record written
-   `featureId: gene:My gene` fails against a correct file that escapes it, and a
-   correct model record written with the escape fails against a file that (in
-   breach of GFF3) writes the space literally.
+   bytes. This makes K4 a test of *spelling*: a correct model record written
+   `featureId: gene:A,B` fails against a correct file that escapes the comma.
 2. **Decode the file side only** — what the FHGM authoring checker does today
    (`unquote_to_bytes` on the row, a raw `featureId.encode()` lookup). It fixes
    half of case 1 and leaves the other half: the identifier is decoded when it
-   comes from the file and left as data when it comes from the header, so the
+   comes from the file and left as written when it comes from the header, so the
    comparison is still a spelling test whenever the header escapes anything.
 3. **Decode both sides** — chosen. Equality is then about the identifier, which
    is what "resolves to" means, and it is symmetric: neither side's serialization
    can decide the verdict.
 
-Cases 2 and 3 coincide on every vector in the FHGM suite as it stands (the
-vectors either escape on neither side or on both), which is exactly why the
-choice had never been forced into the open; it is a decision in principle, so it
-is recorded here and tested explicitly by
-`tests/fixtures/features/percent_encoded_target.gff3` and
-`tests/test_features.py::test_encoded_record_id_matches_literal_row` — a row
-`ID=gene:My%20gene` resolved by the decoded target `gene:My gene`, which outcome
-2 would call `not-found` and outcome 3 calls `found`.
+Cases 2 and 3 coincide on every vector in the FHGM suite as it stands — the
+vectors escape on neither side or on both — which is exactly why the choice was
+never forced into the open. It is a decision in principle, so it is recorded here
+and tested explicitly by
+`tests/fixtures/features/percent_encoded_target.gff3` (a row
+`ID=gene:A%2CB`) resolved by the decoded target `gene:A,B`, in
+`tests/test_features.py::test_encoded_record_id_matches_literal_row`. That test
+asserts the counterfactual as well: `gene:A%2CB` is what the row carries, so
+semantics 2 looking the raw header string up in the file's as-written values finds
+nothing and would report `not-found`, where this index reports `found`.
 
 Two consequences of decoding both sides, both intended:
 
-- Identifiers that differ **only** by escape spelling collapse onto one key
-  (`a%2Fb` and `a/b` are the same identifier), so a layer that carries both now
-  yields `duplicate-row`. Ambiguity surfaces as a scored rejection of the
-  pointer rather than as a silent first match.
-- A malformed escape (`%zz`, `%2`) is left as written by `urllib.parse.unquote`
+- Identifiers that differ **only** by the case of an escape's hex digits collapse
+  onto one key (`gene:C%3BB` and `gene:C%3bB` are the identifier `gene:C;B`), so a
+  layer that carries both now yields `duplicate-row`. Ambiguity surfaces as a
+  scored rejection of the pointer rather than as a silent first match.
+  `tests/fixtures/features/escape_case_collision.gff3` is that file, and note what
+  it is *not*: it is valid GFF3, because one feature may occupy disjunct
+  intervals, so `duplicate-row` is a verdict about the pointer selecting one row,
+  never a restatement of `GFF-STR-001`.
+- A malformed escape (`%2zz`, `%2`) is left as written by `urllib.parse.unquote`
   instead of raising: identifiers are data, and a target that carries the same
-  broken escape matches the row that carries it.
+  broken escape matches the row that carries it
+  (`tests/fixtures/features/invalid_escape.gff3`).
 
 ## What the index explicitly does not do
 
@@ -172,7 +177,7 @@ The same contract is reachable without importing the package:
 
 ```bash
 gff3-validate --list-features annotation.gff3                   # enumerate the layer
-gff3-validate --feature-id 'gene:My%20gene' annotation.gff3      # one K4 predicate
+gff3-validate --feature-id 'gene:A,B' annotation.gff3             # one K4 predicate
 gff3-validate --feature-id gene:MY_GENE --format json annotation.gff3
 ```
 
@@ -204,6 +209,100 @@ The same table, run through the JavaScript resolver, is the agreement table.
 
 ## Cross-implementation agreement
 
-(Added with the implementation: the same fixtures scored by
-`FAIR-bioHeaders-Tools-JavaScript` `src/features.js` on `main` and by
-`gff3_validator.features`, and the disagreements found.)
+Run against `FAIR-bioHeaders-Tools-JavaScript` `src/features.js` as shipped on
+`main` (commit `d8552f6`, blob `5d3ba3d`, SHA-256
+`b99f49dd273e25cf40ff01abc78591552508603a6d39d3be27f70ec1a611969f`), with the K4
+predicate of that library's `src/fhgm.js` applied to the rows its index returns.
+Reproduce it with:
+
+```bash
+poetry run python scripts/feature_index_agreement.py --js ../FAIR-bioHeaders-Tools-JavaScript/src/features.js
+poetry run python scripts/feature_index_agreement.py --js PATH --markdown   # this table
+poetry run python scripts/feature_index_agreement.py                        # this side only, for CI
+```
+
+`scripts/feature_index_agreement.py` only reads the sibling file; it writes
+nothing to it and uses no network. `tests/test_features.py` runs it when
+`GFF3_VALIDATOR_JS_FEATURES` points at a `features.js` and skips with that reason
+otherwise, so CI (which has no sibling checkout) does not silently stop checking
+it. **18 of 21 cases agree.**
+
+| fixture | featureId | this index | `src/features.js` verdict | that verdict in this vocabulary | agreement |
+|---|---|---|---|---|---|
+| `positive.gff3` | `gene:G1` | `found` | pass | `found` | same |
+| `positive.gff3` | `rna:R1` | `non-gene-target` | reject | `non-gene-target` | same |
+| `positive.gff3` | `gene:NOPE` | `not-found` | reject | `not-found` | same |
+| `not_found.gff3` | `gene:G1` | `not-found` | reject | `not-found` | same |
+| `duplicate_row.gff3` | `gene:G1` | `duplicate-row` | reject | `duplicate-row` | same |
+| `non_gene_target.gff3` | `rna:R1` | `non-gene-target` | reject | `non-gene-target` | same |
+| `percent_encoded_target.gff3` | `gene:A%2CB` | `found` | pass | `found` | same |
+| `percent_encoded_target.gff3` | `gene:A,B` | `found` | pass | `found` | same |
+| `malformed_layer.gff3` | `gene:G1` | `malformed-layer` | unchecked | `malformed-layer` | same |
+| `absent_layer.gff3` | `gene:G1` | `absent-layer` | reject | `not-found` | **DIFFERS** |
+| `accession_type.gff3` | `gene:G1` | `found` | pass | `found` | same |
+| `rows_without_id.gff3` | `gene:G1` | `not-found` | reject | `not-found` | same |
+| `escape_case_collision.gff3` | `gene:C%3BB` | `duplicate-row` | reject | `duplicate-row` | same |
+| `escape_case_collision.gff3` | `gene:C;B` | `duplicate-row` | reject | `duplicate-row` | same |
+| `after_fasta.gff3` | `gene:BEFORE` | `found` | pass | `found` | same |
+| `after_fasta.gff3` | `gene:AFTER` | `not-found` | reject | `not-found` | same |
+| `invalid_escape.gff3` | `gene:bad%2zz` | `found` | pass | `found` | same |
+| `implied_fasta.gff3` | `gene:G1` | `malformed-layer` | unchecked | `malformed-layer` | same |
+| `repeated_id_tag.gff3` | `gene:A` | `found` | pass | `found` | same |
+| `repeated_id_tag.gff3` | `gene:B` | `not-found` | pass | `found` | **DIFFERS** |
+| `empty_id.gff3` | *(empty)* | `not-found` | pass | `found` | **DIFFERS** |
+
+### The three disagreements, as findings
+
+Nothing here was bent to match the other side, and nothing there was edited. The
+three differences are reported for the owner of each repository to decide.
+
+1. **`absent_layer.gff3` — a file with no feature rows is a rejection in
+   JavaScript.** `src/features.js` distinguishes a usable layer from an
+   untrustworthy one, and `src/fhgm.js` distinguishes both from a caller that
+   passed no layer at all (`not-checked`). A file that *was* passed and contains
+   no feature rows lands in the usable branch with an empty index, so K4 says
+   `reject`: a header is indicted for a layer nobody could see. This index calls
+   it `absent-layer`, which is not scored. This is the exact collapse the
+   vocabulary exists to prevent, and it is the finding Julia should carry when it
+   retires its `not-supported-yet`: the not-scored state has to be reachable from
+   the file, not only from the caller's options.
+2. **`repeated_id_tag.gff3` — two `ID=` tags on one row.** `src/features.js`
+   collects every `ID=` attribute, so `gene:B` resolves to a gene row and K4
+   passes. This index reads one identifier per row — the first — because that is
+   what the catalogue's own reader does (`parse_attributes`, with `GFF-ATT-004`
+   judging the repetition as an error). A header pointing at the second tag is
+   `not-found` here. Which behaviour a library should have is a real question; it
+   belongs to the FHGM rule text, not to either implementation's convenience.
+3. **`empty_id.gff3` — `ID=` with no value.** `src/features.js` indexes the empty
+   string as an identifier, so a pointer whose `featureId` is empty resolves
+   against it; this index has no empty key, because an attribute with no value
+   names nothing.
+
+The two remaining shapes are **not** comparable case-by-case and are listed here
+rather than in the table:
+
+- **A path that cannot be opened** (missing file, unreadable, truncated stream)
+  is `absent-layer` here. `src/features.js` is handed content, never a path, so
+  the case never reaches it; whoever wraps it owns that state. This is finding 1's
+  general shape: the not-scored outcome has to come from somewhere.
+- **Compressed input.** `src/features.js` refuses bytes that still carry the gzip
+  magic and records it as a layer problem (its stated reason: a gzip stream
+  scanned as text would produce a confidently wrong index). This index reads
+  gzip/BGZF through the validator's own reader, so the same bytes are a usable
+  layer. Both answers decline to guess, which is the property that matters; a
+  consumer delegating to this index gets rows where the local resolver reported a
+  defect, so decompression belongs to whoever calls `src/features.js`.
+- **`escape_case_collision.gff3` is listed twice** because the two spellings are
+  one identifier; both rows and both pointers agree on all three spellings.
+
+The `synthetic` block of `tests/fixtures/features/outcomes.json` records the
+file-less cases (no such path, truncated gzip, empty input) so that a library can
+test them without inventing its own.
+
+## Status of this document
+
+The contract above is implemented in `gff3_validator/features.py` and exposed on
+the CLI as `--list-features` and `--feature-id`. FHGM is a **draft** and is not a
+header type (rule V7): an index that answers K4's predicate does not make the
+model-record rules supported or released anywhere, and nothing in this module is
+wired into the validation report.
