@@ -490,6 +490,10 @@ python scripts/check_conformance.py --gff3-validate gff3-validate          # ful
 python scripts/check_conformance.py --command 'gt gff3validator {file}'    # exit status only
 ```
 
+See [fixture scope](tests/fixtures/README.md) for the historical structural
+header example versus the complete checksummed companion, and how unavailable
+or intentionally disabled optional checks are reported separately from validity.
+
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). The rule catalogue is the source of

@@ -11,11 +11,26 @@ import pytest
 from gff3_validator import header
 
 REAL_SUPPORT = header.toolkit_supports_fhgff3()
+STRUCTURAL_ONLY = (
+    "intentionally disabled by the structural-only pytest fixture; "
+    "FHGFF3 schema/checksum checks were not run (real checks use the headers marker)"
+)
 
 
 def pytest_configure(config):
     config.addinivalue_line(
         "markers", "headers: needs the FAIR-bioHeaders toolkit with FHGFF3 support"
+    )
+
+
+def pytest_report_header(config):
+    return (
+        "FHGFF3: unmarked structural tests intentionally disable header validation; "
+        + (
+            "headers-marked tests use the real toolkit"
+            if REAL_SUPPORT
+            else "headers-marked tests are skipped: toolkit support unavailable"
+        )
     )
 
 
@@ -26,3 +41,4 @@ def _header_support(request, monkeypatch):
             pytest.skip("needs the FAIR-bioHeaders toolkit with FHGFF3 support")
         return
     monkeypatch.setattr(header, "toolkit_supports_fhgff3", lambda: False)
+    monkeypatch.setattr(header, "unavailable_reason", lambda: STRUCTURAL_ONLY)
