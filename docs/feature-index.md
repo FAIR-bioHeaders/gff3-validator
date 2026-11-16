@@ -222,7 +222,13 @@ poetry run python scripts/feature_index_agreement.py                        # th
 ```
 
 `scripts/feature_index_agreement.py` only reads the sibling file; it writes
-nothing to it and uses no network. `tests/test_features.py` runs it when
+nothing to it and uses no network. The copy it was scored against was obtained
+read-only from an existing sibling checkout with `git fetch origin main` and
+`git show origin/main:src/features.js` (the fetch moved that clone's
+`refs/remotes/origin/main`; its working tree, its in-flight branch and its
+uncommitted changes were not touched), and its SHA-256 is printed by the script so
+the table cannot silently drift onto a different file.
+`tests/test_features.py` runs it when
 `GFF3_VALIDATOR_JS_FEATURES` points at a `features.js` and skips with that reason
 otherwise, so CI (which has no sibling checkout) does not silently stop checking
 it. **18 of 21 cases agree.**
