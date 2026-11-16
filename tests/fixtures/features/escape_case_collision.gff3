@@ -1,0 +1,4 @@
+##gff-version 3
+##sequence-region ctg1 1 1000
+ctg1	example	gene	101	200	.	+	.	ID=gene:C%3BB
+ctg1	example	gene	301	400	.	+	.	ID=gene:C%3bB

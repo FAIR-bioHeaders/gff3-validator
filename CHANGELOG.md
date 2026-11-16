@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Feature-layer index for FHGM K4 (#31, `docs/feature-index.md`): a public
+  `gff3_validator.features` module (`build_feature_index`, `resolve_feature_id`,
+  `FeatureIndex.resolve`) and two CLI inspection modes
+  (`--list-features`, `--feature-id`) answer "how many rows carry this local ID,
+  and is exactly one of them a `gene` row" — percent-decoded on both sides —
+  without a validation run. Six outcomes: `found`, `not-found`, `duplicate-row`,
+  `non-gene-target`, `malformed-layer`, `absent-layer`; the last two are never
+  scored as a pass and never scored as a rejection (CLI exit 2, not 0 or 1),
+  because a consumer that cannot see the feature layer must not certify a header.
+  15 fixtures and `tests/fixtures/features/outcomes.json` are the parity artifact
+  other languages are scored against; `scripts/feature_index_agreement.py` runs
+  the same cases through `FAIR-bioHeaders-Tools-JavaScript` `src/features.js`
+  (18/21 agree; the 3 differences are published as findings, not reconciled here).
+  **No rule id is added or changed, no rule's verdict or level moves, no header is
+  parsed and no findings are emitted**: the catalogue is still 85 of 91
+  implemented. Standard library only, offline, and it reads plain, gzip and BGZF
+  input like the rest of the core.
+
 - GFF-STR-015 (warning, core structure) is implemented: the intervals of one
   feature ID on one seqid may not overlap. The lines of one ID "collectively
   represent a single feature" and GFF3's design objective is "an explicit
