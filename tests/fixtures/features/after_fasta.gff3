@@ -1,0 +1,7 @@
+##gff-version 3
+##sequence-region ctg1 1 10
+ctg1	example	gene	1	5	.	+	.	ID=gene:BEFORE
+##FASTA
+>ctg1
+ACGTACGTAC
+ctg1	example	gene	7	10	.	+	.	ID=gene:AFTER

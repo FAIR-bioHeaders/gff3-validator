@@ -157,3 +157,129 @@ def test_version():
     result = run("--version")
     assert result.returncode == 0
     assert result.stdout.strip() == b"0.1.0"
+
+
+# -- the feature-index modes (issue #31, docs/feature-index.md) ------------
+
+FEATURES = FIXTURES / "features"
+
+
+def test_list_features_enumerates_the_layer():
+    result = run("--list-features", FEATURES / "positive.gff3")
+    assert result.returncode == 0, result.stderr
+    text = result.stdout.decode()
+    assert "feature layer indexed" in text
+    assert "feature rows: 2 (with ID: 2, without ID: 0, gene rows: 1)" in text
+    assert "ID=gene:G1" in text and "ID=rna:R1" in text
+
+
+def test_list_features_json_lists_rows_and_problems():
+    result = run(
+        "--format", "json", "--list-features", FEATURES / "malformed_layer.gff3"
+    )
+    assert result.returncode == 2, "a layer that cannot answer has no verdict"
+    data = json.loads(result.stdout)
+    assert data["layer"] == "malformed" and data["usable"] is False
+    assert data["problems"][0].startswith("line 4: a feature row holds nine")
+    assert [row["id"] for row in data["rows"]] == ["gene:G1"]
+
+
+def test_feature_id_found_exits_0():
+    result = run("--feature-id", "gene:G1", FEATURES / "positive.gff3")
+    assert result.returncode == 0, result.stdout
+    assert "-> found" in result.stdout.decode()
+
+
+def test_feature_id_decodes_both_sides():
+    # The row writes ID=gene:A%2CB; the decoded pointer is the same identifier.
+    assert (
+        run(
+            "--feature-id", "gene:A,B", FEATURES / "percent_encoded_target.gff3"
+        ).returncode
+        == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "identifier,fixture",
+    [
+        ("gene:NOPE", "not_found.gff3"),
+        ("gene:G1", "duplicate_row.gff3"),
+        ("rna:R1", "non_gene_target.gff3"),
+    ],
+)
+def test_scored_non_pass_exits_1(identifier, fixture):
+    result = run("--format", "json", "--feature-id", identifier, FEATURES / fixture)
+    assert result.returncode == 1
+    data = json.loads(result.stdout)
+    assert data["scored"] is True and data["passes"] is False
+    assert data["outcome"] in ("not-found", "duplicate-row", "non-gene-target")
+
+
+@pytest.mark.parametrize(
+    "identifier,fixture,outcome",
+    [
+        ("gene:G1", "malformed_layer.gff3", "malformed-layer"),
+        ("gene:G1", "implied_fasta.gff3", "malformed-layer"),
+        ("gene:G1", "absent_layer.gff3", "absent-layer"),
+    ],
+)
+def test_not_scored_outcomes_exit_2_never_0_never_1(identifier, fixture, outcome):
+    result = run("--format", "json", "--feature-id", identifier, FEATURES / fixture)
+    assert result.returncode == 2
+    data = json.loads(result.stdout)
+    assert data["outcome"] == outcome
+    assert data["scored"] is False and data["passes"] is False
+    assert data["rows"] == []
+
+
+def test_feature_id_on_a_missing_file_exits_2_as_absent_layer(tmp_path):
+    result = run("--format", "json", "--feature-id", "gene:G1", tmp_path / "nope.gff3")
+    assert result.returncode == 2, "no layer is neither a pass nor a rejection"
+    data = json.loads(result.stdout)
+    assert data["outcome"] == "absent-layer" and data["scored"] is False
+    assert "cannot open" in data["message"]
+
+
+def test_feature_id_reads_standard_input():
+    result = run(
+        "--format",
+        "json",
+        "--feature-id",
+        "gene:G1",
+        "-",
+        stdin=(FEATURES / "positive.gff3").read_bytes(),
+    )
+    assert result.returncode == 0
+    assert json.loads(result.stdout)["outcome"] == "found"
+
+
+def test_inspection_modes_do_not_validate():
+    # str001_duplicate_id.gff3 is invalid GFF3 (GFF-STR-001); the index answers
+    # about its rows and reports nothing about its validity.
+    invalid = FIXTURES / "invalid" / "str001_duplicate_id.gff3"
+    result = run("--format", "json", "--list-features", invalid)
+    assert result.returncode == 0
+    assert "findings" not in json.loads(result.stdout)
+    assert run(invalid).returncode == 1
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["--list-features", "--feature-id", "x", VALID],
+        ["--list-features", "--genome", "genome.fa", VALID],
+        ["--feature-id", "x", "--profile", "agbiodata", VALID],
+        ["--feature-id", "x", "--require-header", VALID],
+        ["--feature-id", "x", "--no-header", VALID],
+        ["--feature-id", "x", "--so", "so.obo", VALID],
+        ["--format", "sarif", "--feature-id", "x", VALID],
+        ["--format", "html", "--list-features", VALID],
+    ],
+)
+def test_inspection_modes_reject_options_they_do_not_use(args):
+    assert run(*args).returncode == 2
+
+
+def test_feature_id_needs_the_input():
+    assert run("--feature-id", "gene:G1").returncode == 2

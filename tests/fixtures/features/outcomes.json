@@ -1,0 +1,180 @@
+{
+  "about": "Feature-layer index parity artifact (gff3-validator issue #31). Each case is one GFF3 fixture in this directory plus one featureId, and the outcome the K4 predicate must report. The contract is docs/feature-index.md; the vocabulary and the not-scored rule are the parts a consumer must not invent for itself.",
+  "vocabulary": [
+    "found",
+    "not-found",
+    "duplicate-row",
+    "non-gene-target",
+    "malformed-layer",
+    "absent-layer"
+  ],
+  "scored": ["found", "not-found", "duplicate-row", "non-gene-target"],
+  "never_scored": ["malformed-layer", "absent-layer"],
+  "rule": "A case whose outcome is in never_scored answers nothing: a consumer must report K4 as not checked, must not count it as a pass, and must not count it as a rejection.",
+  "predicate": "found means exactly one row of the feature layer carries the percent-decoded featureId (both sides decoded) and that row's column 3 is 'gene' or 'SO:0000704'. The row count is judged before the type.",
+  "other_languages": {
+    "javascript": {
+      "read_from": "FAIR-bioHeaders-Tools-JavaScript src/fhgm.js at origin/main d8552f6 (rules.K4 and records[].featureTarget.verdict)",
+      "found": "pass",
+      "not-found": "reject",
+      "duplicate-row": "reject",
+      "non-gene-target": "reject",
+      "malformed-layer": "unchecked",
+      "absent-layer": "not-checked"
+    }
+  },
+  "cases": [
+    {
+      "fixture": "positive.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "found",
+      "why": "one gene row carries the ID"
+    },
+    {
+      "fixture": "positive.gff3",
+      "feature_id": "rna:R1",
+      "outcome": "non-gene-target",
+      "why": "the only row with that ID is an mRNA row"
+    },
+    {
+      "fixture": "positive.gff3",
+      "feature_id": "gene:NOPE",
+      "outcome": "not-found",
+      "why": "a usable layer with no such row"
+    },
+    {
+      "fixture": "not_found.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "not-found",
+      "why": "the file has one gene row, with another ID"
+    },
+    {
+      "fixture": "duplicate_row.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "duplicate-row",
+      "why": "two rows share the ID; the count is judged before the type, so this is not non-gene-target"
+    },
+    {
+      "fixture": "non_gene_target.gff3",
+      "feature_id": "rna:R1",
+      "outcome": "non-gene-target",
+      "why": "exactly one row, and it is not a gene row"
+    },
+    {
+      "fixture": "percent_encoded_target.gff3",
+      "feature_id": "gene:A%2CB",
+      "outcome": "found",
+      "why": "the target and the row carry the same escape"
+    },
+    {
+      "fixture": "percent_encoded_target.gff3",
+      "feature_id": "gene:A,B",
+      "outcome": "found",
+      "why": "decoded on both sides: the header states the identifier, the row states its column-9 escaping; a raw-featureId lookup would call this not-found"
+    },
+    {
+      "fixture": "malformed_layer.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "malformed-layer",
+      "never_scored": true,
+      "why": "a gene row with this ID is present and would match, but another row is not nine fields, so no count is trustworthy"
+    },
+    {
+      "fixture": "absent_layer.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "absent-layer",
+      "never_scored": true,
+      "why": "directives and comments only: there is no feature layer to resolve against"
+    },
+    {
+      "fixture": "accession_type.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "found",
+      "why": "the gene row is typed SO:0000704, the accession of gene, accepted as a literal"
+    },
+    {
+      "fixture": "rows_without_id.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "not-found",
+      "why": "a layer of rows with no identifiers: not-found, and distinctly not absent-layer"
+    },
+    {
+      "fixture": "escape_case_collision.gff3",
+      "feature_id": "gene:C%3BB",
+      "outcome": "duplicate-row",
+      "why": "the upper-case spelling of the same identifier selects the same two rows"
+    },
+    {
+      "fixture": "escape_case_collision.gff3",
+      "feature_id": "gene:C;B",
+      "outcome": "duplicate-row",
+      "why": "gene:C%3BB and gene:C%3bB are one identifier written twice; decoding collapses them"
+    },
+    {
+      "fixture": "after_fasta.gff3",
+      "feature_id": "gene:BEFORE",
+      "outcome": "found",
+      "why": "the row is above ##FASTA"
+    },
+    {
+      "fixture": "after_fasta.gff3",
+      "feature_id": "gene:AFTER",
+      "outcome": "not-found",
+      "why": "the index stops at ##FASTA; GFF-DIR-004 is the rule that judges a feature line after it"
+    },
+    {
+      "fixture": "invalid_escape.gff3",
+      "feature_id": "gene:bad%2zz",
+      "outcome": "found",
+      "why": "a malformed escape is left as written on both sides: identifiers are data"
+    },
+    {
+      "fixture": "implied_fasta.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "malformed-layer",
+      "never_scored": true,
+      "why": "a FASTA section begun by '>' without ##FASTA puts non-row lines in the layer"
+    },
+    {
+      "fixture": "repeated_id_tag.gff3",
+      "feature_id": "gene:A",
+      "outcome": "found",
+      "why": "one row carries the first ID tag (disagrees with JavaScript: see docs/feature-index.md)"
+    },
+    {
+      "fixture": "repeated_id_tag.gff3",
+      "feature_id": "gene:B",
+      "outcome": "not-found",
+      "why": "the second ID tag on the same row is not an addressable identifier (disagrees with JavaScript: see docs/feature-index.md)"
+    },
+    {
+      "fixture": "empty_id.gff3",
+      "feature_id": "",
+      "outcome": "not-found",
+      "why": "an ID tag with no value is not an identifier (JavaScript indexes it as one: see docs/feature-index.md)"
+    }
+  ],
+  "synthetic": [
+    {
+      "input": "a path that does not exist",
+      "feature_id": "gene:G1",
+      "outcome": "absent-layer",
+      "never_scored": true,
+      "why": "unreadable input is absent, and the reason is recorded; this must not read as not-found"
+    },
+    {
+      "input": "a gzip stream truncated mid-member",
+      "feature_id": "gene:G1",
+      "outcome": "absent-layer",
+      "never_scored": true,
+      "why": "a stream that stops may have lost both rows and defects"
+    },
+    {
+      "input": "an empty input",
+      "feature_id": "gene:G1",
+      "outcome": "absent-layer",
+      "never_scored": true,
+      "why": "no feature rows"
+    }
+  ]
+}

@@ -91,3 +91,23 @@ biology/bio008_internal_stop.gff3: [BIO-008]
 biology/bio009_length_not_multiple_of_three.gff3: [BIO-009]
 biology/bio010_strand_mismatch.gff3: [BIO-010]
 biology/bio011_cds_without_strand.gff3: [BIO-011]
+# The feature-index fixtures (issue #31, docs/feature-index.md). They are inputs
+# to gff3_validator.features, which reports no findings: the ids listed here are
+# what the catalogue makes of the file, recorded so that adding the index is
+# provably not what changed a verdict. Several of these files are deliberately
+# broken GFF3, because a broken layer is one of the outcomes.
+features/absent_layer.gff3: []
+features/accession_type.gff3: []
+features/after_fasta.gff3: [GFF-DIR-004]
+features/duplicate_row.gff3: [GFF-STR-001]
+features/empty_id.gff3: []
+features/escape_case_collision.gff3: []
+features/implied_fasta.gff3: [GFF-DIR-005]
+features/invalid_escape.gff3: [GFF-SYN-008]
+features/malformed_layer.gff3: [GFF-SYN-003]
+features/non_gene_target.gff3: []
+features/not_found.gff3: []
+features/percent_encoded_target.gff3: []
+features/positive.gff3: []
+features/repeated_id_tag.gff3: [GFF-ATT-004]
+features/rows_without_id.gff3: []
