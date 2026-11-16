@@ -67,6 +67,14 @@ def check(command, mode):
                 raise ValueError(
                     f"{name}: expected {sorted(expected)} / exit {code}, got {sorted(hdr)} / exit {result.returncode}"
                 )
+            if report.get("valid") != (code == 0):
+                raise ValueError(
+                    f"{name}: JSON validity disagrees with the expected exit"
+                )
+            if mode == "checked" and name == "supported-v0.4.0" and notes:
+                raise ValueError(
+                    f"{name}: companion header checks were not performed: {notes}"
+                )
             if skip or mode == "unavailable":
                 if not notes:
                     raise ValueError(

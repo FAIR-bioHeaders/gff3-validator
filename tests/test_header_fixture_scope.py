@@ -78,9 +78,40 @@ def test_installed_probe_refuses_a_silent_unperformed_header_check(monkeypatch):
     spec.loader.exec_module(checker)
 
     def silent(*args, **kwargs):
-        report = {"findings": [{"rule": "HDR-002"}], "skipped": []}
+        report = {"valid": True, "findings": [{"rule": "HDR-002"}], "skipped": []}
         return subprocess.CompletedProcess(args, 0, json.dumps(report), "")
 
     monkeypatch.setattr(checker.subprocess, "run", silent)
     with pytest.raises(ValueError, match="unperformed header checks have no reason"):
         checker.check(["unused-command"], "unavailable")
+
+
+def test_installed_probe_refuses_unperformed_companion(monkeypatch):
+    import importlib.util
+    import json
+    import subprocess
+
+    spec = importlib.util.spec_from_file_location(
+        "check_header_fixtures", ROOT / "scripts/check_header_fixtures.py"
+    )
+    checker = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(checker)
+
+    def unchecked(args, **kwargs):
+        historical = args[-1] == str(HISTORICAL)
+        report = {
+            "valid": not historical,
+            "findings": (
+                [{"rule": r} for r in ("HDR-005", "HDR-007")] if historical else []
+            ),
+            "skipped": (
+                [] if historical else [{"layer": "fhgff3", "reason": "disabled"}]
+            ),
+        }
+        return subprocess.CompletedProcess(
+            args, int(historical), json.dumps(report), ""
+        )
+
+    monkeypatch.setattr(checker.subprocess, "run", unchecked)
+    with pytest.raises(ValueError, match="companion header checks were not performed"):
+        checker.check(["unused-command"], "checked")
