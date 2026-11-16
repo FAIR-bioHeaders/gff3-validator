@@ -354,6 +354,42 @@ counts and findings), the HTML report a separate profile section and SARIF a
 tool extension for the profile. A profile can only raise core levels, and a
 profile file given by path cannot load code.
 
+### The feature layer
+
+The rows *below* the header can be enumerated and queried without running a
+validation, so that a header consumer can answer FHGM K4 ("does this `featureId`
+resolve to exactly one local `gene` row?") against one authoritative index
+([docs/feature-index.md](docs/feature-index.md),
+[#31](https://github.com/FAIR-bioHeaders/gff3-validator/issues/31)):
+
+```bash
+gff3-validate --list-features annotation.gff3                 # enumerate the layer
+gff3-validate --feature-id 'gene:A,B' annotation.gff3         # one K4 predicate
+gff3-validate --feature-id gene:G1 --format json annotation.gff3
+```
+
+```python
+from gff3_validator import build_feature_index, resolve_feature_id
+
+resolve_feature_id("annotation.gff3", "gene:A,B").outcome      # found | not-found | ...
+index = build_feature_index("annotation.gff3.gz")
+index.rows[0].type, index.rows[0].id, index.rows[0].parents    # facts, percent-decoded
+```
+
+The outcomes are `found`, `not-found`, `duplicate-row`, `non-gene-target`,
+`malformed-layer` and `absent-layer`. The last two are **never scored**: a layer
+the reader cannot see neither certifies a header nor indicts it, which is why
+they are not folded into `not-found`, and why the CLI exits `2` rather than `0`
+or `1` for them. Identifiers are percent-decoded on both sides, so a header that
+writes the identifier and a row that writes its column-9 escaping still match.
+
+This adds no rule id, emits no findings and parses no header: the FHGFF3 header
+stays the toolkit's, the 91-rule catalogue stays the verdict on validity, and the
+index is offline and standard library only. `FAIR-bioHeaders-Tools-JavaScript`
+and `FAIR-bioHeaders-Tools-Julia` resolve the same
+`tests/fixtures/features/outcomes.json` cases; `scripts/feature_index_agreement.py`
+prints the agreement table and its three open findings.
+
 ## Use it in your browser
 
 <https://fhref.org/gff3-validator/> runs the validator inside the page: the
