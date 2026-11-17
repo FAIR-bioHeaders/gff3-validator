@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Classify the historical `tests/fixtures/valid/fhgff3_header.gff3` as core
+  structure only (#33), preserving its bytes. Contrast it with the existing
+  complete generated FHGFF3 release fixture under real header checks. Make
+  intentional pytest header stubbing explicit in its session header and
+  `Report.skipped`; verify installed core-only and headers-extra wheel modes,
+  with unperformed checks reported as `not-run`. Dependency pins and runtime
+  validity semantics are unchanged.
+
 - Feature-layer index for FHGM K4 (#31, `docs/feature-index.md`): a public
   `gff3_validator.features` module (`build_feature_index`, `resolve_feature_id`,
   `FeatureIndex.resolve`) and two CLI inspection modes

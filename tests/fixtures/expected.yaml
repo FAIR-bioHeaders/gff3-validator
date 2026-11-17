@@ -12,6 +12,8 @@ valid/attributes_and_xrefs.gff3: []
 valid/canonical_gene.gff3: []
 valid/directives.gff3: [GFF-DIR-009, GFF-DIR-010]
 valid/fasta_and_comments.gff3: []
+# Historical core-structure input only; optional header checks are intentionally
+# disabled in this table. This is not a conforming FHGFF3 header; see README.md.
 valid/fhgff3_header.gff3: [HDR-002]
 valid/forward_references.gff3: []
 valid/zero_length_and_circular.gff3: []

@@ -50,6 +50,11 @@ jobs:
           cd /tmp
           /tmp/wheel-check/bin/gff3-validate --version
           /tmp/wheel-check/bin/gff3-validate "$GITHUB_WORKSPACE/tests/fixtures/valid/canonical_gene.gff3"
+          /tmp/wheel-check/bin/python "$GITHUB_WORKSPACE/scripts/check_header_fixtures.py" \
+            --gff3-validate /tmp/wheel-check/bin/gff3-validate --mode unavailable
+          /tmp/wheel-check/bin/python -m pip install "$(find "$GITHUB_WORKSPACE/dist" -maxdepth 1 -name '*.whl' -print -quit)[headers]"
+          /tmp/wheel-check/bin/python "$GITHUB_WORKSPACE/scripts/check_header_fixtures.py" \
+            --gff3-validate /tmp/wheel-check/bin/gff3-validate --mode checked
 
   web:
     # The in-browser page's engine (the wheel in Pyodide, through web/glue.js)
