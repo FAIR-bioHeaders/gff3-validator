@@ -1366,6 +1366,23 @@
       "description": "One line repeated: the two intervals of the ID are identical, which describes one feature twice (an overlap, not a disjunct pair)."
     },
     {
+      "id": "str-015-circular-origin",
+      "file": "valid/str-015-circular-origin.gff3",
+      "expected": "valid",
+      "rule": "GFF-STR-015",
+      "findings": [
+        {
+          "rule": "GFF-STR-015",
+          "level": "warning",
+          "line": 5
+        }
+      ],
+      "section": "Column 9: ID, Is_circular; Summary design objective 6 (disjunct regions)",
+      "status": "proposed",
+      "open_question": "GFF-STR-015",
+      "description": "On the circular 1..1000, 990..1010 runs past the end and continues at 1, covering 990..1000 and 1..10, so it shares 5..10 with the second segment of the same CDS."
+    },
+    {
       "id": "so-001-unknown-type",
       "file": "valid/so-001-unknown-type.gff3",
       "expected": "valid",
