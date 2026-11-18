@@ -54,6 +54,7 @@ class Sequence:
         "max_start",
         "max_start_line",
         "circular",
+        "circle",
         "early",
         "deferred",
         "more",
@@ -64,6 +65,9 @@ class Sequence:
         self.max_end = self.max_start = 0
         self.max_end_line = self.max_start_line = line
         self.circular = False
+        # The interval of the first Is_circular=true line, the sequence's
+        # extent when there is no ##sequence-region for it (GFF-STR-015).
+        self.circle = None
         # Extremes of the features seen before the ##sequence-region line:
         # [min start, line, max end, line, max start, line] (GFF-STR-008).
         self.early = None
@@ -71,6 +75,30 @@ class Sequence:
         # because a later Is_circular=true exempts them.
         self.deferred: List[Tuple[int, int, int]] = []
         self.more = [0, 0]  # not kept: beyond end, starting beyond end
+
+
+def _pieces(start, end, line, circle):
+    """GFF-STR-015: the stretches of sequence one interval covers.
+
+    Each piece is (start, end, line, given start, given end). On a linear
+    sequence an interval is one piece. On a circular sequence of extent
+    ``circle`` an interval that runs past the end continues at the start (990..1010
+    on 1..1000 covers 990..1000 and 1..10), and an interval as long as the
+    sequence covers all of it.
+    """
+    if circle is None:
+        return ((start, end, line, start, end),)
+    low, high = circle
+    length = high - low + 1
+    if length < 1:
+        return ((start, end, line, start, end),)
+    if end - start + 1 >= length:
+        return ((low, high, line, start, end),)
+    first = low + (start - low) % length
+    last = first + (end - start)
+    if last <= high:
+        return ((first, last, line, start, end),)
+    return ((first, high, line, start, end), (low, last - length, line, start, end))
 
 
 class Structure:
@@ -247,6 +275,8 @@ class Structure:
             sequence = self.sequences[seqid] = Sequence(line)
         if circular:
             sequence.circular = True
+            if sequence.circle is None:
+                sequence.circle = (start, end)
         if end > sequence.max_end:
             sequence.max_end, sequence.max_end_line = end, line
         if start > sequence.max_start:
@@ -317,32 +347,53 @@ class Structure:
             return
         groups, self.intervals = self.intervals, {}
         names = None
-        found = []
-        for (node, _), group in groups.items():
+        found = {}
+        for (node, seqid), group in groups.items():
             if len(group) < 6:
                 continue
-            spans = sorted(zip(group[0::3], group[1::3], group[2::3]))
+            circle = self._circle(seqid)
+            spans = sorted(
+                piece
+                for start, end, line in zip(group[0::3], group[1::3], group[2::3])
+                for piece in _pieces(start, end, line, circle)
+            )
             furthest = spans[0]
-            for start, end, line in spans[1:]:
-                if start <= furthest[1]:
+            for piece in spans[1:]:
+                start, end, line = piece[:3]
+                if start <= furthest[1] and line != furthest[2] and line not in found:
                     if names is None:
                         names = list(self.index)
-                    found.append(
-                        (
-                            line,
-                            (
-                                "GFF-STR-015",
-                                line,
-                                f"segments of ID {show_id(names[node])} overlap: "
-                                f"{start}..{end} on this line and "
-                                f"{furthest[0]}..{furthest[1]} on line {furthest[2]}",
-                            ),
+                    shown, other = piece[3:], furthest[3:]
+                    where = ""
+                    if shown != (start, end) or other != furthest[:2]:
+                        where = (
+                            f", across the origin of the circular sequence "
+                            f"{show_id(seqid)} ({circle[0]}..{circle[1]})"
                         )
+                    found[line] = (
+                        "GFF-STR-015",
+                        line,
+                        f"segments of ID {show_id(names[node])} overlap: "
+                        f"{shown[0]}..{shown[1]} on this line and "
+                        f"{other[0]}..{other[1]} on line {furthest[2]}{where}",
                     )
                 if end > furthest[1]:
-                    furthest = (start, end, line)
-        for _, problem in sorted(found):
-            yield problem
+                    furthest = piece
+        for line in sorted(found):
+            yield found[line]
+
+    def _circle(self, seqid):
+        """The extent (start, end) of ``seqid`` if it is circular, else None.
+
+        A sequence is circular once a line on it has Is_circular=true; its
+        extent is its ##sequence-region, or without one the interval of that
+        Is_circular line (the region feature that describes the molecule).
+        """
+        sequence = self.sequences.get(seqid)
+        if sequence is None or not sequence.circular:
+            return None
+        region = self.regions.get(seqid)
+        return region[:2] if region is not None else sequence.circle
 
     def strand_of(self, identifier):
         """The strand of the first line with ID ``identifier``, if seen yet."""

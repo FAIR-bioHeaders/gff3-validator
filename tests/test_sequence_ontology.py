@@ -104,6 +104,13 @@ def test_derived_file_is_deterministic():
     assert derived_bytes(SO.terms) == data.read_bytes()
 
 
+def test_derived_gzip_header_is_host_independent():
+    # mtime 0, XFL 2 (level 9) and OS 255 ("unknown") on every Python version;
+    # Python 3.12's gzip.compress writes the host OS (3 on Unix) by itself.
+    header = derived_bytes({"SO:0000110": {"name": "sequence_feature"}})[:10]
+    assert header == b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff"
+
+
 def test_well_known_terms():
     for name, accession in (
         ("gene", "SO:0000704"),

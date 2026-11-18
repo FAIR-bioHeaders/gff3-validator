@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- GFF-STR-015 now handles circular sequences. On a sequence with
+  `Is_circular=true`, an interval that runs past the end continues at the
+  start. The sequence extent is its `##sequence-region` or, if there is none,
+  the `Is_circular` line's interval. So on a circular 1..1000, CDS segments
+  990..1010 and 5..20 of one ID overlap at 5..10 and now warn. Before this
+  they were silent. The message says when an overlap crosses the origin.
+  Linear sequences are unchanged.
+- The `str-015-disjunct-segments` conformance case no longer has a CDS
+  (91..120) outside its parent mRNA: the mRNA now ends at 120. New case
+  `str-015-circular-origin`.
+- INSDC Annotation v1.0 b.vii.2 is reclassified as out of scope (Feature
+  Table only) in `docs/insdc-rule-placement.md` and the GFF-STR-001 note.
+  Both previously said GFF-STR-001 covers it, which is wrong: GFF-STR-001
+  only reports an ID reused with a different type (#27).
+- `derived_bytes` writes the gzip header OS byte as 255 explicitly. This
+  makes `data/so.json.gz` byte-identical on Python 3.12, which writes the
+  host value 3, so `test_derived_file_is_deterministic` passes there. CI
+  adds Python 3.12. The committed file is unchanged.
+
 - Classify the historical `tests/fixtures/valid/fhgff3_header.gff3` as core
   structure only (#33), preserving its bytes. Contrast it with the existing
   complete generated FHGFF3 release fixture under real header checks. Make

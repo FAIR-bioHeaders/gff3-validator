@@ -512,6 +512,74 @@ def test_a_feature_crossing_the_origin_of_a_circle_is_valid():
     assert ids(report) == []
 
 
+CIRCLE = ("##sequence-region c 1 1000", "c|.|region|1|1000|.|+|.|ID=r;Is_circular=true")
+
+
+def test_segments_overlapping_across_the_origin_of_a_circle_are_warned():
+    # 990..1010 on a circular 1..1000 covers 990..1000 and then 1..10, so it
+    # shares 5..10 with the next segment.
+    report = run(
+        *CIRCLE,
+        "c|.|CDS|990|1010|.|+|0|ID=c1",
+        "c|.|CDS|5|20|.|+|0|ID=c1",
+    )
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 5)]
+    assert report.findings[0].message == (
+        'segments of ID "c1" overlap: 5..20 on this line and 990..1010 on line '
+        '4, across the origin of the circular sequence "c" (1..1000)'
+    )
+
+
+def test_circle_extent_comes_from_the_is_circular_line_without_a_region():
+    report = run(
+        "c|.|region|1|1000|.|+|.|ID=r;Is_circular=true",
+        "c|.|CDS|5|20|.|+|0|ID=c1",
+        "c|.|CDS|990|1010|.|+|0|ID=c1",
+    )
+    # 990..1010 wraps to 1..10, which sorts before 5..20: line 3 is reported.
+    assert [(f.rule, f.line) for f in report.findings] == [("GFF-STR-015", 3)]
+
+
+@pytest.mark.parametrize(
+    "spans",
+    [
+        ("990|1010", "11|20"),  # wraps to 1..10, then touches 11
+        ("990|1000", "1|10"),  # written as two segments, one each side
+        ("995|1004", "5|994"),  # the whole circle once, in two disjunct halves
+    ],
+)
+def test_disjoint_segments_across_the_origin_are_valid(spans):
+    lines = [f"c|.|CDS|{span}|.|+|0|ID=c1" for span in spans]
+    assert "GFF-STR-015" not in ids(run(*CIRCLE, *lines))
+
+
+@pytest.mark.parametrize(
+    "spans, line",
+    [
+        # Starts past the end: 5..10 after wrapping, which sorts after 1..10.
+        (("1005|1010", "1|10"), 4),
+        (("1|1200", "500|510"), 5),  # longer than the circle: covers all of it
+        (("995|1004", "4|994"), 5),  # one base (4) covered on both sides
+    ],
+)
+def test_overlapping_segments_across_the_origin_are_warned(spans, line):
+    lines = [f"c|.|CDS|{span}|.|+|0|ID=c1" for span in spans]
+    report = run(*CIRCLE, *lines)
+    found = [(f.rule, f.line) for f in report.findings if f.rule == "GFF-STR-015"]
+    assert found == [("GFF-STR-015", line)]
+
+
+def test_a_linear_sequence_does_not_wrap():
+    # Without Is_circular=true, 990..1010 does not continue at 1; its end past
+    # the region is GFF-STR-008's business, not an overlap.
+    report = run(
+        "##sequence-region c 1 1000",
+        "c|.|CDS|990|1010|.|+|0|ID=c1",
+        "c|.|CDS|5|20|.|+|0|ID=c1",
+    )
+    assert "GFF-STR-015" not in ids(report)
+
+
 # -- bounds -----------------------------------------------------------------
 
 

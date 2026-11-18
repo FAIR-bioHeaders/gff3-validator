@@ -1295,7 +1295,7 @@ case(
     "valid",
     [
         V,
-        t("ctg1 . mRNA 1 90 . + . ID=t1"),
+        t("ctg1 . mRNA 1 120 . + . ID=t1"),
         t("ctg1 . CDS 1 30 . + 0 ID=c1;Parent=t1"),
         t("ctg1 . CDS 31 90 . + 0 ID=c1;Parent=t1"),
         t("ctg1 . CDS 91 120 . + 0 ID=c1;Parent=t1"),
@@ -1338,6 +1338,25 @@ case(
     section="Column 9: ID; Summary design objective 6 (disjunct regions)",
     description="One line repeated: the two intervals of the ID are identical, "
     "which describes one feature twice (an overlap, not a disjunct pair).",
+)
+case(
+    "str-015-circular-origin",
+    "valid",
+    [
+        V,
+        "##sequence-region c 1 1000",
+        t("c . region 1 1000 . + . ID=r;Is_circular=true"),
+        t("c . CDS 990 1010 . + 0 ID=c1"),
+        t("c . CDS 5 20 . + 0 ID=c1"),
+    ],
+    rule="GFF-STR-015",
+    findings=[f("GFF-STR-015", "warning", 5)],
+    status="proposed",
+    open_question="GFF-STR-015",
+    section="Column 9: ID, Is_circular; Summary design objective 6 (disjunct regions)",
+    description="On the circular 1..1000, 990..1010 runs past the end and "
+    "continues at 1, covering 990..1000 and 1..10, so it shares 5..10 with the "
+    "second segment of the same CDS.",
 )
 
 # Sequence Ontology (bundled so.obo data-version 2026-08-07)

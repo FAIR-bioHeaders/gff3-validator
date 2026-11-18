@@ -874,10 +874,10 @@ rules:
     IDs are compared after percent-decoding; confirm. Until SO answers, lines
     sharing an ID with different types are reported (one finding per later
     line); IDs, Parent and Derives_from values are compared after percent-
-    decoding. INSDC Annotation v1.0 b.vii.2 asks for a transcript_id unique
-    "within the full genome annotation": that is this rule within one file, and
-    out of the single-file validator's scope across files (#27,
-    docs/insdc-rule-placement.md).
+    decoding. This rule does not cover INSDC Annotation v1.0 b.vii.2
+    (transcript_id values unique "within the full genome annotation"): that
+    rule is scoped to Feature Table format, and this one only reports an ID
+    reused with a different type (#27, docs/insdc-rule-placement.md).
 
 - id: GFF-STR-002
   level: warning
@@ -1116,7 +1116,12 @@ rules:
     lines on another seqid (GFF-STR-002) are compared only among themselves,
     since coordinates say nothing across sequences; a line whose start or end
     is not a usable interval is already an error (GFF-SYN-013 to -015) and is
-    not compared. Intervals are judged at the next ### or the end of the file
+    not compared. On a circular sequence (a line on it has Is_circular=true)
+    an interval that runs past the end continues at the start, the extent
+    being the sequence's ##sequence-region or, without one, the interval of
+    that Is_circular line: on a circular 1..1000, 990..1010 covers 990..1000
+    and 1..10, so it overlaps 5..20 and touches 11..20. Circularity is read as
+    known when the intervals are judged. Intervals are judged at the next ### or the end of the file
     and the list kept for that is then dropped, as the biology rules do: the
     first interval of an ID is remembered, so a feature whose lines continue
     after a ### is still compared with it, while its second and later

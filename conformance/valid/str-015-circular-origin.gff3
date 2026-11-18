@@ -1,0 +1,5 @@
+##gff-version 3
+##sequence-region c 1 1000
+c	.	region	1	1000	.	+	.	ID=r;Is_circular=true
+c	.	CDS	990	1010	.	+	0	ID=c1
+c	.	CDS	5	20	.	+	0	ID=c1

@@ -133,7 +133,7 @@ in the same place.
 | `b.vi.4` (p. 2) | "Coding regions with a phase ≠ 0 must be declared as partial" | **profile** (INSDC/NCBI, #20); blocked | draft `INSDC-016` | It reads the GFF3 phase column — which GFF3 does define — against the CDS's 5'-most segment, and is the mirror of the exemption BIO-006 already grants; blocked on the partiality representation, with no table 2e exception. |
 | `b.vi.7` (p. 2) | "Product or translation must not be provided for a coding region with any pseudo parent features" | **profile** (INSDC/NCBI, #20); blocked | draft `INSDC-007`; needs [question 20](questions-for-SO.md) | `product`, `translation` and `pseudo` are none of them GFF3 1.26 attributes and "pseudo parent" has no agreed GFF3 representation, so a core rule would have to invent both. |
 | `b.vii.1` (p. 2) | "In GFF3 format, this is indicated by the required `Parent=` attribute on the CDS feature" | **profile** (INSDC/NCBI, #20) | draft `INSDC-008` | GFF3 makes `Parent` optional for a CDS (ID is required only for features with children or spanning several lines), so "required" is submission policy; the community-profile layer already carries this shape as `AGB-007`. |
-| `b.vii.2` (p. 2) | "In feature table format, this is indicated by a `/transcript_id` qualifier … Transcript_id values must be unique within the full genome annotation" | **covered / out of scope** | [GFF-STR-001](rules.md#gff-str-001) (implemented); nothing new | GFF3's analogue is file-wide ID uniqueness, which GFF-STR-001 already enforces; "within the full genome annotation" spans several files and this validator is single-file by design, so the cross-file half is out of scope rather than a missing rule. |
+| `b.vii.2` (p. 2) | "In feature table format, this is indicated by a `/transcript_id` qualifier … Transcript_id values must be unique within the full genome annotation" | **out of scope** (Feature Table only) | nothing; not GFF-STR-001 | The rule is written for Feature Table format ("In feature table format, …") and `/transcript_id` is a Feature Table qualifier with no GFF3 1.26 counterpart. GFF-STR-001 is not an equivalent: it only reports an ID reused with a different type, and lines that share an ID and a type are one discontinuous feature in GFF3, so it does not enforce a unique identifier per transcript. Corrected 2026-11-18; the earlier "covered by GFF-STR-001" reading was wrong. |
 | `b.ix.1` (p. 3) | "Locus tags must be present in eukaryote and prokaryote genome submissions" | **profile** (INSDC/NCBI, #20) | draft `INSDC-009` | `locus_tag` is not a GFF3 attribute and "genome submission" is a scope the file does not state; a profile can require it once the submitter says what the file is. |
 | `b.ix.2` (p. 3) | "Locus tag prefixes must be consistent within a single genome, and use an alphanumeric prefix that is uniquely assigned for the genome. The prefix must be separated from the tag value by an underscore, with exceptions made only for legacy genomes" | **profile** + **guidance** | draft `INSDC-010` | The underscore form and one-prefix-per-file are checkable offline; "uniquely assigned" needs the NCBI registry and the validator makes no network requests, so that half is guidance. |
 | `b.ix.3` (p. 3) | "Each gene feature in a genome must have a unique locus tag" | **profile** (INSDC/NCBI, #20) | draft `INSDC-011` | Uniqueness of an INSDC qualifier among the gene lines of one file is a profile check; the genome-wide half is again outside a single file. |
@@ -141,9 +141,10 @@ in the same place.
 | `c.ii` (p. 3) | "Use of `artificial_location` (either low-quality sequence region or heterogeneous population sequenced) must be limited to genome-scale annotation" | **profile** (vocabulary) + **out of scope** (the limit) | draft `INSDC-013` and guidance | The two-value vocabulary of an INSDC qualifier is profile-checkable; that its use is "limited to genome-scale annotation" compares the file with a submission scope no GFF3 file expresses, exactly the reasoning that puts row AN.b.viii of the coverage matrix out of scope. |
 
 Summary: **1 provisional catalogue candidate** (GFF-STR-015 at core);
-**16 draft INSDC/NCBI profile candidates** under #20; **1 already covered**
-(b.vii.2 by GFF-STR-001 in its GFF3 reading). Cross-file uniqueness, registry
-assignment and the genome-scale limit remain outside this single-file validator.
+**16 draft INSDC/NCBI profile candidates** under #20; **1 out of scope** as
+Feature Table only (b.vii.2, which GFF-STR-001 does not cover). Cross-file
+uniqueness, registry assignment and the genome-scale limit remain outside this
+single-file validator.
 Partiality and pseudo-parent candidates await questions 19/20 and the INSDC update.
 
 ## Cross-reference: what the INSDC tools themselves do
@@ -486,7 +487,7 @@ follows the existing workflow — `case(...)` in the generator with status
 
 | INSDC rule | Why not |
 | --- | --- |
-| `b.vii.2` (genome-wide `transcript_id` uniqueness) | The validator reads one file at a time; GFF3's in-file equivalent is already GFF-STR-001, and `transcript_id` itself is Feature Table vocabulary. |
+| `b.vii.2` (`transcript_id` unique within the full genome annotation) | The rule is scoped to Feature Table format and `transcript_id` is Feature Table vocabulary, not a GFF3 attribute. It has no GFF3 equivalent in the catalogue: GFF-STR-001 only reports an ID reused with a different type. The genome-wide half would also span files, and the validator reads one file at a time. |
 | `b.ix.2` ("uniquely assigned for the genome") | Requires the NCBI locus_tag registry; the validator makes no network requests (AGENTS.md, Security). |
 | `c.ii` ("limited to genome-scale annotation") | Submission scope is not carried by a GFF3 file; the same reasoning the coverage matrix applies to row AN.b.viii. |
 | `b.vi.6` (product names follow the international protein nomenclature guide) | Not machine-checkable from text; the pattern for guidance rows. #27 does not list it, and it is named here only so the b.vi family is fully dispositioned. |

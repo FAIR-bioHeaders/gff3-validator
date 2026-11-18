@@ -145,7 +145,12 @@ def read_obo(path) -> Tuple[Dict[str, str], Dict[str, dict], str]:
 
 
 def derived_bytes(terms: Dict[str, dict]) -> bytes:
-    """The deterministic gzip JSON form of ``terms`` (mtime 0, sorted keys)."""
+    """The deterministic gzip JSON form of ``terms`` (mtime 0, sorted keys).
+
+    The gzip header's OS byte is set to 255 ("unknown") explicitly: depending on
+    the Python version, ``gzip.compress`` writes either 255 or the host's value
+    (3 on Unix, as Python 3.12 does), which would make the bytes host-dependent.
+    """
     compact = {
         identifier: {
             key: terms[identifier][key] for key in FIELDS if key in terms[identifier]
@@ -158,7 +163,11 @@ def derived_bytes(terms: Dict[str, dict]) -> bytes:
         separators=(",", ":"),
         ensure_ascii=False,
     )
-    return gzip.compress(text.encode("utf-8"), compresslevel=9, mtime=0)
+    data = bytearray(gzip.compress(text.encode("utf-8"), compresslevel=9, mtime=0))
+    # No FEXTRA/FNAME/FCOMMENT flags are set, so the header is the fixed ten
+    # bytes and byte 9 is the OS field (RFC 1952, section 2.3).
+    data[9] = 0xFF
+    return bytes(data)
 
 
 # --------------------------------------------------------------------------
