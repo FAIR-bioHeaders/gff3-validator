@@ -20,6 +20,16 @@ gff3-validate --profile my-profile.yaml annotation.gff3   # a profile file
 On the web page, choose the profile under "Profile"; in Galaxy, set the
 "Profile" parameter.
 
+## Project 9 foundation scope
+
+The [November 19, 2026 D11 disposition](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/211#issuecomment-7017854934)
+defers additional repository profiles and external endorsement from the shared
+foundation. The delivered AgBioData mechanism remains explicitly unreviewed.
+The [clause-by-clause #20 disposition](review-packets/repository-profiles.md#foundation-disposition--november-19-2026)
+records delivered evidence and deferred expansion separately. Unanswered SO
+questions and INSDC rule semantics remain open under #18/#19/#27; no deferred
+profile is represented as implemented or compliant.
+
 ## What a profile can do
 
 A profile is a YAML file (`profiles/ID.yaml`, shipped in the package) that

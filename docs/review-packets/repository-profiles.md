@@ -8,6 +8,35 @@ adoption or endorsement — of AgBioData by its working group, or of anything
 by NCBI, Ensembl or the Alliance. Every external citation below was checked
 **on 2026-11-11** and is described only as far as the fetched text supports.
 
+## Foundation disposition — November 19, 2026
+
+The [adopted D11 decision](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/211#issuecomment-7017854934)
+defers optional profile expansion and external endorsement from Project 9's
+foundation requirements. This changes #20's completion boundary; it supplies
+no repository review, SO answer, profile rule or live-service acceptance.
+The earlier research and routing asks below remain historical proposals.
+
+| #20 acceptance clause | Foundation disposition | Evidence / retained boundary |
+| --- | --- | --- |
+| Implement the first AgBioData profile, cited checks and separate reporting | Delivered | `profiles/agbiodata.yaml`, packaged copy, generated documentation and `tests/test_profiles.py`; 13 rules, two raised core levels and explicit source pin. |
+| Obtain actual profile review | Deferred optional endorsement under D11 | Keep the working-group review explicitly absent; no outreach or endorsement is implied. |
+| Develop narrow NCBI/Ensembl/Alliance cases | Deferred optional expansion under D11 | The source research below is preparation, not shipped profiles or tested repository support. |
+| Preserve local/versioned policy and separation from core/biology/header results | Delivered mechanism | Loader constraints, positive/rejection fixtures, raised-level restrictions, not-checked biology and separate JSON/HTML/SARIF/core validity are covered by `tests/test_profiles.py`. Profile compliance never guarantees live-service acceptance. |
+
+This disposition does **not** defer normative questions by calling them optional
+endorsement. The INSDC placements and exceptions remain individually recorded
+in [insdc-rule-placement.md](../insdc-rule-placement.md): GFF-STR-015 is
+implemented; 16 profile candidates remain unimplemented; b.vii.2 is Feature
+Table only and out of scope. Partiality, pseudo-parent and exception
+representation still require the actual answers tracked by
+[#27](https://github.com/FAIR-bioHeaders/gff3-validator/issues/27) and
+[questions 17–20](../questions-for-SO.md).
+Catalogue review, Q13–Q16 and SO-007 remain tracked separately by
+[#18](https://github.com/FAIR-bioHeaders/gff3-validator/issues/18) and
+[#19](https://github.com/FAIR-bioHeaders/gff3-validator/issues/19).
+No INSDC, NCBI, Ensembl or Alliance implementation is supplied by this scope
+disposition. Existing normative dependencies retain their issues.
+
 ## 1. The shipped-profile mechanism (as implemented today)
 
 A profile is `profiles/ID.yaml` (`profile_format: 1`) layered on the core
