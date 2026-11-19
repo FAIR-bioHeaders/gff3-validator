@@ -49,18 +49,20 @@ from gff3_validator.features import build_feature_index  # noqa: E402
 FIXTURES = ROOT / "tests" / "fixtures" / "features"
 CONTRACT = json.loads((FIXTURES / "outcomes.json").read_text(encoding="utf-8"))
 
-# The outcome -> verdict words each implementation reports for it. JavaScript has
-# no file-level "no feature rows" state: src/fhgm.js reaches "not-checked" only
-# when the caller supplies no layer at all, which is why absent_layer.gff3 comes
-# out as "reject" there. See docs/feature-index.md, "Cross-implementation
-# agreement".
+# The outcome -> verdict words each implementation reports for it. In
+# FAIR-bioHeaders-Tools-JavaScript (after PR #21, commit 8fd467dab0e8),
+# indexGff3FeatureRows counts nine-field feature rows (featureRows) independently
+# of ID-carrying rows, and src/fhgm.js maps a readable, trustworthy layer with
+# featureRows === 0 to state: 'none' -> "not-checked" (absent-layer), while
+# rows_without_id (featureRows > 0, rows.length === 0) scores as "reject"
+# (not-found). See docs/feature-index.md, "Cross-implementation agreement".
 JS_VERDICT = {
     "found": "pass",
     "not-found": "reject",
     "duplicate-row": "reject",
     "non-gene-target": "reject",
     "malformed-layer": "unchecked",
-    "absent-layer": "not-checked (only when the caller passes no layer)",
+    "absent-layer": "not-checked",
 }
 
 JS_DRIVER = """
@@ -87,6 +89,8 @@ for (const one of cases) {
   let outcome;
   if (indexed.problems.length > 0) {
     outcome = 'malformed-layer';
+  } else if (indexed.featureRows === 0) {
+    outcome = 'absent-layer';
   } else {
     const wanted = decodeFeatureId(one.feature_id);
     const types = indexed.rows
@@ -102,6 +106,7 @@ for (const one of cases) {
     js_outcome: outcome,
     js_verdict: verdicts[outcome],
     rows_seen: indexed.rows.length,
+    feature_rows: indexed.featureRows,
     problems: indexed.problems.length,
   });
 }

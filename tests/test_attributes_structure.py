@@ -117,8 +117,16 @@ def test_crlf_line_endings_are_not_reported():
     assert ids(validate(io.BytesIO(data))) == []
 
 
-def test_lone_carriage_return_is_a_control_character():
-    report = run("ctg1|.|gene|1|90|.|+|.|ID=g1;Note=a\rb")
+def test_lone_cr_line_endings_split_lines_per_r1():
+    data = b"##gff-version 3\rctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1\r"
+    data += b"ctg1\t.\tmRNA\t1\t90\t.\t+\t.\tID=t1;Parent=g1\r"
+    report = validate(io.BytesIO(data))
+    assert ids(report) == []
+    assert report.lines == 3
+
+
+def test_control_character_inside_a_line_is_reported():
+    report = run("ctg1|.|gene|1|90|.|+|.|ID=g1;Note=a\x07b")
     assert [(f.rule, f.field) for f in report.findings] == [("GFF-SYN-005", 9)]
 
 
