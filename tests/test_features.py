@@ -312,11 +312,21 @@ def test_the_index_stops_at_fasta_and_sees_nothing_after_it():
     assert index.resolve("gene:BEFORE").outcome == OUTCOME_FOUND
 
 
-def test_crlf_line_endings_do_not_change_the_index(tmp_path):
-    text = (FIXTURES / "positive.gff3").read_text(encoding="utf-8")
-    path = tmp_path / "crlf.gff3"
-    path.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
-    assert build_feature_index(path).resolve("gene:G1").outcome == OUTCOME_FOUND
+def test_crlf_cr_and_mixed_line_endings_do_not_change_the_index():
+    baseline = [row.to_dict() for row in index_of("positive.gff3").rows]
+    for name in ("positive_cr.gff3", "positive_crlf.gff3", "positive_mixed.gff3"):
+        index = index_of(name)
+        assert index.state == "indexed" and index.usable
+        assert index.feature_rows == 2 and len(index.rows) == 2
+        assert [row.to_dict() for row in index.rows] == baseline
+        assert index.resolve("gene:G1").outcome == OUTCOME_FOUND
+        assert index.resolve("rna:R1").outcome == OUTCOME_NON_GENE_TARGET
+        assert index.resolve("gene:NOPE").outcome == OUTCOME_NOT_FOUND
+        # Loud-vs-quiet distinction (#38 item 2): a file with rows under CR/CRLF/mixed
+        # must never be confusable with an absent layer, and validating it must pass G1.
+        assert index.resolve("gene:G1").outcome != OUTCOME_ABSENT_LAYER
+        report = validate(FIXTURES / name)
+        assert report.valid and report.lines == 4
 
 
 def test_a_non_string_target_is_a_programming_error_not_an_outcome():
@@ -407,24 +417,11 @@ def test_the_index_never_writes_to_the_input():
     assert path.read_bytes() == before
 
 
-# -- cross-implementation agreement (issue #31, acceptance 4) --------------
+# -- cross-implementation agreement (issue #31, acceptance 4; issue #37) ---
 
-# The three cases where the JavaScript resolver and this index answer differently,
-# published in docs/feature-index.md. They are findings against the other side,
-# not things this implementation bends to match: if the JavaScript repository
-# closes one, this test must be told, and if a fourth appears, it must be read.
-KNOWN_JAVASCRIPT_DIVERGENCES = {
-    # src/features.js has no file-level "there are no rows" state: a header whose
-    # file carries no feature rows is scored "reject" there, which indicts a
-    # header the resolver could not see. This index says absent-layer, not scored.
-    "absent_layer.gff3#gene:G1",
-    # A row with two ID tags: src/features.js indexes both, so gene:B resolves.
-    # This index reads the first tag, which is what GFF-ATT-004 judges.
-    "repeated_id_tag.gff3#gene:B",
-    # ID= with no value: src/features.js indexes the empty string as an
-    # identifier, so the empty pointer resolves. This index has no such key.
-    "empty_id.gff3#",
-}
+# After FAIR-bioHeaders-Tools-JavaScript#21 (8fd467dab0e8) and gff3-validator#38,
+# all 24 fixture cases in outcomes.json agree between this index and src/features.js.
+KNOWN_JAVASCRIPT_DIVERGENCES = set()
 
 AGREEMENT = (
     Path(__file__).resolve().parents[1] / "scripts" / "feature_index_agreement.py"
@@ -439,7 +436,7 @@ JAVASCRIPT = Path(os.environ.get("GFF3_VALIDATOR_JS_FEATURES", "")).expanduser()
 )
 def test_the_javascript_resolver_agrees_except_for_the_published_findings():
     result = subprocess.run(
-        [sys.executable, str(AGREEMENT), "--js", str(JAVASCRIPT), "--json"],
+        [sys.executable, str(AGREEMENT), "--js", str(JAVASCRIPT), "--json", "--strict"],
         capture_output=True,
     )
     assert result.returncode == 0, result.stderr.decode()
@@ -449,11 +446,19 @@ def test_the_javascript_resolver_agrees_except_for_the_published_findings():
         CONTRACT["cases"]
     )
     assert set(report["findings"]) == KNOWN_JAVASCRIPT_DIVERGENCES
-    # The one not-scored outcome the other side models as well as this does: a
-    # layer it cannot trust is "unchecked", never a pass and never a rejection.
+    # Both never-scored outcomes (malformed-layer and absent-layer) are derived from
+    # the two unscoreable layer states on both sides, never a pass or a rejection.
+    derived_never_scored = {
+        row["outcome"]
+        for row in report["rows"]
+        if row["js_verdict"] in ("unchecked", "not-checked")
+    }
+    assert derived_never_scored == set(CONTRACT["never_scored"])
     for row in report["rows"]:
         if row["outcome"] == OUTCOME_MALFORMED_LAYER:
             assert row["js_verdict"] == "unchecked", row
+        elif row["outcome"] == OUTCOME_ABSENT_LAYER:
+            assert row["js_verdict"] == "not-checked", row
         if row["agree"]:
             # Identical outcomes carry identical scoring on both sides.
             assert (row["js_verdict"] == "pass") == (row["outcome"] == OUTCOME_FOUND)

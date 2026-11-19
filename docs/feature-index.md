@@ -210,9 +210,10 @@ The same table, run through the JavaScript resolver, is the agreement table.
 ## Cross-implementation agreement
 
 Run against `FAIR-bioHeaders-Tools-JavaScript` `src/features.js` as shipped on
-`main` (commit `d8552f6`, blob `5d3ba3d`, SHA-256
-`b99f49dd273e25cf40ff01abc78591552508603a6d39d3be27f70ec1a611969f`), with the K4
-predicate of that library's `src/fhgm.js` applied to the rows its index returns.
+`main` (commit `8fd467dab0e8`, merged in PR #21 `a645bb87675e`, blob `23acab24`,
+SHA-256 `5c513a783f41e8834fb4ef009582764bb1117f2c9d9636fd5e8a7ef877620dc9`),
+with the K4 predicate of that library's `src/fhgm.js` applied to the rows its
+index returns.
 Reproduce it with:
 
 ```bash
@@ -231,7 +232,7 @@ the table cannot silently drift onto a different file.
 `tests/test_features.py` runs it when
 `GFF3_VALIDATOR_JS_FEATURES` points at a `features.js` and skips with that reason
 otherwise, so CI (which has no sibling checkout) does not silently stop checking
-it. **18 of 21 cases agree.**
+it. **24 of 24 cases agree.**
 
 | fixture | featureId | this index | `src/features.js` verdict | that verdict in this vocabulary | agreement |
 |---|---|---|---|---|---|
@@ -244,7 +245,7 @@ it. **18 of 21 cases agree.**
 | `percent_encoded_target.gff3` | `gene:A%2CB` | `found` | pass | `found` | same |
 | `percent_encoded_target.gff3` | `gene:A,B` | `found` | pass | `found` | same |
 | `malformed_layer.gff3` | `gene:G1` | `malformed-layer` | unchecked | `malformed-layer` | same |
-| `absent_layer.gff3` | `gene:G1` | `absent-layer` | reject | `not-found` | **DIFFERS** |
+| `absent_layer.gff3` | `gene:G1` | `absent-layer` | not-checked | `absent-layer` | same |
 | `accession_type.gff3` | `gene:G1` | `found` | pass | `found` | same |
 | `rows_without_id.gff3` | `gene:G1` | `not-found` | reject | `not-found` | same |
 | `escape_case_collision.gff3` | `gene:C%3BB` | `duplicate-row` | reject | `duplicate-row` | same |
@@ -254,35 +255,37 @@ it. **18 of 21 cases agree.**
 | `invalid_escape.gff3` | `gene:bad%2zz` | `found` | pass | `found` | same |
 | `implied_fasta.gff3` | `gene:G1` | `malformed-layer` | unchecked | `malformed-layer` | same |
 | `repeated_id_tag.gff3` | `gene:A` | `found` | pass | `found` | same |
-| `repeated_id_tag.gff3` | `gene:B` | `not-found` | pass | `found` | **DIFFERS** |
-| `empty_id.gff3` | *(empty)* | `not-found` | pass | `found` | **DIFFERS** |
+| `repeated_id_tag.gff3` | `gene:B` | `not-found` | reject | `not-found` | same |
+| `empty_id.gff3` | *(empty)* | `not-found` | reject | `not-found` | same |
+| `positive_cr.gff3` | `gene:G1` | `found` | pass | `found` | same |
+| `positive_crlf.gff3` | `gene:G1` | `found` | pass | `found` | same |
+| `positive_mixed.gff3` | `gene:G1` | `found` | pass | `found` | same |
 
-### The three disagreements, as findings
+### Resolved disagreements (`FAIR-bioHeaders-Tools-JavaScript#21` and `gff3-validator#38`)
 
-Nothing here was bent to match the other side, and nothing there was edited. The
-three differences are reported for the owner of each repository to decide.
+The three earlier disagreements (measured at `d8552f6`) and the line-terminator
+asymmetry (#38) are now closed across both implementations:
 
-1. **`absent_layer.gff3` — a file with no feature rows is a rejection in
-   JavaScript.** `src/features.js` distinguishes a usable layer from an
-   untrustworthy one, and `src/fhgm.js` distinguishes both from a caller that
-   passed no layer at all (`not-checked`). A file that *was* passed and contains
-   no feature rows lands in the usable branch with an empty index, so K4 says
-   `reject`: a header is indicted for a layer nobody could see. This index calls
-   it `absent-layer`, which is not scored. This is the exact collapse the
-   vocabulary exists to prevent, and it is the finding Julia should carry when it
-   retires its `not-supported-yet`: the not-scored state has to be reachable from
-   the file, not only from the caller's options.
-2. **`repeated_id_tag.gff3` — two `ID=` tags on one row.** `src/features.js`
-   collects every `ID=` attribute, so `gene:B` resolves to a gene row and K4
-   passes. This index reads one identifier per row — the first — because that is
-   what the catalogue's own reader does (`parse_attributes`, with `GFF-ATT-004`
-   judging the repetition as an error). A header pointing at the second tag is
-   `not-found` here. Which behaviour a library should have is a real question; it
-   belongs to the FHGM rule text, not to either implementation's convenience.
-3. **`empty_id.gff3` — `ID=` with no value.** `src/features.js` indexes the empty
-   string as an identifier, so a pointer whose `featureId` is empty resolves
-   against it; this index has no empty key, because an attribute with no value
-   names nothing.
+1. **`absent_layer.gff3` — zero feature rows abstain (`not-checked` /
+   `absent-layer`).** In `FAIR-bioHeaders-Tools-JavaScript#21` (`8fd467dab0e8`),
+   `src/features.js` counts nine-field feature rows (`featureRows`) separately
+   from ID-carrying rows (`rows`), and `src/fhgm.js` maps a readable, trustworthy
+   layer with `featureRows === 0` to `state: 'none'` (`not-checked`), while
+   `rows_without_id.gff3` (`featureRows === 2`, `rows.length === 0`) still scores
+   as `reject` (`not-found`). Both sides derive `never_scored` (`malformed-layer`
+   and `absent-layer`) directly from the two unscoreable layer states.
+2. **`repeated_id_tag.gff3` — only the first `ID=` tag on a row is indexed.**
+   `src/features.js` now keeps only the first `ID=` tag per row, matching
+   `parse_attributes` (`GFF-ATT-004`). A pointer to `gene:B` reports `not-found`
+   (`reject`) in both implementations.
+3. **`empty_id.gff3` — `ID=` with no value is not an identifier.** Neither index
+   records an empty-string key for `ID=`, so an empty pointer reports `not-found`
+   (`reject`) on both sides.
+4. **Line terminators (`positive_cr.gff3`, `positive_crlf.gff3`,
+   `positive_mixed.gff3`).** `gff3_validator.reader.iter_lines` splits lines at
+   LF, CRLF, or a lone CR per `docs/FORMAT.md` rule R1, matching
+   `src/features.js`. A carrier with lone-CR or mixed line endings yields its
+   feature rows (`found`) rather than collapsing into a single unsplit line.
 
 The two remaining shapes are **not** comparable case-by-case and are listed here
 rather than in the table:

@@ -40,10 +40,12 @@ def open_input(source):
 def iter_lines(source, on_invalid_utf8=None):
     """Yield ``(line_number, text)`` for each line of ``source``.
 
-    Text is decoded as UTF-8 with the line feed removed. Invalid bytes are
+    A line ends at LF, at CRLF, or at a CR that is not followed by LF (FORMAT
+    R1). Text is decoded as UTF-8 with the line feed removed. Carriage returns
+    are kept on the yielded line (so both CRLF and lone-CR lines end with
+    ``"\\r"``, which callers strip as the line terminator). Invalid bytes are
     replaced by U+FFFD and ``on_invalid_utf8(line_number)`` is called, if
-    given (GFF-SYN-006). Carriage returns are kept, so CRLF input stays
-    visible to the rules.
+    given (GFF-SYN-006).
     """
     stream, owned = open_input(source)
     try:
@@ -57,16 +59,26 @@ def iter_lines(source, on_invalid_utf8=None):
                 ) from error
             if not raw:
                 break
-            number += 1
             if raw.endswith(b"\n"):
                 raw = raw[:-1]
-            try:
-                text = raw.decode("utf-8")
-            except UnicodeDecodeError:
-                text = raw.decode("utf-8", errors="replace")
-                if on_invalid_utf8 is not None:
-                    on_invalid_utf8(number)
-            yield number, text
+            # Split at any lone CR (a CR not followed by the line's terminating LF).
+            parts = raw.split(b"\r")
+            for index, piece in enumerate(parts):
+                # If the chunk ended with \r (before the stripped \n, i.e. CRLF,
+                # or at EOF with a trailing \r), the final empty piece after \r
+                # is the terminator of the preceding piece, not a new empty line.
+                if index == len(parts) - 1 and piece == b"" and index > 0:
+                    break
+                if index < len(parts) - 1:
+                    piece = piece + b"\r"
+                number += 1
+                try:
+                    text = piece.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = piece.decode("utf-8", errors="replace")
+                    if on_invalid_utf8 is not None:
+                        on_invalid_utf8(number)
+                yield number, text
     finally:
         if owned is not None:
             owned.close()

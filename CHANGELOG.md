@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- `gff3_validator.reader.iter_lines` now splits lines at a lone CR as well as
+  LF and CRLF, per FAIR-bioHeaders-Specification `docs/FORMAT.md` rule R1
+  ("A line ends at LF, at CRLF, or at a CR that is not followed by LF").
+  Before this, a lone-CR GFF3 file was read as one unsplit line: G1 failed,
+  and the feature-layer index saw zero rows with no diagnostic — a file with
+  real gene rows read as `absent-layer` (#38). The CR stays on the line as
+  its terminator, as it already did for CRLF, and rules strip it the same
+  way. Feature-index fixtures `positive_cr`, `positive_crlf` and
+  `positive_mixed` pin the row-presence outcomes (#38). The catalogue's
+  GFF-SYN-005 example uses U+0007 instead of a terminator-looking CR, and
+  its note records that R1 line terminators are not column content
+  (question 2).
+- Cross-implementation agreement re-run against
+  `FAIR-bioHeaders-Tools-JavaScript` `main` after its #21 (commit
+  `8fd467dab0e8`, `src/features.js` SHA-256
+  `5c513a783f41e8834fb4ef009582764bb1117f2c9d9636fd5e8a7ef877620dc9`):
+  **24 of 24 cases agree, 0 findings**. The three historical divergences
+  (zero-row abstention, repeated `ID=`, empty `ID=`) are closed on the
+  JavaScript side, `outcomes.json` re-cites the last-touch commit rather
+  than `d8552f6`, and `never_scored` is now asserted against what both
+  sides actually produce (#37).
 - GFF-STR-015 now handles circular sequences. On a sequence with
   `Is_circular=true`, an interval that runs past the end continues at the
   start. The sequence extent is its `##sequence-region` or, if there is none,

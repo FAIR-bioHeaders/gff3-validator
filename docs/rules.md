@@ -150,12 +150,12 @@ Tab (outside column separators), newline, carriage return and other control char
 Example (invalid):
 
 ```text
-ctg1→.→gene→1→90→.→+→.→ID=g1;Note=first<CR>second
+ctg1→.→gene→1→90→.→+→.→ID=g1;Note=firstsecond
 ```
 
 Fix: Percent-encode the character (for example %09 for tab, %0D for carriage return).
 
-Notes: The specification does not address line endings. Are CRLF files invalid (the CR is an unescaped control character in column 9) or should a CRLF terminator be accepted? Proposal: report CRLF once per file as an error under this rule. Until SO answers, the validator reports control characters inside a line and does not report a carriage return immediately before the line feed (a CRLF line ending), which it removes before checking the line.
+Notes: The specification does not address line endings. Are CRLF files invalid (the CR is an unescaped control character in column 9) or should a CRLF terminator be accepted? Proposal: report CRLF once per file as an error under this rule. Until SO answers, the validator reports control characters inside a line and does not report a carriage return used as a line terminator (CRLF or lone CR under FORMAT R1), which it removes before checking the line.
 
 ### GFF-SYN-006
 

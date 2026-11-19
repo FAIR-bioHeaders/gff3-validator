@@ -1,4 +1,6 @@
-# The conformance suite is byte-exact (CRLF, BOM and Latin-1 cases): never
-# convert line endings or re-encode these files.
+# The conformance suite and feature-index fixtures are byte-exact (CR, CRLF,
+# mixed-ending, BOM and Latin-1 cases): never convert line endings or re-encode
+# these files.
 conformance/** -text
 conformance/**/*.gz binary
+tests/fixtures/features/** -text

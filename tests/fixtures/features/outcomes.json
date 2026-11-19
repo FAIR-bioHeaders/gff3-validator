@@ -14,7 +14,7 @@
   "predicate": "found means exactly one row of the feature layer carries the percent-decoded featureId (both sides decoded) and that row's column 3 is 'gene' or 'SO:0000704'. The row count is judged before the type.",
   "other_languages": {
     "javascript": {
-      "read_from": "FAIR-bioHeaders-Tools-JavaScript src/fhgm.js at origin/main d8552f6 (rules.K4 and records[].featureTarget.verdict)",
+      "read_from": "FAIR-bioHeaders-Tools-JavaScript src/fhgm.js and src/features.js at origin/main 8fd467dab0e8 (merged PR #21 a645bb87675e; rules.K4 and records[].featureTarget.verdict)",
       "found": "pass",
       "not-found": "reject",
       "duplicate-row": "reject",
@@ -139,19 +139,37 @@
       "fixture": "repeated_id_tag.gff3",
       "feature_id": "gene:A",
       "outcome": "found",
-      "why": "one row carries the first ID tag (disagrees with JavaScript: see docs/feature-index.md)"
+      "why": "one row carries the first ID tag"
     },
     {
       "fixture": "repeated_id_tag.gff3",
       "feature_id": "gene:B",
       "outcome": "not-found",
-      "why": "the second ID tag on the same row is not an addressable identifier (disagrees with JavaScript: see docs/feature-index.md)"
+      "why": "the second ID tag on the same row is not an addressable identifier"
     },
     {
       "fixture": "empty_id.gff3",
       "feature_id": "",
       "outcome": "not-found",
-      "why": "an ID tag with no value is not an identifier (JavaScript indexes it as one: see docs/feature-index.md)"
+      "why": "an ID tag with no value is not an identifier"
+    },
+    {
+      "fixture": "positive_cr.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "found",
+      "why": "lone-CR line endings split lines per FORMAT R1; the gene row is indexed"
+    },
+    {
+      "fixture": "positive_crlf.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "found",
+      "why": "CRLF line endings split lines per FORMAT R1; the gene row is indexed"
+    },
+    {
+      "fixture": "positive_mixed.gff3",
+      "feature_id": "gene:G1",
+      "outcome": "found",
+      "why": "mixed CR, CRLF and LF line endings split lines per FORMAT R1; the gene row is indexed"
     }
   ],
   "synthetic": [

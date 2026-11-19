@@ -128,7 +128,7 @@ rules:
     Tab (outside column separators), newline, carriage return and other control
     characters (0x00 to 0x1F, 0x7F) must be percent-encoded.
   reference: {source: gff3, anchor: description-of-the-format, section: "Description of the Format: escaping"}
-  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note=first\rsecond"
+  example: "ctg1\t.\tgene\t1\t90\t.\t+\t.\tID=g1;Note=first\x07second"
   fix: Percent-encode the character (for example %09 for tab, %0D for carriage return).
   status: implemented
   review: pending-SO
@@ -138,8 +138,9 @@ rules:
     CR is an unescaped control character in column 9) or should a CRLF
     terminator be accepted? Proposal: report CRLF once per file as an error
     under this rule. Until SO answers, the validator reports control characters
-    inside a line and does not report a carriage return immediately before the
-    line feed (a CRLF line ending), which it removes before checking the line.
+    inside a line and does not report a carriage return used as a line
+    terminator (CRLF or lone CR under FORMAT R1), which it removes before
+    checking the line.
 
 - id: GFF-SYN-006
   level: warning
