@@ -1,5 +1,8 @@
 # Round 16 maintenance and audit — 2026-11-20
 
+These corrections are unreleased source changes, not a claim that the existing
+0.1.0 wheel changed. No release/tag/publication occurs in this packet.
+
 This packet ports human-only merge guidance, repairs documentation and modern
 Black development-tool advisories. It changes no rule IDs, ontology, schemas,
 fixtures, runtime dependency range or release version. SO review/endorsement,
@@ -72,3 +75,9 @@ fails closed on unknown in-checkout tracking. Synthetic-root sentinel tests
 never risk the actual checkout. Dedicated untracked scratch outputs remain
 replaceable; TOCTOU and external untracked data are not isolation guarantees.
 No generated fixture bytes are changed.
+
+The output guard uses physical samefile ancestry plus NFC/casefold indexed-path
+prefixes, so case/composition aliases such as DOCS/.GIT or composed/decomposed
+Unicode cannot bypass protection on case-insensitive filesystems. Unknown file
+identity/tracking fails closed. Synthetic-root tests cover these aliases without
+ever deleting the actual checkout.

@@ -190,3 +190,61 @@ def test_conformance_generated_subdirectory_cannot_point_at_user_work(checkout, 
             generator.write(output)
         remove.assert_not_called()
     assert (user_work / "keep").read_text() == "user work"
+
+
+@pytest.mark.parametrize("name", ["DOCS", ".GIT", ".GIT/objects"])
+def test_case_variant_tracked_or_git_output_is_refused(checkout, name):
+    with (
+        mock.patch.object(builder.shutil, "rmtree") as remove,
+        mock.patch.object(builder, "build_wheel") as wheel,
+    ):
+        with pytest.raises(ValueError):
+            builder.build(checkout / name)
+        remove.assert_not_called()
+        wheel.assert_not_called()
+    assert (checkout / "docs/keep.md").read_text() == "tracked source"
+
+
+@pytest.mark.parametrize("suffix", ["", "docs"])
+def test_physical_checkout_case_alias_is_refused(checkout, suffix):
+    alias = checkout.with_name(checkout.name.upper())
+    if not alias.exists() or not alias.samefile(checkout):
+        pytest.skip("requires a case-insensitive filesystem for a physical alias")
+    target = alias / suffix if suffix else alias
+    with (
+        mock.patch.object(builder.shutil, "rmtree") as remove,
+        mock.patch.object(builder, "build_wheel") as wheel,
+    ):
+        with pytest.raises(ValueError):
+            builder.build(target)
+        remove.assert_not_called()
+        wheel.assert_not_called()
+    assert (checkout / "docs/keep.md").read_text() == "tracked source"
+
+
+def test_unknown_filesystem_identity_fails_closed(checkout):
+    target = checkout / "scratch"
+    with mock.patch.object(Path, "samefile", side_effect=PermissionError("unknown")):
+        with mock.patch.object(builder.shutil, "rmtree") as remove:
+            with pytest.raises(ValueError, match="filesystem identity"):
+                builder.build(target)
+            remove.assert_not_called()
+
+
+@pytest.mark.parametrize("alias", ["CAFÉ", "CAFE\u0301"])
+def test_unicode_case_and_composition_aliases_cannot_delete_tracked_source(
+    checkout, alias
+):
+    source = checkout / "café"
+    source.mkdir()
+    (source / "keep").write_text("unicode tracked source")
+    subprocess.run(["git", "-C", str(checkout), "add", "café"], check=True)
+    with (
+        mock.patch.object(builder.shutil, "rmtree") as remove,
+        mock.patch.object(builder, "build_wheel") as wheel,
+    ):
+        with pytest.raises(ValueError, match="tracked source"):
+            builder.build(checkout / alias)
+        remove.assert_not_called()
+        wheel.assert_not_called()
+    assert (source / "keep").read_text() == "unicode tracked source"
