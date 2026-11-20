@@ -458,8 +458,7 @@ then `cd web/test && npm install --save-exact pyodide@VERSION`, rebuild and run
 wrapper (`gff3_validator`) that follows the
 [IUC standards](https://galaxy-iuc-standards.readthedocs.io/). It takes a
 GFF3 dataset (plain or gzip) and, optionally, a genome FASTA with a
-translation table for the biology rules, a FAIR-bioHeaders header mode and a
-profile (none, or AgBioData). It
+translation table for the biology rules and a FAIR-bioHeaders header mode. It
 always writes the HTML report, optionally the JSON and SARIF reports, and puts
 the text summary in the job's standard output. A file with errors (exit
 status 1) is a successful job; only an incomplete run (exit status 2) fails
@@ -471,9 +470,14 @@ planemo lint --report_level warn galaxy/
 planemo test galaxy/gff3_validator.xml
 ```
 
-The wrapper needs the `gff3-validator` Bioconda package. It will be submitted
+The wrapper targets the published `gff3-validator` **0.1.0** Bioconda package.
+That package has no `--profile` option; repository profiles and the lone-CR
+reader correction on main are not shipped by that version. Reports preserve
+explicit planned/skipped checks. The wrapper will be submitted
 to [tools-iuc](https://github.com/galaxyproject/tools-iuc) (as
-`tools/gff3_validator`) once the Bioconda recipe is merged.
+`tools/gff3_validator`) after installed-wrapper verification. Bioconda recipe
+[#70098](https://github.com/bioconda/bioconda-recipes/pull/70098) is merged;
+external integration/recommendation acceptance is tracked in [#21](https://github.com/FAIR-bioHeaders/gff3-validator/issues/21).
 
 ## Conformance suite
 

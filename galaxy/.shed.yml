@@ -10,7 +10,7 @@ long_description: |
   Parent references, cycles, sequence regions) and, with a genome FASTA, CDS
   phase, start and stop codons, internal stops and strand consistency. Every
   finding cites a numbered rule with a suggested fix. Reports are HTML, JSON
-  and SARIF. Built by FAIR-bioHeaders with the Sequence Ontology group.
+  and SARIF. Developed by FAIR-bioHeaders. Sequence Ontology review is not an endorsement.
 homepage_url: https://github.com/FAIR-bioHeaders/gff3-validator
 remote_repository_url: https://github.com/galaxyproject/tools-iuc/tree/main/tools/gff3_validator
 type: unrestricted
