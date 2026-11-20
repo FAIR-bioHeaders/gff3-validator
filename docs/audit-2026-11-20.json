@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-20",
+  "tools": {
+    "Bandit": "1.8.6/Python3.13",
+    "Zizmor": "1.16.3",
+    "Gitleaks": "8.30.1",
+    "pip-audit": "2.9.0"
+  },
+  "configuration": "default rules; no suppressions; gitleaks redact=100",
+  "bandit": {
+    "parse_errors": [],
+    "files": 23,
+    "findings": [
+      {
+        "filename": "gff3_validator/checks/attributes.py",
+        "line_number": 229,
+        "test_id": "B105",
+        "issue_severity": "LOW",
+        "issue_text": "Possible hardcoded password: ''"
+      },
+      {
+        "filename": "gff3_validator/checks/biology.py",
+        "line_number": 111,
+        "test_id": "B105",
+        "issue_severity": "LOW",
+        "issue_text": "Possible hardcoded password: 'start'"
+      }
+    ]
+  },
+  "secret_matches": [
+    {
+      "scan": "gitleaks-history.json",
+      "matches": []
+    },
+    {
+      "scan": "gitleaks-tree.json",
+      "matches": []
+    }
+  ],
+  "scope": "gff3_validator package and all workflows",
+  "dependency_audit": {
+    "dependencies": [
+      {
+        "name": "fair-bioheaders",
+        "version": "0.8.6",
+        "vulns": []
+      },
+      {
+        "name": "jsonschema",
+        "version": "4.26.0",
+        "vulns": []
+      },
+      {
+        "name": "attrs",
+        "version": "26.1.0",
+        "vulns": []
+      },
+      {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1",
+        "vulns": []
+      },
+      {
+        "name": "referencing",
+        "version": "0.37.0",
+        "vulns": []
+      },
+      {
+        "name": "rpds-py",
+        "version": "2026.9.1",
+        "vulns": []
+      },
+      {
+        "name": "fqdn",
+        "version": "1.6.0",
+        "vulns": []
+      },
+      {
+        "name": "idna",
+        "version": "3.20",
+        "vulns": []
+      },
+      {
+        "name": "isoduration",
+        "version": "20.11.0",
+        "vulns": []
+      },
+      {
+        "name": "arrow",
+        "version": "1.4.0",
+        "vulns": []
+      },
+      {
+        "name": "python-dateutil",
+        "version": "4.0.0",
+        "vulns": []
+      },
+      {
+        "name": "tzdata",
+        "version": "2026.6",
+        "vulns": []
+      },
+      {
+        "name": "jsonpointer",
+        "version": "3.12",
+        "vulns": []
+      },
+      {
+        "name": "rfc3339-validator",
+        "version": "0.1.4",
+        "vulns": []
+      },
+      {
+        "name": "six",
+        "version": "1.17.0",
+        "vulns": []
+      },
+      {
+        "name": "rfc3987",
+        "version": "1.3.8",
+        "vulns": []
+      },
+      {
+        "name": "uri-template",
+        "version": "1.3.0",
+        "vulns": []
+      },
+      {
+        "name": "webcolors",
+        "version": "25.10.0",
+        "vulns": []
+      },
+      {
+        "name": "pyyaml",
+        "version": "6.0.3",
+        "vulns": []
+      }
+    ],
+    "fixes": []
+  }
+}

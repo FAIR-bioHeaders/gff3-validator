@@ -1,3 +1,7 @@
+> Every PR requires independent review by another actual model (another family
+> preferred); a human alone merges. Agents never enable auto-merge, queue merges
+> or substitute default-branch pushes. See [AGENTS.md](AGENTS.md) for current policy.
+
 # Contributing
 
 Start with an issue describing the use case or failure and a small reproducible
@@ -46,7 +50,8 @@ SO review of the catalogue is recorded per rule (`review`). Follow the
 
 ## Releasing
 
-Not yet. The first release waits for the SO review of the catalogue and needs a
+The 0.1.0 package is published; SO catalogue review remains a separate gate.
+A subsequent release needs a
 PyPI pending trusted publisher (see `.github/workflows/release.yml`). Preparing
 a release does not authorize publishing, tagging or minting a DOI; those are
 maintainer actions.
