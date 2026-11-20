@@ -8,7 +8,7 @@
   var $ = function (id) {
     return document.getElementById(id);
   };
-  var state = { worker: null, ready: false, busy: false, file: null, genome: null, result: null, facts: null };
+  var state = { worker: null, ready: false, busy: false, file: null, genome: null, result: null, facts: null, revision: 0, job: null, resultName: null };
   var GENOME_WARN_BYTES = 300 * 1024 * 1024;
 
   function formatBytes(n) {
@@ -37,13 +37,23 @@
     $("run").disabled = !(state.ready && state.file && !state.busy);
   }
 
+  function invalidate() {
+    state.revision++;
+    state.result = null;
+    state.resultName = null;
+    $("results").hidden = true;
+    $("report").srcdoc = "";
+  }
+
   function chooseFile(file) {
+    invalidate();
     state.file = file || null;
     $("gff3-chosen").textContent = file ? file.name + " (" + formatBytes(file.size) + ")" : "";
     updateButton();
   }
 
   function chooseGenome(file) {
+    invalidate();
     state.genome = file || null;
     var text = "";
     if (file) {
@@ -126,7 +136,9 @@
       updateButton();
     } else if (m.type === "result") {
       state.busy = false;
-      showResult(m.result);
+      if (state.job && state.job.revision === state.revision) showResult(m.result);
+      else status("Inputs changed. Run validation for the current selection.", 1, 1);
+      state.job = null;
       updateButton();
     } else if (m.type === "error") {
       fail((m.during === "init" ? "Could not load the validator: " : "Validation failed: ") + m.message);
@@ -141,9 +153,10 @@
       return;
     }
     state.result = result;
+    state.resultName = state.job.name;
     status("Done in " + result.seconds.toFixed(1) + " s.", 1, 1);
     var verdict = $("verdict");
-    verdict.textContent = state.file.name + ": " + result.summary;
+    verdict.textContent = state.resultName + ": " + result.summary;
     verdict.className = result.valid && result.compliant !== false ? "ok" : "bad";
     $("report").srcdoc = result.html;
     $("results").hidden = false;
@@ -157,7 +170,7 @@
     var blob = new Blob([state.result[kind]], { type: types[kind] + ";charset=utf-8" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = state.file.name.replace(/\.gz$/i, "") + suffix[kind];
+    a.download = state.resultName.replace(/\.gz$/i, "") + suffix[kind];
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -169,6 +182,8 @@
   function submit(event) {
     event.preventDefault();
     if (!state.ready || !state.file || state.busy) return;
+    invalidate();
+    state.job = { name: state.file.name, revision: state.revision };
     state.busy = true;
     updateButton();
     $("status-text").classList.remove("alert");
@@ -210,6 +225,12 @@
       if (files && files.length) chooseFile(files[0]);
     });
     $("form").addEventListener("submit", submit);
+    ["table", "profile"].forEach(function (id) {
+      $(id).addEventListener("change", invalidate);
+    });
+    $("form").addEventListener("change", function (event) {
+      if (event.target.name === "header") invalidate();
+    });
     document.querySelectorAll("[data-download]").forEach(function (button) {
       button.addEventListener("click", function () {
         download(button.getAttribute("data-download"));

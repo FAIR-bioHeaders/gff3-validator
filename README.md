@@ -503,6 +503,17 @@ python scripts/check_conformance.py --gff3-validate gff3-validate          # ful
 python scripts/check_conformance.py --command 'gt gff3validator {file}'    # exit status only
 ```
 
+The generic adapter treats exit 0 as valid and exit 1 as a validation rejection.
+For tools with another documented rejection code, pass `--invalid-exit CODE`
+(repeatable; supplying it replaces the default). Signals, exit 126/127 and
+Python tracebacks fail the run regardless of the expected verdict. Exit-only
+scoring cannot distinguish a silent crash using an allowed rejection code;
+choose codes from the tool's documented contract and inspect unexpected output.
+An optional genome can be written as `--genome {genome}`, `--genome={genome}`
+or a positional `{genome}`; the placeholder and its immediately preceding
+option are omitted for cases without a genome. Keep that option adjacent to
+its placeholder. No shell is invoked.
+
 See [fixture scope](tests/fixtures/README.md) for the historical structural
 header example versus the complete checksummed companion, and how unavailable
 or intentionally disabled optional checks are reported separately from validity.

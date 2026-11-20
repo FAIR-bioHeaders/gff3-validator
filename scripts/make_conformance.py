@@ -2151,7 +2151,10 @@ def check_cases():
 
 def write(output):
     check_cases()
-    from scripts.build_output import safe_output
+    if __name__ == "__main__" and not __package__:
+        from build_output import safe_output
+    else:
+        from scripts.build_output import safe_output
 
     # Only the explicit generated conformance tree may contain tracked outputs.
     # A custom output must not overlap source or Git metadata.
