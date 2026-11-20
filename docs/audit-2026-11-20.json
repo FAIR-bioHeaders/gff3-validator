@@ -137,5 +137,223 @@
       }
     ],
     "fixes": []
+  },
+  "developer_script_scan": {
+    "scanner": "Bandit1.8.6/Python3.13",
+    "parse_errors": [],
+    "files": 8,
+    "findings": [
+      {
+        "filename": "scripts/build_web.py",
+        "line_number": 29,
+        "test_id": "B404",
+        "issue_severity": "LOW",
+        "issue_text": "Consider possible security implications associated with the subprocess module."
+      },
+      {
+        "filename": "scripts/build_web.py",
+        "line_number": 56,
+        "test_id": "B310",
+        "issue_severity": "MEDIUM",
+        "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected."
+      },
+      {
+        "filename": "scripts/build_web.py",
+        "line_number": 69,
+        "test_id": "B607",
+        "issue_severity": "LOW",
+        "issue_text": "Starting a process with a partial executable path"
+      },
+      {
+        "filename": "scripts/build_web.py",
+        "line_number": 69,
+        "test_id": "B603",
+        "issue_severity": "LOW",
+        "issue_text": "subprocess call - check for execution of untrusted input."
+      },
+      {
+        "filename": "scripts/build_web.py",
+        "line_number": 93,
+        "test_id": "B607",
+        "issue_severity": "LOW",
+        "issue_text": "Starting a process with a partial executable path"
+      },
+      {
+        "filename": "scripts/build_web.py",
+        "line_number": 93,
+        "test_id": "B603",
+        "issue_severity": "LOW",
+        "issue_text": "subprocess call - check for execution of untrusted input."
+      },
+      {
+        "filename": "scripts/check_conformance.py",
+        "line_number": 36,
+        "test_id": "B404",
+        "issue_severity": "LOW",
+        "issue_text": "Consider possible security implications associated with the subprocess module."
+      },
+      {
+        "filename": "scripts/check_conformance.py",
+        "line_number": 90,
+        "test_id": "B603",
+        "issue_severity": "LOW",
+        "issue_text": "subprocess call - check for execution of untrusted input."
+      },
+      {
+        "filename": "scripts/check_conformance.py",
+        "line_number": 220,
+        "test_id": "B603",
+        "issue_severity": "LOW",
+        "issue_text": "subprocess call - check for execution of untrusted input."
+      },
+      {
+        "filename": "scripts/check_header_fixtures.py",
+        "line_number": 15,
+        "test_id": "B404",
+        "issue_severity": "LOW",
+        "issue_text": "Consider possible security implications associated with the subprocess module."
+      },
+      {
+        "filename": "scripts/check_header_fixtures.py",
+        "line_number": 40,
+        "test_id": "B603",
+        "issue_severity": "LOW",
+        "issue_text": "subprocess call - check for execution of untrusted input."
+      },
+      {
+        "filename": "scripts/feature_index_agreement.py",
+        "line_number": 39,
+        "test_id": "B404",
+        "issue_severity": "LOW",
+        "issue_text": "Consider possible security implications associated with the subprocess module."
+      },
+      {
+        "filename": "scripts/feature_index_agreement.py",
+        "line_number": 141,
+        "test_id": "B603",
+        "issue_severity": "LOW",
+        "issue_text": "subprocess call - check for execution of untrusted input."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 85,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 91,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 124,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 125,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 166,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 1701,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2128,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2132,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2134,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2136,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2138,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2140,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2141,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2144,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2146,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/make_conformance.py",
+        "line_number": 2149,
+        "test_id": "B101",
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+      },
+      {
+        "filename": "scripts/update_so.py",
+        "line_number": 64,
+        "test_id": "B310",
+        "issue_severity": "MEDIUM",
+        "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected."
+      }
+    ],
+    "disposition": "Argument-array maintenance subprocesses; fixed HTTPS update endpoints under explicit maintainer commands; generator invariants. Actual source-overlap deletion defects fixed separately with a shared guard."
   }
 }

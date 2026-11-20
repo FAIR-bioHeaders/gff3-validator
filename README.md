@@ -13,8 +13,8 @@ Sequence Ontology (SO) group; endorsement is not implied.
 > answers we proposed to SO, at conservative levels), and the optional biology
 > rules run with `--genome`. FHGFF3 header rules (HDR-004 to HDR-010) run
 > with the optional headers extra when its installed toolkit supports the cited
-contract. The published 0.1.0 wheel and this checkout have different header
-dependency ranges; see the getting-started guide. Install
+> contract. The published 0.1.0 wheel and this checkout have different header
+> dependency ranges; see the getting-started guide. Install
 > with `pip install gff3-validator`, or use it in the browser at
 > https://fhref.org/gff3-validator/. Rule ids, levels and
 > output formats may still change before 1.0.

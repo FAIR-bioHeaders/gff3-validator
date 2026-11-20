@@ -2151,7 +2151,15 @@ def check_cases():
 
 def write(output):
     check_cases()
-    output = Path(output)
+    from scripts.build_output import safe_output
+
+    # Only the explicit generated conformance tree may contain tracked outputs.
+    # A custom output must not overlap source or Git metadata.
+    output = safe_output(output, ROOT, allowed_tracked=(ROOT / "conformance",))
+    for name in GENERATED_DIRECTORIES:
+        target = output / name
+        if target.is_symlink() or (target / ".git").exists():
+            raise ValueError("generated subdirectory is a symlink or repository")
     output.mkdir(parents=True, exist_ok=True)
     for name in GENERATED_DIRECTORIES:
         shutil.rmtree(output / name, ignore_errors=True)
@@ -2171,13 +2179,18 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     args = parser.parse_args(argv)
-    write(args.output)
+    try:
+        write(args.output)
+    except ValueError as error:
+        print(f"make_conformance: {error}", file=sys.stderr)
+        return 1
     print(
         f"wrote {len(CASES)} cases and {len(PROFILE_CASES)} profile cases to "
         f"{args.output}",
         file=sys.stderr,
     )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

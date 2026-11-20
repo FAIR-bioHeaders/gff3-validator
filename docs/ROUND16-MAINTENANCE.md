@@ -56,3 +56,19 @@ pip-audit 2.9.0 reported no known vulnerabilities on 2026-11-20 for the actual P
 Exact advisory input is [the dated requirement set](audit-runtime-2026-11-20.txt).
 Re-run `pip-audit -r docs/audit-runtime-2026-11-20.txt --no-deps --disable-pip -f json`.
 Advisory databases change; an old zero result is not a future warranty.
+
+Independent Qwen3 actual-source review found a mislabeled omitted-row count in
+feature text listings: anonymous rows were called ID-carrying. The label and
+coordinate/strand spacing are corrected with a two-row regression. No feature
+ID predicate, report JSON/SARIF schema, rule or fixture bytes change. Stale
+pre-first-release comments and the canonical specification link are corrected.
+
+Manual follow-up of development scripts found destructive output overlap:
+`build_web.py --out .` could remove the checkout, and `make_conformance.py
+--output .` could remove source `profiles`. A shared stdlib guard now runs
+before building/deleting, refuses source/ancestor/Git/worktree/symlink overlaps
+and tracked source (except the designated generated conformance tree), and
+fails closed on unknown in-checkout tracking. Synthetic-root sentinel tests
+never risk the actual checkout. Dedicated untracked scratch outputs remain
+replaceable; TOCTOU and external untracked data are not isolation guarantees.
+No generated fixture bytes are changed.

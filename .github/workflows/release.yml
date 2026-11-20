@@ -1,11 +1,9 @@
 name: Release
 
-# NOT READY FOR USE. gff3-validator is pre-release (0.0.1.dev0) and must not be
-# published until the rule catalogue has been reviewed (FAIR-bioHeaders-Specification #62).
-# Before the first release a maintainer must create a PyPI *pending* trusted
-# publisher for the project "gff3-validator" (owner FAIR-bioHeaders, repository
-# gff3-validator, workflow release.yml, environment pypi) and a "pypi"
-# environment in this repository. Recheck that the PyPI name is still free.
+# Version 0.1.0 is published; SO catalogue review remains separate
+# (FAIR-bioHeaders-Specification #62). Future tags/publications require explicit
+# maintainer authority and the configured PyPI trusted publisher/environment.
+# Preparing maintenance or a passing PR never authorizes a new release.
 #
 # Pushing a version tag (vX.Y.Z) builds, tests and publishes that version: the
 # wheel and sdist are attached to a GitHub release (which Zenodo can archive)

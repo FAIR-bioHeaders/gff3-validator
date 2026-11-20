@@ -224,7 +224,7 @@ def list_features_text(index, max_rows=None):
     for row in index.rows if max_rows is None else index.rows[:max_rows]:
         lines.append(f"\t{row.describe()}")
     if max_rows is not None and len(index.rows) > max_rows:
-        lines.append(f"\t... {len(index.rows) - max_rows} more ID-carrying rows")
+        lines.append(f"\t... {len(index.rows) - max_rows} more feature rows")
     for problem in index.problems:
         lines.append(f"\tdefect: {problem}")
     return "".join(line + "\n" for line in lines)

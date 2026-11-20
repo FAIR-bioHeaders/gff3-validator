@@ -70,3 +70,15 @@ limit bounds retained findings, not all CPU/memory or decompressed input size.
 Apply process, input-size, disk and wall-time limits for untrusted uploads. No
 network request is required for ordinary validation; explicit ontology inputs
 are local files. See [the maintenance record](ROUND16-MAINTENANCE.md).
+
+## Build tools and output safety
+
+`scripts/build_web.py --out DIRECTORY` replaces a dedicated disposable output
+directory. It refuses this checkout/ancestors, Git metadata, other repository
+roots, symlinks and tracked source overlaps, and fails closed when Git tracking
+cannot be established for an in-checkout output. It is not a sandbox or a
+concurrent-filesystem isolation guarantee: untracked scratch data can still be
+replaced. Keep outputs separate from user data and use the default `web/dist`
+or a fresh temporary directory. The conformance generator similarly protects
+source/Git overlaps; only the designated `conformance` generated tree may contain
+tracked outputs. Do not regenerate published fixtures as incidental cleanup.

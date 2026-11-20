@@ -462,3 +462,17 @@ def test_the_javascript_resolver_agrees_except_for_the_published_findings():
         if row["agree"]:
             # Identical outcomes carry identical scoring on both sides.
             assert (row["js_verdict"] == "pass") == (row["outcome"] == OUTCOME_FOUND)
+
+
+def test_text_listing_counts_anonymous_omitted_rows():
+    from gff3_validator.cli import list_features_text
+
+    source = io.BytesIO(
+        b"chr1\tdemo\tgene\t1\t4\t.\t+\t.\tID=gene1\n"
+        b"chr1\tdemo\texon\t1\t4\t.\t+\t.\t.\n"
+    )
+    index = build_feature_index(source, name="anonymous.gff3")
+    text = list_features_text(index, max_rows=1)
+    assert "1-4 +" in text
+    assert "... 1 more feature rows" in text
+    assert "ID-carrying rows" not in text

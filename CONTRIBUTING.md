@@ -51,8 +51,8 @@ SO review of the catalogue is recorded per rule (`review`). Follow the
 ## Releasing
 
 The 0.1.0 package is published; SO catalogue review remains a separate gate.
-A subsequent release needs a
-PyPI pending trusted publisher (see `.github/workflows/release.yml`). Preparing
+A subsequent release needs the configured PyPI trusted publisher/environment
+and explicit maintainer authority (see `.github/workflows/release.yml`). Preparing
 a release does not authorize publishing, tagging or minting a DOI; those are
 maintainer actions.
 

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "gff3-validator"
-# Pre-release: not to be published until the rule catalogue is reviewed with the
-# Sequence Ontology group (FHR-Specification #62).
+# Version 0.1.0 is published; catalogue review remains a separate SO gate
+# (FAIR-bioHeaders-Specification #62). Further publication requires maintainers.
 version = "0.1.0"
 description = "One-stop GFF3 validator: GFF3 1.26 syntax, structure and Sequence Ontology rules, plus optional FAIR-bioHeaders (FHGFF3) header checks"
 authors = ["Adam Wright <wright@fhref.org>", "David Molik <molik@fhref.org>"]
@@ -40,7 +40,7 @@ jsonschema = ">=4.17"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/FAIR-bioHeaders/gff3-validator/issues"
-"Specification" = "https://github.com/FAIR-bioHeaders/FHR-Specification/blob/main/specs/009-gff3-validator/spec.md"
+"Specification" = "https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/specs/009-gff3-validator/spec.md"
 
 [tool.poetry.scripts]
 gff3-validate = "gff3_validator.cli:main"

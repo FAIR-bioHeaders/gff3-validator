@@ -143,7 +143,7 @@ class FeatureRow:
                 span += f"-{self.end}"
         identifier = self.raw_id if self.raw_id is not None else "-"
         return (
-            f"line {self.line}\t{self.seqid}\t{self.type}\t{span}{self.strand}"
+            f"line {self.line}\t{self.seqid}\t{self.type}\t{span} {self.strand}"
             f"\tID={identifier}"
         )
 

@@ -24,6 +24,7 @@ class Finding:
     core_level: Optional[str] = None
 
     def to_dict(self):
+        """Core finding fields; ProfileResult adds profile/core-level context."""
         return {
             "rule": self.rule,
             "level": self.level,
