@@ -1,33 +1,31 @@
 # Agent instructions
 
-## Independent review and merge authorization (2026-11-18)
+## Independent review and human-only merges (maintainer direction, 2026-11-20)
 
-The maintainer's independent-review rule (2026-11-18) applies only to
-FAIR-bioHeaders repositories and agents operated by David Molik (`molikd`) or
-Adam Wright (`adamjohnwright`). A PR submitted by either maintainer or their
-agents may satisfy the approval gate through an independent **different model**:
-Copilot, or a model operated by David or Adam. The approving model/agent must be
-other than the submitter; an agent must not self-approve its PR, and another
-instance of the same model does not satisfy the different-model requirement.
-Record author/reviewer model provenance when needed to establish independence.
-David and Adam themselves may self-approve their PRs; this exception does not
-apply to their agents.
+The [Round 16 policy](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/211#issuecomment-7042896529)
+supersedes the former conditional agent-merge authorization of 2026-11-16/18 and
+the #268 authority links recorded under it. **Agents must never merge pull
+requests in this repository; a human performs every merge.** Do not enable
+auto-merge, enter a merge queue, use another agent or service as a merge proxy,
+or push directly to the default branch as a substitute for merging a PR. Model
+review never grants an agent merge authority; preserve platform protections and
+do not forge approval or work around repository permissions.
 
-An eligible agent may merge only after that approval requirement is met, all
-applicable CI checks are green, and its own validation of the current changes
-passes, including changes after review. Recheck the exact head, base branch,
-findings and dependencies immediately before merging. Missing checks are not
-passing checks, and branch protection must not be bypassed. Read every overall
-review and inline finding, reply with its disposition and fix/evidence, resolve
-handled threads, and post an overall response. Merge authorization does not grant
-contract adoption, curator acceptance, release, publication or deployment
-authority; those retain their separate maintainer gates.
+Every PR receives independent review from another actual model. A different
+model family is preferred (for example Codex or Gemini reviewing Qwen work, or
+Qwen reviewing Codex work), but family diversity is a preference, not a hard
+requirement; a second session of the same model is not another model. Record
+actual author/reviewer model identities and never invent review provenance.
 
-Authority: [approval by another, different model](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/268#issuecomment-6984337685)
-and [human self-approval exception](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/268#issuecomment-6984418624).
-
-Port source: FAIR-bioHeaders-Specification commit
-`0d0d6b43efdee96bc7548f1f7c65fdafb2a31f32` ([specification PR #269](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/pull/269)).
+Agents keep monitoring CI and fixing failures and actionable review findings:
+read the overall review and every inline finding, fix in new commits, reply with
+disposition and evidence, resolve handled threads and acknowledge clean reviews.
+Validate the current head after changes and hand the human exact head/base,
+review, CI, dependency and remaining-risk information. Missing, failed and
+NOT_RUN checks are not passes. This grants no contract adoption, curator
+acceptance, release, publication or deployment authority — those gates are
+unchanged. Earlier rounds' authorized merges and dated receipts remain accurate
+historical facts, not future permission.
 
 ## Current repository context
 
@@ -224,5 +222,6 @@ When a PR receives code review (human or model):
 6. Treat optional suggestions as required unless they are genuinely out of
    scope; state why and link a follow-up issue.
 
-Do not push directly to the default branch. PR merges follow the independent
-review authorization above; adoption and publication keep their separate gates.
+Do not push directly to the default branch. PR merges are performed only by a
+human maintainer (agents never merge, per the human-only merges section above);
+adoption and publication keep their separate gates.
