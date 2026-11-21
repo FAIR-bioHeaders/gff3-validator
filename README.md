@@ -1,7 +1,8 @@
 # gff3-validator
 
 A one-stop validator for [GFF3](https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md)
-annotation files, built by FAIR-bioHeaders with the Sequence Ontology (SO) group.
+annotation files, developed by FAIR-bioHeaders with review requested from the
+Sequence Ontology (SO) group; endorsement is not implied.
 
 > **Status: early release (0.1.0).** The rule catalogue is a draft under
 > review with the Sequence Ontology group
@@ -11,10 +12,18 @@ annotation files, built by FAIR-bioHeaders with the Sequence Ontology (SO) group
 > types and Parent relationships against a bundled SO release (following the
 > answers we proposed to SO, at conservative levels), and the optional biology
 > rules run with `--genome`. FHGFF3 header rules (HDR-004 to HDR-010) run
-> with the optional headers extra once a fair-bioheaders release supports FHGFF3. Install
+> with the optional headers extra when its installed toolkit supports the cited
+> contract. The published 0.1.0 wheel and this checkout have different header
+> dependency ranges; see the getting-started guide. Install
 > with `pip install gff3-validator`, or use it in the browser at
 > https://fhref.org/gff3-validator/. Rule ids, levels and
 > output formats may still change before 1.0.
+
+## Start here
+
+[Getting started and Python API](docs/GETTING-STARTED.md) explains installation,
+report layers, important helpers and error handling. [Maintenance audit](docs/ROUND16-MAINTENANCE.md)
+records source/artifact limits and current security findings.
 
 ## Goal
 
@@ -493,6 +502,17 @@ this one. Profile cases (status `extension:agbiodata`) are kept in a separate
 python scripts/check_conformance.py --gff3-validate gff3-validate          # full findings
 python scripts/check_conformance.py --command 'gt gff3validator {file}'    # exit status only
 ```
+
+The generic adapter treats exit 0 as valid and exit 1 as a validation rejection.
+For tools with another documented rejection code, pass `--invalid-exit CODE`
+(repeatable; supplying it replaces the default). Signals, exit 126/127 and
+Python tracebacks fail the run regardless of the expected verdict. Exit-only
+scoring cannot distinguish a silent crash using an allowed rejection code;
+choose codes from the tool's documented contract and inspect unexpected output.
+An optional genome can be written as `--genome {genome}`, `--genome={genome}`
+or a positional `{genome}`; the placeholder and its immediately preceding
+option are omitted for cases without a genome. Keep that option adjacent to
+its placeholder. No shell is invoked.
 
 See [fixture scope](tests/fixtures/README.md) for the historical structural
 header example versus the complete checksummed companion, and how unavailable

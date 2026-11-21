@@ -11,7 +11,7 @@ Then, optionally, it runs a validator over every case and prints a table:
     # gff3-validator's JSON report: compares every finding (rule, level, line)
     python scripts/check_conformance.py --gff3-validate gff3-validate
 
-    # any other tool: compares only the exit status (valid: 0, invalid: not 0)
+    # any other tool: compares only the exit status (valid: 0, invalid: configured rejection codes)
     python scripts/check_conformance.py --command 'gt gff3validator {file}'
 
 In the generic mode ``{file}`` is replaced by the case file and ``{genome}``,
@@ -287,8 +287,8 @@ def score_json(suite, case, base, timeout):
     return ("fail" if details else "pass"), got, "; ".join(details)
 
 
-def score_exit(suite, case, template, timeout):
-    """Generic adapter: only the exit status (0 valid, anything else invalid)."""
+def score_exit(suite, case, template, timeout, invalid_exits=(1,)):
+    """Generic adapter: exit status with explicit validation rejection codes."""
     if case.get("options"):
         return "skip", "", "needs validator options"
     if case.get("headers"):
@@ -298,12 +298,28 @@ def score_exit(suite, case, template, timeout):
     values = {"file": str(suite / case["file"])}
     if "genome" in case:
         values["genome"] = str(suite / case["genome"])
-    command = [part.format(**values) for part in shlex.split(template)]
+    parts = shlex.split(template)
     if "genome" not in case:
-        command = [part for part in command if "{genome}" not in part]
+        kept = []
+        for part in parts:
+            if "{genome}" in part:
+                if part == "{genome}" and kept and kept[-1].startswith("-"):
+                    kept.pop()
+                continue
+            kept.append(part)
+        parts = kept
+    command = [part.format(**values) for part in parts]
     result = run(command, timeout)
     if result is None:
         return "fail", "?", "timed out"
+    output = result.stderr + result.stdout
+    if (
+        result.returncode < 0
+        or result.returncode in (126, 127)
+        or result.returncode not in (0, *invalid_exits)
+        or "Traceback (most recent call last):" in output
+    ):
+        return "fail", "?", f"validator execution failed (exit {result.returncode})"
     got = "valid" if result.returncode == 0 else "invalid"
     detail = ""
     if got == "valid" and case["expected"] == "invalid":
@@ -383,6 +399,12 @@ def main(argv=None):
         help="do not regenerate the suite or check the manifest",
     )
     parser.add_argument("--markdown", action="store_true", help="Markdown table")
+    parser.add_argument(
+        "--invalid-exit",
+        type=int,
+        action="append",
+        help="generic rejection exit code (repeatable; default: 1)",
+    )
     parser.add_argument("--timeout", type=float, default=60, help="seconds per case")
     parser.add_argument(
         "--jobs",
@@ -392,6 +414,9 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
 
+    invalid_exits = args.invalid_exit or [1]
+    if any(code <= 0 or code in (126, 127) for code in invalid_exits):
+        parser.error("--invalid-exit must be positive and cannot be 126 or 127")
     suite = Path(args.suite)
     manifest = json.loads((suite / "manifest.json").read_text(encoding="utf-8"))
     failed = False
@@ -426,7 +451,7 @@ def main(argv=None):
         if args.gff3_validate:
             base = shlex.split(args.gff3_validate)
             return score_json(suite, case, base, args.timeout)
-        return score_exit(suite, case, args.command, args.timeout)
+        return score_exit(suite, case, args.command, args.timeout, invalid_exits)
 
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
         results = list(pool.map(score, cases))

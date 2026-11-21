@@ -75,7 +75,14 @@ def build_wheel(directory):
     return wheel
 
 
+def safe_output(out):
+    from scripts.build_output import safe_output as guard_output
+
+    return guard_output(out, ROOT)
+
+
 def build(out, wheel=None):
+    out = safe_output(out)
     pinned = json.loads(PIN.read_text(encoding="utf-8"))
     if pinned["base"] != CDN.format(version=pinned["version"]):
         raise SystemExit(f"{PIN}: base does not match version")
@@ -122,7 +129,11 @@ def main(argv=None):
     if args.pin:
         pin(args.pin)
         return 0
-    build(args.out.resolve(), args.wheel)
+    try:
+        build(args.out, args.wheel)
+    except ValueError as error:
+        print(f"build_web: {error}", file=sys.stderr)
+        return 1
     return 0
 
 

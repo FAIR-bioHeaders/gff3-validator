@@ -1,6 +1,6 @@
 """gff3-validator: validate GFF3 files against GFF3 1.26 and the Sequence Ontology.
 
-Pre-release. Only the rules marked ``implemented`` in the catalogue are checked.
+Early 0.x release; catalogue review remains separate. Only the rules marked ``implemented`` in the catalogue are checked.
 """
 
 __version__ = "0.1.0"

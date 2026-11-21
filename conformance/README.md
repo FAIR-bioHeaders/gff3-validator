@@ -138,9 +138,14 @@ python scripts/check_conformance.py --gff3-validate gff3-validate
 python scripts/check_conformance.py --gff3-validate "poetry run gff3-validate"
 ```
 
-Any other tool, comparing only the exit status (0 for valid, anything else for
-invalid). `{file}` is replaced by the case file and `{genome}`, if present, by
-the genome FASTA. Cases that need a genome are skipped when the command has no
+Any other tool, comparing exit status (0 for valid, 1 for invalid by default).
+Use repeatable `--invalid-exit CODE` to replace the rejection code set for a
+tool with a different documented contract. Signals, 126/127 and Python
+tracebacks fail execution, never satisfy an invalid case. A silent crash with
+an allowed rejection code cannot be distinguished by exit-only scoring. `{file}` is replaced by the case file and `{genome}`, if present, by
+the genome FASTA. For cases without a genome, a standalone `{genome}`
+and its immediately preceding option (or `--option={genome}`) are omitted
+before expansion. Keep that option adjacent to the placeholder. Cases that need a genome are skipped when the command has no
 `{genome}`; cases that need `options` or depend on `headers` are always skipped. For example,
 GenomeTools:
 

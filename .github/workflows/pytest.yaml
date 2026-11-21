@@ -77,6 +77,8 @@ jobs:
           poetry install
       - name: Build web/dist
         run: poetry run python scripts/build_web.py
+      - name: Page input and report attribution
+        run: node web/test/app-state.mjs
       - name: Pyodide parity with the CLI
         run: |
           (cd web/test && npm ci --no-audit --no-fund)
